@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>WebAR: Descubrimiento de Escultura en la Selva</title>
+  <title>WebGL & WebAR: Arquitectura de Selva en 8 Capas</title>
   
   <!-- Tailwind CSS para la interfaz de usuario (UI) -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Google Fonts: Inter y Cinzel para títulos artísticos -->
+  <!-- Google Fonts: Cinzel e Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Importmap para cargar Three.js y GLTFLoader como módulos ES6 estándar -->
+  <!-- Importmap para Three.js r160 y GLTFLoader -->
   <script type="importmap">
     {
       "imports": {
@@ -24,7 +24,6 @@
   </script>
 
   <style>
-    /* Bloqueo estricto de gestos del navegador en móviles (iOS Safari / Android Chrome) */
     * {
       box-sizing: border-box;
       user-select: none;
@@ -38,16 +37,45 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #090d0a;
+      background-color: #06140f;
       font-family: 'Inter', sans-serif;
-      touch-action: none; /* Crítico para que el arrastre táctil no mueva la página */
+      touch-action: none;
     }
 
     .font-serif-art {
       font-family: 'Cinzel', serif;
     }
 
-    /* Video de fondo para el modo Realidad Aumentada por Cámara */
+    /* Fondo atmosférico estilo ilustración digital semirealista */
+    #illustration-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(52, 211, 153, 0.28) 0%, rgba(13, 148, 136, 0.18) 28%, rgba(6, 34, 24, 0.88) 65%, #030d09 100%),
+        linear-gradient(180deg, #0b2922 0%, #071c15 55%, #040e0a 100%);
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+
+    /* Rayos de sol volumétricos (God Rays) hacia el claro central */
+    #god-rays {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: conic-gradient(
+        from 165deg at 50% -10%,
+        transparent 0deg,
+        rgba(167, 243, 208, 0.08) 12deg,
+        transparent 25deg,
+        rgba(253, 230, 138, 0.09) 36deg,
+        transparent 52deg
+      );
+      mix-blend-mode: screen;
+    }
+
+    /* Video de cámara trasera para modo WebAR */
     #ar-video {
       position: fixed;
       top: 0;
@@ -65,7 +93,7 @@
       opacity: 1;
     }
 
-    /* Lienzo 3D de Three.js superpuesto con canal alfa */
+    /* Lienzo WebGL de Three.js */
     #webgl-container {
       position: fixed;
       top: 0;
@@ -76,7 +104,16 @@
       touch-action: none;
     }
 
-    /* Capa de Interfaz de Usuario */
+    /* Viñeta natural de contraste para las Capas 6, 7 y 8 */
+    .jungle-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 48%, transparent 46%, rgba(2, 14, 9, 0.72) 100%);
+    }
+
+    /* Capa de interfaz HUD */
     #ui-layer {
       position: fixed;
       top: 0;
@@ -93,94 +130,93 @@
     .interactive-ui {
       pointer-events: auto;
     }
-
-    /* Viñeta selvática ambiental en los bordes */
-    .jungle-vignette {
-      position: fixed;
-      inset: 0;
-      z-index: 3;
-      pointer-events: none;
-      background: radial-gradient(circle at center, transparent 55%, rgba(6, 28, 14, 0.55) 100%);
-      transition: opacity 1s ease;
-    }
-
-    /* Animación de pulso para la guía táctil */
-    @keyframes swipeHint {
-      0%, 100% { transform: translateX(-18px) rotate(-8deg); opacity: 0.7; }
-      50% { transform: translateX(18px) rotate(8deg); opacity: 1; }
-    }
-
-    .swipe-hand {
-      animation: swipeHint 2.2s ease-in-out infinite;
-    }
   </style>
 </head>
 <body>
 
-  <!-- 1. VIDEO DE CÁMARA TRASERA PARA WEBAR -->
+  <!-- 1. FONDO PICTÓRICO DE ILUSTRACIÓN DIGITAL Y RAYOS VOLUMÉTRICOS -->
+  <div id="illustration-backdrop"></div>
+  <div id="god-rays"></div>
+
+  <!-- 2. VIDEO DE CÁMARA TRASERA PARA WEBAR -->
   <video id="ar-video" autoplay playsinline muted></video>
 
-  <!-- 2. CONTENEDOR DEL ESCENARIO 3D (THREE.JS) -->
+  <!-- 3. CONTENEDOR WEBGL (THREE.JS) -->
   <div id="webgl-container"></div>
 
-  <!-- 3. VIÑETA AMBIENTAL -->
-  <div id="vignette" class="jungle-vignette"></div>
+  <!-- 4. VIÑETA DE CONTRASTE EN PRIMER PLANO -->
+  <div class="jungle-vignette"></div>
 
-  <!-- 4. PANTALLA DE CARGA (LOADING OVERLAY) -->
+  <!-- 5. PANTALLA DE CARGA -->
   <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-md transition-opacity duration-700 px-6 text-center">
     <div class="w-16 h-16 mb-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-950/50">
       <svg class="w-9 h-9 text-emerald-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
       </svg>
     </div>
-    <h1 class="font-serif-art text-2xl sm:text-3xl text-emerald-50 tracking-wider mb-2">EXPEDICIÓN AR</h1>
-    <p id="loading-status" class="text-sm text-emerald-300/80 mb-6 max-w-xs">Inicializando escena 3D, iluminación del pasillo y follaje tropical...</p>
-    
-    <!-- Barra de progreso -->
+    <h1 class="font-serif-art text-2xl sm:text-3xl text-emerald-50 tracking-wider mb-2">ARQUITECTURA 8 CAPAS</h1>
+    <p id="loading-status" class="text-sm text-emerald-300/80 mb-6 max-w-xs">Calculando Bounding Box del modelo 3D y generando 8 estratos de profundidad...</p>
     <div class="w-64 sm:w-80 h-2 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
       <div id="loading-bar" class="h-full bg-gradient-to-r from-emerald-600 to-teal-400 w-0 transition-all duration-300"></div>
     </div>
     <span id="loading-percent" class="text-xs font-mono text-stone-400 mt-2">0%</span>
   </div>
 
-  <!-- 5. CAPA DE INTERFAZ DE USUARIO (HUD) -->
+  <!-- 6. HUD DE CONTROL Y TELEMETRÍA DE ARQUITECTURA 3D -->
   <div id="ui-layer" class="p-3 sm:p-5">
     
-    <!-- Barra Superior: Estado, Progreso de Descubrimiento y Controles AR -->
-    <header class="w-full max-w-4xl mx-auto flex flex-col gap-2.5">
-      <div class="flex items-center justify-between gap-2 bg-stone-950/75 backdrop-blur-md border border-white/10 rounded-2xl px-3.5 py-2.5 shadow-xl">
+    <!-- Barra Superior -->
+    <header class="w-full max-w-5xl mx-auto flex flex-col gap-2">
+      <div class="flex flex-wrap items-center justify-between gap-2 bg-stone-950/80 backdrop-blur-md border border-emerald-500/20 rounded-2xl px-3.5 py-2.5 shadow-2xl">
         
-        <!-- Indicador de modo y título -->
+        <!-- Título y Estado de Capas -->
         <div class="flex items-center gap-2.5 min-w-0">
-          <span id="ar-status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0"></span>
+          <span id="ar-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
           <div class="truncate">
-            <h2 class="text-xs sm:text-sm font-semibold text-white truncate">Pasillo Botánico AR</h2>
-            <p id="asset-source-badge" class="text-[10px] sm:text-xs text-emerald-300/80 truncate">Cargando activos...</p>
+            <h2 class="text-xs sm:text-sm font-semibold text-white truncate">Selva Semirealista · 8 Capas de Paralaje 3D</h2>
+            <p id="asset-source-badge" class="text-[10px] sm:text-xs text-emerald-300/80 truncate">
+              Claro Central Activo · Capas 1-3 Estáticas · 4-5 Viento Sutil · 6-8 Dinámicas + DoF
+            </p>
           </div>
         </div>
 
-        <!-- Botones de Acción (Cámara AR, Subir GLB propio, Sonido) -->
+        <!-- Controles Interactivos -->
         <div class="flex items-center gap-1.5 sm:gap-2 interactive-ui shrink-0">
-          <!-- Botón para activar/desactivar cámara real del móvil -->
+          <!-- Mostrar/Ocultar Bounding Box de Depuración (Tech Lead View) -->
+          <button id="btn-toggle-bbox" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-teal-950/90 hover:bg-teal-900 text-teal-200 border border-teal-500/30 transition-all" title="Ver Caja Delimitadora (Bounding Box) y Claro Central">
+            <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <span class="hidden md:inline">Bounding Box</span>
+          </button>
+
+          <!-- Botón Cámara AR -->
           <button id="btn-toggle-camera" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 text-white shadow-md transition-all">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span id="camera-btn-text">Activar Cámara AR</span>
+            <span id="camera-btn-text">Cámara AR</span>
           </button>
 
-          <!-- Botón para probar un archivo .GLB local directamente desde el navegador -->
-          <label for="glb-upload" title="Probar tu propio archivo .glb" class="cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-stone-800/90 hover:bg-stone-700 active:scale-95 text-stone-200 border border-white/10 transition-all">
+          <!-- Subir modelo .GLB propio -->
+          <label for="glb-upload" title="Cargar modelo .GLB central" class="cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-stone-800/90 hover:bg-stone-700 active:scale-95 text-stone-200 border border-white/10 transition-all">
             <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            <span class="hidden sm:inline">Cargar .GLB</span>
+            <span class="hidden sm:inline">Subir .GLB</span>
           </label>
           <input id="glb-upload" type="file" accept=".glb,.gltf" class="hidden" />
 
-          <!-- Botón de Sonido Ambiental -->
-          <button id="btn-sound" title="Efectos de sonido" class="p-1.5 rounded-xl bg-stone-800/90 hover:bg-stone-700 text-stone-300 border border-white/10 transition-all">
+          <!-- Reiniciar posición de hojas -->
+          <button id="btn-reset" title="Restaurar follaje" class="p-1.5 rounded-xl bg-stone-800/90 hover:bg-stone-700 text-stone-300 border border-white/10 transition-all">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+
+          <!-- Sonido -->
+          <button id="btn-sound" title="Audio reactivo" class="p-1.5 rounded-xl bg-stone-800/90 hover:bg-stone-700 text-stone-300 border border-white/10 transition-all">
             <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
             </svg>
@@ -188,137 +224,262 @@
         </div>
       </div>
 
-      <!-- Barra de Progreso de Descubrimiento de la Escultura -->
-      <div id="discovery-hud" class="bg-stone-950/75 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-2.5 shadow-lg transition-all duration-500">
-        <div class="flex items-center justify-between text-xs mb-1.5">
-          <span id="discovery-instruction" class="text-emerald-200 font-medium flex items-center gap-1.5">
-            <span class="swipe-hand inline-block">👋</span> Desliza las hojas hacia los bordes para descubrir la escultura
-          </span>
-          <span id="discovery-percentage" class="font-mono font-bold text-emerald-400">0%</span>
+      <!-- Indicador Visual de las 8 Capas de Profundidad (Z-Depth Map) -->
+      <div class="grid grid-cols-3 gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
+        <div class="bg-stone-950/70 backdrop-blur-md border border-teal-500/20 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+          <span class="text-teal-300 font-medium">Capas 1–3 (Fondo)</span>
+          <span class="px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-200 font-mono text-[10px]">ESTÁTICAS</span>
         </div>
-        <div class="w-full h-2 bg-stone-800 rounded-full overflow-hidden p-0.5">
-          <div id="discovery-bar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 rounded-full transition-all duration-300 w-0"></div>
+        <div class="bg-stone-950/70 backdrop-blur-md border border-emerald-500/20 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+          <span class="text-emerald-300 font-medium">Capas 4–5 (Medio)</span>
+          <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-200 font-mono text-[10px]">VIENTO SUTIL</span>
+        </div>
+        <div class="bg-stone-950/70 backdrop-blur-md border border-amber-500/25 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
+          <span class="text-amber-300 font-medium">Capas 6–8 (Frente)</span>
+          <span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-200 font-mono text-[10px]">TÁCTIL + DoF</span>
         </div>
       </div>
     </header>
 
-    <!-- Notificación Toast Flotante (Sin usar alert) -->
+    <!-- Notificación Toast -->
     <div id="toast-message" class="self-center bg-stone-900/95 border border-emerald-500/40 text-emerald-100 px-4 py-2 rounded-xl text-xs shadow-2xl transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-2">
       Mensaje del sistema
     </div>
 
-    <!-- Panel Inferior: Tarjeta de Escultura Descubierta (Oculta hasta alcanzar el 80%) -->
-    <footer class="w-full max-w-xl mx-auto flex flex-col items-center">
-      
-      <!-- Guía flotante inicial -->
-      <div id="touch-coach" class="mb-4 px-4 py-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 text-white/90 text-xs flex items-center gap-2 shadow-lg transition-opacity duration-500">
-        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-        <span>Arrastra con tu dedo o cursor las hojas tropicales hacia afuera (Meta: 80%)</span>
-      </div>
-
-      <!-- Tarjeta de Revelación (Aparece al despejar >= 80% de la selva) -->
-      <div id="reveal-card" class="hidden interactive-ui w-full bg-stone-950/85 backdrop-blur-xl border border-amber-400/30 rounded-3xl p-4 sm:p-5 shadow-2xl transition-all duration-500 transform translate-y-4 opacity-0">
-        <div class="flex items-start justify-between gap-3 mb-2">
-          <div>
-            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-1">
-              ¡Escultura Descubierta!
-            </span>
-            <h3 class="font-serif-art text-lg sm:text-xl text-white">Reliquia del Pasillo Central</h3>
-          </div>
-          <button id="btn-reset" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-semibold shadow-lg shadow-emerald-900/40 flex items-center gap-1.5 transition-all shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Reiniciar Selva
+    <!-- Pie de Página: Controles de Iluminación e Instrucciones -->
+    <footer class="w-full max-w-2xl mx-auto flex flex-col items-center gap-2">
+      <div class="interactive-ui flex flex-wrap items-center justify-center gap-2 bg-stone-950/80 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-2.5 shadow-xl text-xs">
+        <span class="text-stone-300 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          Pasa el dedo/cursor por los bordes para apartar las <strong>Capas 6–8</strong> o arrastra el centro para girar el modelo 3D
+        </span>
+        <div class="flex items-center gap-1.5 pl-2 border-l border-white/10">
+          <button id="btn-light-illustration" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/30 transition">
+            Esmeralda Ilustración
+          </button>
+          <button id="btn-light-golden" class="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-200 border border-amber-500/30 hover:bg-amber-500/25 transition">
+            Hora Dorada
           </button>
         </div>
-
-        <p class="text-xs sm:text-sm text-stone-300 leading-relaxed mb-3">
-          Has despejado la espesura tropical. Ahora puedes <strong class="text-amber-300">arrastrar sobre la escultura para rotarla 360°</strong> e inspeccionar sus materiales y reflejos en el pasillo.
-        </p>
-
-        <!-- Controles rápidos de inspección de la escultura -->
-        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10 text-xs text-stone-400">
-          <div class="flex items-center gap-2">
-            <span>Iluminación:</span>
-            <button id="btn-light-warm" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition">Cálida Pasillo</button>
-            <button id="btn-light-jungle" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20 transition">Bioluminiscente</button>
-          </div>
-          <span class="text-[11px] text-stone-400">Giro libre activado</span>
-        </div>
       </div>
-
     </footer>
   </div>
 
   <!-- =========================================================================
-       LÓGICA PRINCIPAL WEBAR + THREE.JS + FÍSICAS TÁCTILES
+       ARQUITECTURA THREE.JS: 8 CAPAS DE PROFUNDIDAD + BOUNDING BOX CLEARING
        ========================================================================= -->
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+    const REPO_RAW_BASE = 'https://raw.githubusercontent.com/blenderingforconservation-maker/recorridovirtual_Leonora/main/';
+
     /**
-     * CONFIGURACIÓN GENERAL DEL EJERCICIO
-     * Estas rutas apuntan a tus archivos reales cuando despliegues en GitHub Pages.
-     * Si no existen aún, el código activa automáticamente el Generador Procedimental.
+     * CONFIGURACIÓN TÉCNICA DE LAS 8 CAPAS Y DEL SUJETO CENTRAL
+     * - El modelo 3D se sitúa en Z = 0.0, a una distancia media de la cámara (Z = 5.4).
+     * - Capas 1, 2, 3 (Z < 0): Detrás del modelo, estáticas, atmósfera pictórica.
+     * - Capas 4, 5 (Z ≈ -0.45 a +0.45): Envolviendo los laterales del Bounding Box con viento sutil.
+     * - Capas 6, 7, 8 (Z > 1.25 a 2.85): Primer plano con efecto viñeta, desenfoque DoF,
+     *   silueta más oscura para alto contraste y repulsión/arrastre táctil dinámico.
      */
     const CONFIG = {
-      modelPath: 'models/escultura.glb',
-      leafTexturePaths: [
-        'assets/hoja1.png',
-        'assets/hoja2.png',
-        'assets/hoja3.png',
-        'assets/hoja4.png'
+      cameraDistance: 5.4, // Distancia media para encuadrar el cuerpo completo del modelo
+      modelPaths: [
+        'models/escultura.glb',
+        'assets/escultura.glb',
+        'escultura.glb',
+        `${REPO_RAW_BASE}models/escultura.glb`,
+        `${REPO_RAW_BASE}assets/escultura.glb`
       ],
-      totalLeaves: 16,           // Cantidad de hojas en la cortina selvática
-      discoveryThreshold: 0.80,  // 80% de hojas apartadas para revelar la escultura
-      clearRadiusDistance: 1.55, // Distancia radial desde el centro para considerar una hoja "apartada"
-      damping: 0.91,             // Factor de fricción / inercia al soltar una hoja (0.91 = suave)
-      springReturn: 0.045        // Si el usuario apenas toca la hoja sin sacarla, regresa suavemente
+      vegetationAssets: [
+        {
+          key: 'tree',
+          name: 'tree-tropical.png',
+          localPath: 'assets/tree-tropical.png',
+          rawUrl: `${REPO_RAW_BASE}assets/tree-tropical.png`,
+          aspectWidth: 2.35,
+          aspectHeight: 2.55
+        },
+        {
+          key: 'arbusto',
+          name: 'arbustotropical.png',
+          localPath: 'assets/arbustotropical.png',
+          rawUrl: `${REPO_RAW_BASE}assets/arbustotropical.png`,
+          aspectWidth: 1.95,
+          aspectHeight: 1.65
+        },
+        {
+          key: 'plantas',
+          name: 'plantas.png',
+          localPath: 'assets/plantas.png',
+          rawUrl: `${REPO_RAW_BASE}assets/plantas.png`,
+          aspectWidth: 1.75,
+          aspectHeight: 1.95
+        }
+      ],
+      /**
+       * ESPECIFICACIÓN ARQUITECTÓNICA DE LAS 8 CAPAS DE PARALAJE 3D
+       */
+      eightLayerSpecs: [
+        // --- CAPAS 1, 2 y 3: FONDO (Detrás del modelo 3D) -> ESTÁTICAS ---
+        {
+          layerIndex: 1,
+          role: 'BACKGROUND_DEEP_CANOPY',
+          zDepth: -3.20,
+          isStatic: true,
+          windAmplitude: 0.0,
+          interactive: false,
+          dofBlurPx: 2,
+          colorTint: '#164e43',    // Verde azulado profundo atmosférico
+          emissiveTint: '#07261f',
+          clearingMultiplier: 0.0, // Cubre el telón de fondo detrás de la escultura
+          scaleMultiplier: 1.75
+        },
+        {
+          layerIndex: 2,
+          role: 'BACKGROUND_TREES_AND_VINES',
+          zDepth: -2.15,
+          isStatic: true,
+          windAmplitude: 0.0,
+          interactive: false,
+          dofBlurPx: 1,
+          colorTint: '#236b56',    // Tonos medios esmeralda-teal
+          emissiveTint: '#0b3327',
+          clearingMultiplier: 0.55, // Abre un halo luminoso detrás de la silueta del modelo
+          scaleMultiplier: 1.50
+        },
+        {
+          layerIndex: 3,
+          role: 'BACKGROUND_RIM_CLEARING',
+          zDepth: -1.15,
+          isStatic: true,
+          windAmplitude: 0.0,
+          interactive: false,
+          dofBlurPx: 0,
+          colorTint: '#489e7a',    // Borde retroiluminado por los rayos de sol del claro
+          emissiveTint: '#114231',
+          clearingMultiplier: 0.92,
+          scaleMultiplier: 1.32
+        },
+
+        // --- CAPAS 4 y 5: PLANO MEDIO (Alrededor del modelo 3D) -> VIENTO MUY SUTIL ---
+        {
+          layerIndex: 4,
+          role: 'MIDGROUND_LATERAL_BUSHES',
+          zDepth: -0.35,
+          isStatic: false,
+          windAmplitude: 0.022,    // Animación de viento muy sutil en vértices
+          interactive: false,
+          dofBlurPx: 0,
+          colorTint: '#8CE6B4',    // Verde vibrante semirealista a la altura del sujeto
+          emissiveTint: '#0a291c',
+          clearingMultiplier: 1.18, // Respeta estrictamente el Bounding Box del modelo 3D
+          scaleMultiplier: 1.16
+        },
+        {
+          layerIndex: 5,
+          role: 'MIDGROUND_SURROUNDING_FERNS',
+          zDepth: 0.45,
+          isStatic: false,
+          windAmplitude: 0.034,    // Viento suave envolvente
+          interactive: false,
+          dofBlurPx: 0,
+          colorTint: '#a7f3d0',    // Iluminación directa del claro central
+          emissiveTint: '#092418',
+          clearingMultiplier: 1.24, // Despeja por completo el cuerpo entero del modelo 3D
+          scaleMultiplier: 1.10
+        },
+
+        // --- CAPAS 6, 7 y 8: PRIMER PLANO (Frente a cámara) -> DINÁMICAS + TÁCTIL + DoF + CONTRASTE ---
+        {
+          layerIndex: 6,
+          role: 'FOREGROUND_INTERACTIVE_FRAME',
+          zDepth: 1.35,
+          isStatic: false,
+          windAmplitude: 0.068,
+          interactive: true,
+          dofBlurPx: 2,
+          colorTint: '#4f8a69',    // Ligeramente más oscuro para iniciar el contraste de viñeta
+          emissiveTint: '#03120b',
+          clearingMultiplier: 1.15,
+          scaleMultiplier: 1.12
+        },
+        {
+          layerIndex: 7,
+          role: 'FOREGROUND_DOF_TROPICAL_LEAVES',
+          zDepth: 2.10,
+          isStatic: false,
+          windAmplitude: 0.088,
+          interactive: true,
+          dofBlurPx: 5,            // Desenfoque Depth-of-Field medio
+          colorTint: '#2b543d',    // Silueta verde oscura para forzar contraste con el centro
+          emissiveTint: '#020a06',
+          clearingMultiplier: 1.22,
+          scaleMultiplier: 1.22
+        },
+        {
+          layerIndex: 8,
+          role: 'FOREGROUND_EXTREME_VIGNETTE_DOF',
+          zDepth: 2.80,
+          isStatic: false,
+          windAmplitude: 0.115,
+          interactive: true,
+          dofBlurPx: 9,            // Desenfoque Depth-of-Field pronunciado en bordes extremos
+          colorTint: '#152e20',    // Silueta muy oscura de primerísimo plano (viñeta natural)
+          emissiveTint: '#010503',
+          clearingMultiplier: 1.32,
+          scaleMultiplier: 1.35
+        }
+      ],
+      particleCount: 200,
+      damping: 0.90,
+      springReturn: 0.045,
+      pointerRepulsionRadius: 1.25 // Radio de reacción al paso del ratón/dedo en Capas 6, 7 y 8
     };
 
-    // Estado global de la aplicación
+    // Estado reactivo de la escena
     const state = {
-      leaves: [],
-      clearedCount: 0,
-      isRevealed: false,
-      activeLeaf: null,
+      foliagePlanes: [],
+      modelBoundingBox: new THREE.Box3(),
+      modelSize: new THREE.Vector3(1.4, 2.1, 1.4),
+      clearingEllipse: { radiusX: 1.15, radiusY: 1.35, centerY: 0.12 },
+      activeDraggedLeaf: null,
       pointerDown: false,
+      rotatingModel: false,
+      pointerNDC: new THREE.Vector2(0, 0),
+      SmoothedParallax: new THREE.Vector2(0, 0),
+      pointerWorldAtForeground: new THREE.Vector3(999, 999, 2.0),
       lastPointerWorld: new THREE.Vector3(),
-      pointerVelocity: new THREE.Vector2(),
-      inspectingSculpture: false,
-      lastInspectPos: { x: 0, y: 0 },
-      sculptureTargetRotationY: 0,
-      sculptureTargetRotationX: 0,
+      lastInspectClient: { x: 0, y: 0 },
+      modelTargetRotY: 0,
+      modelTargetRotX: 0,
+      showBoundingBoxHelper: false,
       cameraActive: false,
       soundEnabled: true,
-      audioCtx: null
+      audioCtx: null,
+      particleData: []
     };
 
-    // Referencias del DOM
+    // Referencias DOM
     const container = document.getElementById('webgl-container');
     const videoElement = document.getElementById('ar-video');
+    const backdropElement = document.getElementById('illustration-backdrop');
     const loadingScreen = document.getElementById('loading-screen');
     const loadingBar = document.getElementById('loading-bar');
     const loadingPercent = document.getElementById('loading-percent');
     const loadingStatus = document.getElementById('loading-status');
-    const discoveryBar = document.getElementById('discovery-bar');
-    const discoveryPercentage = document.getElementById('discovery-percentage');
-    const discoveryInstruction = document.getElementById('discovery-instruction');
-    const revealCard = document.getElementById('reveal-card');
-    const touchCoach = document.getElementById('touch-coach');
     const assetSourceBadge = document.getElementById('asset-source-badge');
     const toastMessage = document.getElementById('toast-message');
 
-    // Variables de Three.js
-    let scene, camera, renderer, raycaster, pointerNDC;
-    let hallwayGroup, sculptureGroup, foliageGroup, dustParticles;
-    let ambientLight, dirLight, spotLight, rimLight;
+    // Instancias principales de Three.js
+    let scene, camera, renderer, raycaster;
+    let studioEnvironmentGroup, sculptureGroup, foliageRootGroup, bboxHelperGroup, bioParticles;
+    let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight;
+    let cachedTexturesByKey = null;
     const clock = new THREE.Clock();
 
     /* =========================================================================
-       1. SISTEMA DE AUDIO SINTETIZADO (Crujido de hojas y revelación sin MP3 externos)
+       1. AUDIO REACTIVO SINTETIZADO (Web Audio API)
        ========================================================================= */
     function initAudio() {
       if (!state.audioCtx && state.soundEnabled) {
@@ -330,29 +491,27 @@
       }
     }
 
-    // Genera un suave sonido orgánico de roce de hojas usando ruido blanco filtrado
-    function playLeafRustle(intensity = 0.5) {
+    function playFoliageRustle(intensity = 0.4) {
       if (!state.soundEnabled || !state.audioCtx) return;
       try {
         const ctx = state.audioCtx;
-        const duration = 0.16;
-        const bufferSize = ctx.sampleRate * duration;
+        const duration = 0.14;
+        const bufferSize = Math.floor(ctx.sampleRate * duration);
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
           data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
         }
-
         const noise = ctx.createBufferSource();
         noise.buffer = buffer;
 
         const filter = ctx.createBiquadFilter();
         filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(900 + Math.random() * 600, ctx.currentTime);
-        filter.Q.setValueAtTime(1.8, ctx.currentTime);
+        filter.frequency.setValueAtTime(850 + Math.random() * 550, ctx.currentTime);
+        filter.Q.setValueAtTime(2.0, ctx.currentTime);
 
         const gain = ctx.createGain();
-        const vol = Math.min(0.18, Math.max(0.03, intensity * 0.12));
+        const vol = Math.min(0.14, Math.max(0.02, intensity * 0.1));
         gain.gain.setValueAtTime(vol, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
@@ -360,32 +519,6 @@
         filter.connect(gain);
         gain.connect(ctx.destination);
         noise.start();
-      } catch (e) {
-        // Ignorar si el navegador bloquea el audio antes de interacción
-      }
-    }
-
-    // Acorde armónico al descubrir el 80% de la escultura
-    function playDiscoveryChime() {
-      if (!state.soundEnabled || !state.audioCtx) return;
-      try {
-        const ctx = state.audioCtx;
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // Do5, Mi5, Sol5, Do6
-        notes.forEach((freq, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.09);
-
-          gain.gain.setValueAtTime(0.001, ctx.currentTime + idx * 0.09);
-          gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + idx * 0.09 + 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.09 + 1.4);
-
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + idx * 0.09);
-          osc.stop(ctx.currentTime + idx * 0.09 + 1.45);
-        });
       } catch (e) {}
     }
 
@@ -397,66 +530,60 @@
       showToast.timer = setTimeout(() => {
         toastMessage.classList.remove('opacity-100', 'translate-y-0');
         toastMessage.classList.add('opacity-0', '-translate-y-2');
-      }, 3200);
+      }, 3000);
     }
 
     /* =========================================================================
-       2. INICIALIZACIÓN DE LA ESCENA THREE.JS E ILUMINACIÓN DE PASILLO
+       2. INICIALIZACIÓN DE CÁMARA (DISTANCIA MEDIA) Y DIRECCIÓN DE ARTE
        ========================================================================= */
     async function init() {
-      updateLoading(10, 'Configurando motor WebGL y cámara AR...');
+      updateLoading(12, 'Configurando cámara a distancia media y luces pictóricas...');
 
-      // Escena con fondo transparente para permitir ver el video de la cámara debajo
       scene = new THREE.Scene();
+      // Niebla exponencial suave para fundir las Capas 1, 2 y 3 en la atmósfera de la selva
+      scene.fog = new THREE.FogExp2(0x072119, 0.075);
 
-      // Cámara con campo de visión natural de dispositivo móvil
-      camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 50);
-      camera.position.set(0, 0.25, 4.4);
-      camera.lookAt(0, 0.1, 0);
+      // Cámara situada a distancia media (Z = 5.4) para ver el modelo 3D de cuerpo completo
+      camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 60);
+      camera.position.set(0, 0.22, CONFIG.cameraDistance);
+      camera.lookAt(0, 0.12, 0);
 
-      // Renderizador con canal Alfa (transparencia) y sombras suaves
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
         powerPreference: 'high-performance'
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Límite a 2x para evitar sobrecalentamiento móvil
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.15;
+      renderer.toneMappingExposure = 1.22;
       container.appendChild(renderer.domElement);
 
-      // Raycaster para detectar qué hoja toca el usuario en pantalla
       raycaster = new THREE.Raycaster();
-      pointerNDC = new THREE.Vector2();
 
-      // Configurar luces de interior (pasillo arquitectónico)
-      setupHallwayLighting();
+      setupIllustrationLighting();
+      createJungleClearingFloor();
 
-      // Crear entorno de pasillo simulado (se oculta automáticamente cuando se activa la cámara real)
-      createSimulatedHallway();
+      updateLoading(38, 'Cargando modelo 3D central y calculando Bounding Box...');
+      await loadAndFrameCentralModel();
 
-      updateLoading(35, 'Cargando escultura 3D (models/escultura.glb)...');
-      await loadOrGenerateSculpture();
+      updateLoading(68, 'Generando las 8 capas de vegetación alrededor del Claro Central...');
+      cachedTexturesByKey = await loadBaseVegetationTextures();
+      generateEightLayerJungle(state.modelBoundingBox, cachedTexturesByKey);
 
-      updateLoading(65, 'Generando cortina de vegetación tropical...');
-      await setupJungleFoliage();
+      updateLoading(90, 'Generando partículas bioluminiscentes entre capas...');
+      createLuminescentParticles();
 
-      // Partículas de polen / atmósfera selvática
-      createJungleParticles();
-
-      // Eventos táctiles y de ventana
       setupInteractionEvents();
       window.addEventListener('resize', onWindowResize);
 
-      updateLoading(100, '¡Experiencia lista!');
+      updateLoading(100, '¡Escena de 8 capas lista!');
       setTimeout(() => {
         loadingScreen.classList.add('opacity-0', 'pointer-events-none');
-      }, 400);
+      }, 350);
 
-      // Iniciar bucle de renderizado
       renderer.setAnimationLoop(animate);
     }
 
@@ -466,898 +593,987 @@
       if (message) loadingStatus.textContent = message;
     }
 
-    function setupHallwayLighting() {
-      // Luz hemisférica neutra para simular rebote de techo y suelo de pasillo
-      ambientLight = new THREE.HemisphereLight(0xfef9c3, 0x1c2e24, 0.85);
-      scene.add(ambientLight);
+    function setupIllustrationLighting() {
+      // Luz ambiental hemisférica rica en tonos esmeralda y ámbar suave
+      hemiLight = new THREE.HemisphereLight(0xa7f3d0, 0x051b13, 1.15);
+      scene.add(hemiLight);
 
-      // Luz direccional principal (focos cenitales del pasillo)
-      dirLight = new THREE.DirectionalLight(0xfff3d6, 1.8);
-      dirLight.position.set(2.2, 4.5, 2.8);
-      dirLight.castShadow = true;
-      dirLight.shadow.mapSize.width = 1024;
-      dirLight.shadow.mapSize.height = 1024;
-      dirLight.shadow.camera.near = 0.5;
-      dirLight.shadow.camera.far = 15;
-      dirLight.shadow.bias = -0.001;
-      scene.add(dirLight);
+      // Luz cenital principal (simula el rayo de sol que entra al claro central donde está el modelo)
+      sunClearLight = new THREE.DirectionalLight(0xfef08a, 2.2);
+      sunClearLight.position.set(1.8, 5.2, 2.6);
+      sunClearLight.castShadow = true;
+      sunClearLight.shadow.mapSize.width = 1024;
+      sunClearLight.shadow.mapSize.height = 1024;
+      sunClearLight.shadow.bias = -0.001;
+      scene.add(sunClearLight);
 
-      // Luz de recorte (Rim Light) verdosa para integrar la escultura con la selva
-      rimLight = new THREE.PointLight(0x34d399, 2.2, 8);
-      rimLight.position.set(-2.2, 1.5, -1.5);
-      scene.add(rimLight);
+      // Luz de recorte izquierda (Rim Light Turquesa Ilustración)
+      rimTealLight = new THREE.PointLight(0x2dd4bf, 3.2, 10);
+      rimTealLight.position.set(-2.4, 1.4, -0.8);
+      scene.add(rimTealLight);
 
-      // Foco cálido frontal hacia la escultura
-      spotLight = new THREE.SpotLight(0xffedd5, 2.0);
-      spotLight.position.set(0, 3.2, 3.5);
-      spotLight.angle = Math.PI / 4;
-      spotLight.penumbra = 0.7;
-      scene.add(spotLight);
+      // Luz de recorte derecha (Rim Light Cálida Dorada)
+      rimGoldLight = new THREE.PointLight(0xfbbf24, 2.4, 9);
+      rimGoldLight.position.set(2.3, 0.9, 1.2);
+      scene.add(rimGoldLight);
+
+      // Foco dedicado exclusivamente al modelo 3D central para destacarlo frente a las Capas 6-8
+      centerSpotLight = new THREE.SpotLight(0xffffff, 2.8);
+      centerSpotLight.position.set(0, 3.4, 3.2);
+      centerSpotLight.angle = Math.PI / 5.5;
+      centerSpotLight.penumbra = 0.85;
+      scene.add(centerSpotLight);
+    }
+
+    function createJungleClearingFloor() {
+      studioEnvironmentGroup = new THREE.Group();
+      scene.add(studioEnvironmentGroup);
+
+      // Suelo orgánico del claro de la selva
+      const groundGeo = new THREE.CircleGeometry(6.5, 48);
+      const groundMat = new THREE.MeshStandardMaterial({
+        color: 0x0c241b,
+        roughness: 0.85,
+        metalness: 0.08
+      });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -1.25;
+      ground.receiveShadow = true;
+      studioEnvironmentGroup.add(ground);
+
+      // Anillo de musgo bioluminiscente sutil que marca el claro central
+      const mossRingGeo = new THREE.RingGeometry(0.85, 1.45, 48);
+      const mossRingMat = new THREE.MeshBasicMaterial({
+        color: 0x34d399,
+        transparent: true,
+        opacity: 0.16,
+        side: THREE.DoubleSide
+      });
+      const mossRing = new THREE.Mesh(mossRingGeo, mossRingMat);
+      mossRing.rotation.x = -Math.PI / 2;
+      mossRing.position.y = -1.24;
+      studioEnvironmentGroup.add(mossRing);
     }
 
     /* =========================================================================
-       3. PASILLO ARQUITECTÓNICO 3D (Respaldo visual si la cámara está apagada)
+       3. CARGA Y ENCUADRE DEL MODELO 3D CENTRAL A DISTANCIA MEDIA (Z = 0)
        ========================================================================= */
-    function createSimulatedHallway() {
-      hallwayGroup = new THREE.Group();
-      scene.add(hallwayGroup);
-
-      // Suelo del pasillo con textura de baldosas reflectantes sutiles
-      const floorGeo = new THREE.PlaneGeometry(7, 24);
-      const floorMat = new THREE.MeshStandardMaterial({
-        color: 0x181b1a,
-        roughness: 0.35,
-        metalness: 0.2
-      });
-      const floor = new THREE.Mesh(floorGeo, floorMat);
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.y = -1.45;
-      floor.receiveShadow = true;
-      hallwayGroup.add(floor);
-
-      // Cuadrícula arquitectónica de perspectiva en el suelo del pasillo
-      const grid = new THREE.GridHelper(18, 24, 0x2dd4bf, 0x26332d);
-      grid.position.y = -1.44;
-      grid.material.opacity = 0.35;
-      grid.material.transparent = true;
-      hallwayGroup.add(grid);
-
-      // Paredes laterales y arcos del pasillo para dar profundidad espacial
-      const pillarGeo = new THREE.BoxGeometry(0.35, 4.5, 0.35);
-      const pillarMat = new THREE.MeshStandardMaterial({
-        color: 0x1f2421,
-        roughness: 0.8
-      });
-
-      for (let z = -6; z <= 2; z += 2.6) {
-        const leftPillar = new THREE.Mesh(pillarGeo, pillarMat);
-        leftPillar.position.set(-2.3, 0.8, z);
-        leftPillar.receiveShadow = true;
-        hallwayGroup.add(leftPillar);
-
-        const rightPillar = new THREE.Mesh(pillarGeo, pillarMat);
-        rightPillar.position.set(2.3, 0.8, z);
-        rightPillar.receiveShadow = true;
-        hallwayGroup.add(rightPillar);
-
-        // Dintel superior del pasillo
-        const beamGeo = new THREE.BoxGeometry(5.0, 0.25, 0.35);
-        const beam = new THREE.Mesh(beamGeo, pillarMat);
-        beam.position.set(0, 2.9, z);
-        hallwayGroup.add(beam);
-      }
-    }
-
-    /* =========================================================================
-       4. CARGA DE LA ESCULTURA (.GLB) CON RESPALDO PROCEDIMENTAL AUTOMÁTICO
-       ========================================================================= */
-    async function loadOrGenerateSculpture() {
+    async function loadAndFrameCentralModel() {
       sculptureGroup = new THREE.Group();
-      sculptureGroup.position.set(0, -0.25, 0);
+      sculptureGroup.position.set(0, 0, 0);
       scene.add(sculptureGroup);
 
-      // Crear el pedestal de museo donde descansa la escultura en el pasillo
+      // Pedestal de piedra ancestral que sostiene el modelo en el claro
       const pedestalGroup = new THREE.Group();
-      const baseGeo = new THREE.CylinderGeometry(0.68, 0.76, 0.9, 32);
-      const baseMat = new THREE.MeshStandardMaterial({
-        color: 0x27272a,
-        roughness: 0.3,
-        metalness: 0.4
+      const stoneMat = new THREE.MeshStandardMaterial({
+        color: 0x1c2e26,
+        roughness: 0.65,
+        metalness: 0.2
       });
-      const pedestal = new THREE.Mesh(baseGeo, baseMat);
-      pedestal.position.y = -0.95;
-      pedestal.castShadow = true;
-      pedestal.receiveShadow = true;
-      pedestalGroup.add(pedestal);
+      const basePedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.68, 0.55, 32), stoneMat);
+      basePedestal.position.y = -0.97;
+      basePedestal.castShadow = true;
+      basePedestal.receiveShadow = true;
+      pedestalGroup.add(basePedestal);
 
-      // Anillo dorado superior del pedestal
-      const ringGeo = new THREE.TorusGeometry(0.69, 0.025, 16, 48);
-      const goldMat = new THREE.MeshStandardMaterial({
-        color: 0xfbbf24,
-        roughness: 0.2,
-        metalness: 0.9
-      });
-      const ring = new THREE.Mesh(ringGeo, goldMat);
-      ring.rotation.x = Math.PI / 2;
-      ring.position.y = -0.51;
-      pedestalGroup.add(ring);
+      const goldTrim = new THREE.Mesh(
+        new THREE.TorusGeometry(0.57, 0.02, 16, 48),
+        new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.25, metalness: 0.85 })
+      );
+      goldTrim.rotation.x = Math.PI / 2;
+      goldTrim.position.y = -0.70;
+      pedestalGroup.add(goldTrim);
 
       sculptureGroup.add(pedestalGroup);
 
-      // Intentar cargar 'models/escultura.glb'
+      // Intentar cargar el modelo .GLB de las rutas configuradas
       const loader = new GLTFLoader();
-      try {
-        const gltf = await new Promise((resolve, reject) => {
-          loader.load(CONFIG.modelPath, resolve, undefined, reject);
-        });
-        mountCustomGLB(gltf.scene, 'Modelo cargado: models/escultura.glb');
-      } catch (err) {
-        // Si no existe 'models/escultura.glb', generamos una escultura artística 3D de respaldo
-        buildProceduralSculpture();
-        assetSourceBadge.textContent = 'Modo Demo Activo (Escultura 3D + Hojas generadas)';
+      loader.setCrossOrigin('anonymous');
+
+      let loadedGLTF = null;
+      for (const path of CONFIG.modelPaths) {
+        try {
+          loadedGLTF = await new Promise((resolve, reject) => {
+            loader.load(path, resolve, undefined, reject);
+          });
+          break;
+        } catch (err) {}
+      }
+
+      if (loadedGLTF) {
+        mountAndComputeBoundingBox(loadedGLTF.scene);
+      } else {
+        const fallbackModel = createSemiRealisticSculpture();
+        mountAndComputeBoundingBox(fallbackModel);
       }
     }
 
-    // Monta y normaliza cualquier modelo .GLB (ya sea de la carpeta 'models/' o subido por el usuario)
-    function mountCustomGLB(modelScene, labelText) {
-      // Eliminar malla de escultura previa (conservando el pedestal en índice 0)
+    /**
+     * Normaliza el modelo 3D para que se vea de cuerpo completo en el centro (Z = 0)
+     * y calcula su Caja Delimitadora (THREE.Box3) exacta para despejar las 8 capas.
+     */
+    function mountAndComputeBoundingBox(modelNode) {
       while (sculptureGroup.children.length > 1) {
         sculptureGroup.remove(sculptureGroup.children[1]);
       }
 
-      // Centrar y escalar automáticamente el modelo GLB para que encaje perfecto sobre el pedestal
-      const box = new THREE.Box3().setFromObject(modelScene);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
+      // Calcular dimensiones nativas del modelo
+      const rawBox = new THREE.Box3().setFromObject(modelNode);
+      const rawSize = rawBox.getSize(new THREE.Vector3());
+      const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const targetHeight = 1.65;
-      const scale = targetHeight / maxDim;
+      // Escalar para que la altura total del cuerpo sea de ~1.75 unidades (encuadre medio ideal)
+      const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
+      const targetFullBodyHeight = 1.72;
+      const scale = targetFullBodyHeight / maxDim;
 
-      modelScene.scale.setScalar(scale);
-      modelScene.position.x = -center.x * scale;
-      modelScene.position.z = -center.z * scale;
-      modelScene.position.y = -0.5 - (box.min.y * scale);
+      modelNode.scale.setScalar(scale);
+      modelNode.position.x = -rawCenter.x * scale;
+      modelNode.position.z = -rawCenter.z * scale;
+      modelNode.position.y = -0.68 - (rawBox.min.y * scale);
 
-      modelScene.traverse((child) => {
+      modelNode.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
         }
       });
 
-      sculptureGroup.add(modelScene);
-      assetSourceBadge.textContent = labelText;
+      sculptureGroup.add(modelNode);
+      sculptureGroup.updateMatrixWorld(true);
+
+      // Calcular el Bounding Box mundial definitivo (incluyendo pedestal + escultura completa)
+      state.modelBoundingBox.setFromObject(sculptureGroup);
+      state.modelSize = state.modelBoundingBox.getSize(new THREE.Vector3());
+      const boxCenter = state.modelBoundingBox.getCenter(new THREE.Vector3());
+
+      // Definir la elipse de seguridad del "Claro Central" para que ninguna hoja tape el núcleo del modelo
+      state.clearingEllipse = {
+        radiusX: Math.max(0.95, state.modelSize.x * 0.68),
+        radiusY: Math.max(1.22, state.modelSize.y * 0.56),
+        centerY: boxCenter.y
+      };
+
+      updateBoundingBoxVisualHelper();
     }
 
-    // Escultura contemporánea / clásica generada por código cuando no hay archivo .glb externo
-    function buildProceduralSculpture() {
-      const artPiece = new THREE.Group();
-      artPiece.name = 'ProceduralSculpture';
+    function createSemiRealisticSculpture() {
+      const group = new THREE.Group();
+      group.name = 'ProceduralSculpture';
 
-      // Material de bronce pulido y mármol jade
       const bronzeMat = new THREE.MeshStandardMaterial({
-        color: 0xd97706,
-        roughness: 0.22,
-        metalness: 0.88
+        color: 0xeab308,
+        roughness: 0.24,
+        metalness: 0.82
       });
-
-      const marbleMat = new THREE.MeshStandardMaterial({
+      const jadeMat = new THREE.MeshStandardMaterial({
+        color: 0x10b981,
+        roughness: 0.20,
+        metalness: 0.25,
+        emissive: 0x065f46,
+        emissiveIntensity: 0.35
+      });
+      const stoneMat = new THREE.MeshStandardMaterial({
         color: 0xe2e8f0,
-        roughness: 0.18,
+        roughness: 0.3,
         metalness: 0.1
       });
 
-      const jadeMat = new THREE.MeshStandardMaterial({
-        color: 0x10b981,
-        roughness: 0.25,
-        metalness: 0.3,
-        emissive: 0x064e3b,
-        emissiveIntensity: 0.25
-      });
+      // Cuerpo escultural estilizado de cuerpo completo
+      const torusKnot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.42, 0.11, 128, 32, 2, 3), bronzeMat);
+      torusKnot.position.y = 0.45;
+      group.add(torusKnot);
 
-      // Figura central: Nudo infinito escultural
-      const knotGeo = new THREE.TorusKnotGeometry(0.46, 0.13, 128, 32, 2, 3);
-      const knotMesh = new THREE.Mesh(knotGeo, bronzeMat);
-      knotMesh.position.y = 0.42;
-      knotMesh.castShadow = true;
-      knotMesh.receiveShadow = true;
-      artPiece.add(knotMesh);
+      const innerCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 2), jadeMat);
+      innerCore.position.y = 0.45;
+      group.add(innerCore);
 
-      // Núcleo interior de jade suspendido
-      const coreGeo = new THREE.OctahedronGeometry(0.26, 2);
-      const coreMesh = new THREE.Mesh(coreGeo, jadeMat);
-      coreMesh.position.y = 0.42;
-      artPiece.add(coreMesh);
+      const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.035, 20, 64), stoneMat);
+      haloRing.position.y = 0.45;
+      group.add(haloRing);
 
-      // Aureola / arco de mármol que enmarca la escultura
-      const archGeo = new THREE.TorusGeometry(0.75, 0.04, 20, 64);
-      const archMesh = new THREE.Mesh(archGeo, marbleMat);
-      archMesh.position.y = 0.42;
-      archMesh.castShadow = true;
-      artPiece.add(archMesh);
+      const column = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 0.55, 24), stoneMat);
+      column.position.y = -0.22;
+      group.add(column);
 
-      // Base escalonada sobre el pedestal
-      const plinthGeo = new THREE.CylinderGeometry(0.45, 0.55, 0.16, 24);
-      const plinthMesh = new THREE.Mesh(plinthGeo, marbleMat);
-      plinthMesh.position.y = -0.42;
-      artPiece.add(plinthMesh);
+      return group;
+    }
 
-      sculptureGroup.add(artPiece);
+    // Visualizador técnico de la Caja Delimitadora (Bounding Box) y el Claro Central
+    function updateBoundingBoxVisualHelper() {
+      if (bboxHelperGroup) scene.remove(bboxHelperGroup);
+      bboxHelperGroup = new THREE.Group();
+      bboxHelperGroup.visible = state.showBoundingBoxHelper;
+
+      // 1. Box3Helper del modelo 3D completo
+      const boxHelper = new THREE.Box3Helper(state.modelBoundingBox, 0x2dd4bf);
+      bboxHelperGroup.add(boxHelper);
+
+      // 2. Elipse del Claro Central libre de obstrucciones
+      const curve = new THREE.EllipseCurve(
+        0, state.clearingEllipse.centerY,
+        state.clearingEllipse.radiusX, state.clearingEllipse.radiusY,
+        0, 2 * Math.PI, false, 0
+      );
+      const points = curve.getPoints(64).map((p) => new THREE.Vector3(p.x, p.y, 0));
+      const ellipseGeo = new THREE.BufferGeometry().setFromPoints(points);
+      const ellipseLine = new THREE.LineLoop(
+        ellipseGeo,
+        new THREE.LineBasicMaterial({ color: 0xfbbf24 })
+      );
+      bboxHelperGroup.add(ellipseLine);
+
+      scene.add(bboxHelperGroup);
     }
 
     /* =========================================================================
-       5. GENERACIÓN Y CARGA DE VEGETACIÓN SELVÁTICA (PLANOS 2D CON TRANSPARENCIA)
+       4. FUNCIÓN PRINCIPAL TECH LEAD: GENERADOR PROCEDURAL DE LAS 8 CAPAS
+          Garantiza que la Bounding Box del modelo 3D quede en un claro visible.
        ========================================================================= */
-    async function setupJungleFoliage() {
-      if (foliageGroup) scene.remove(foliageGroup);
-      foliageGroup = new THREE.Group();
-      scene.add(foliageGroup);
+    function generateEightLayerJungle(modelBoundingBox, baseTextures) {
+      if (foliageRootGroup) scene.remove(foliageRootGroup);
+      foliageRootGroup = new THREE.Group();
+      foliageRootGroup.name = 'EightLayerJungleSystem';
+      scene.add(foliageRootGroup);
 
-      // Intentar cargar 'assets/hoja1.png' ... 'assets/hoja4.png'.
-      // Si no se encuentran, generar 4 texturas botánicas hiperdetalladas en Canvas 2D con canal Alfa.
-      const leafTextures = await loadOrGenerateLeafTextures();
+      state.foliagePlanes = [];
 
-      state.leaves = [];
-      state.clearedCount = 0;
-      state.isRevealed = false;
+      // Dimensiones de seguridad calculadas a partir del Bounding Box del modelo 3D
+      const bboxSize = modelBoundingBox.getSize(new THREE.Vector3());
+      const bboxCenter = modelBoundingBox.getCenter(new THREE.Vector3());
+      const clearRx = Math.max(0.95, bboxSize.x * 0.68);
+      const clearRy = Math.max(1.22, bboxSize.y * 0.56);
 
-      /**
-       * Distribución estratégica en cortina frente a la escultura:
-       * Colocamos las hojas en capas de profundidad Z (entre z = 1.1 y z = 2.3)
-       * cubriendo el centro y los alrededores de la escultura.
-       */
-      for (let i = 0; i < CONFIG.totalLeaves; i++) {
-        const texIndex = i % leafTextures.length;
-        const texture = leafTextures[texIndex];
+      // Recorrer la especificación de las 8 capas (Z = -3.20 hasta Z = +2.80)
+      CONFIG.eightLayerSpecs.forEach((layerSpec) => {
+        const layerGroup = new THREE.Group();
+        layerGroup.name = `Layer_${layerSpec.layerIndex}_${layerSpec.role}`;
+        foliageRootGroup.add(layerGroup);
 
-        // Geometría ligeramente curvada (subdividida) para que las hojas no se vean rígidas
-        const planeGeo = new THREE.PlaneGeometry(1.45, 1.75, 4, 4);
-        bendLeafGeometry(planeGeo, (i % 2 === 0 ? 1 : -1) * 0.18);
+        // Compensación de escala por perspectiva según la distancia Z a la cámara
+        const distToCamera = Math.max(1.2, CONFIG.cameraDistance - layerSpec.zDepth);
+        const perspectiveScale = (distToCamera / CONFIG.cameraDistance) * layerSpec.scaleMultiplier;
 
-        const material = new THREE.MeshStandardMaterial({
-          map: texture,
-          transparent: true,
-          alphaTest: 0.08,
-          side: THREE.DoubleSide,
-          roughness: 0.55,
-          metalness: 0.05,
-          depthWrite: true
-        });
-
-        const leafMesh = new THREE.Mesh(planeGeo, material);
-
-        // Posición inicial formando una densa cortina de selva frente a la escultura
-        const ringLayer = i < 6 ? 0.28 : (i < 12 ? 0.65 : 0.95);
-        const angle = (i / CONFIG.totalLeaves) * Math.PI * 2 + (Math.random() * 0.45);
-        const startX = Math.cos(angle) * ringLayer * (0.8 + Math.random() * 0.4);
-        const startY = Math.sin(angle) * ringLayer * 0.85 + 0.12;
-        const startZ = 1.25 + (i / CONFIG.totalLeaves) * 1.05; // Capas escalonadas en Z para evitar parpadeo (Z-fighting)
-
-        // Rotación natural orientada desde los bordes hacia el centro
-        const initialRotZ = angle + Math.PI / 2 + (Math.random() - 0.5) * 0.5;
-        const scale = 0.85 + Math.random() * 0.35;
-
-        leafMesh.position.set(startX, startY, startZ);
-        leafMesh.rotation.set(
-          (Math.random() - 0.5) * 0.25,
-          (Math.random() - 0.5) * 0.25,
-          initialRotZ
+        // Generar la distribución de elementos botánicos específica para esta capa
+        const placements = computeLayerPlacementsAroundBoundingBox(
+          layerSpec,
+          clearRx,
+          clearRy,
+          bboxCenter.y,
+          perspectiveScale
         );
-        leafMesh.scale.setScalar(scale);
 
-        // Datos de física e inercia propios de cada hoja
-        leafMesh.userData = {
-          id: i,
-          homePos: new THREE.Vector3(startX, startY, startZ),
-          homeRotZ: initialRotZ,
-          velocity: new THREE.Vector2(0, 0),
-          rotVelocity: 0,
-          isCleared: false,
-          swaySpeed: 1.1 + Math.random() * 1.2,
-          swayOffset: Math.random() * Math.PI * 2,
-          baseScale: scale
-        };
+        placements.forEach((slot, idx) => {
+          const assetMeta = CONFIG.vegetationAssets.find((a) => a.key === slot.assetKey);
 
-        foliageGroup.add(leafMesh);
-        state.leaves.push(leafMesh);
-      }
+          // Obtener textura con el nivel de desenfoque Depth of Field (DoF) propio de la capa
+          const layerTexture = getOrCreateLayerDoFTexture(
+            slot.assetKey,
+            baseTextures[slot.assetKey],
+            layerSpec.dofBlurPx
+          );
 
-      updateDiscoveryHUD();
-    }
+          // Si la capa es estática (Capas 1, 2 y 3), usamos 1x1 segmentos para optimizar GPU.
+          // Si tiene viento o interacción táctil (Capas 4 a 8), subdividimos 10x10 para vertex displacement.
+          const segs = layerSpec.isStatic ? 1 : 10;
+          const planeGeo = new THREE.PlaneGeometry(
+            assetMeta.aspectWidth * slot.scale,
+            assetMeta.aspectHeight * slot.scale,
+            segs,
+            segs
+          );
 
-    // Curva suavemente los vértices del plano para darle volumen orgánico a la hoja
-    function bendLeafGeometry(geometry, bendAmount) {
-      const pos = geometry.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i);
-        const y = pos.getY(i);
-        const zOffset = -Math.pow(x, 2) * bendAmount - Math.pow(y * 0.5, 2) * (bendAmount * 0.5);
-        pos.setZ(i, zOffset);
-      }
-      geometry.computeVertexNormals();
-    }
+          if (slot.flipX) {
+            const uv = planeGeo.attributes.uv;
+            for (let u = 0; u < uv.count; u++) {
+              uv.setX(u, 1.0 - uv.getX(u));
+            }
+            uv.needsUpdate = true;
+          }
 
-    // Intenta cargar los PNG reales y, si no están, dibuja 4 especies de hojas tropicales con transparencia
-    async function loadOrGenerateLeafTextures() {
-      const texLoader = new THREE.TextureLoader();
-      const loadedTextures = [];
+          const posAttr = planeGeo.attributes.position;
+          const basePositions = new Float32Array(posAttr.array.length);
+          basePositions.set(posAttr.array);
 
-      for (let i = 0; i < CONFIG.leafTexturePaths.length; i++) {
-        try {
-          const tex = await new Promise((resolve, reject) => {
-            texLoader.load(CONFIG.leafTexturePaths[i], resolve, undefined, reject);
+          // Material con gradación cromática semirealista (fondo atmosférico vs primer plano en silueta oscura)
+          const material = new THREE.MeshStandardMaterial({
+            map: layerTexture,
+            color: new THREE.Color(layerSpec.colorTint),
+            emissive: new THREE.Color(layerSpec.emissiveTint),
+            emissiveIntensity: layerSpec.layerIndex <= 3 ? 0.45 : 0.15,
+            transparent: true,
+            alphaTest: 0.05,
+            side: THREE.DoubleSide,
+            roughness: 0.65,
+            metalness: 0.05,
+            depthWrite: true
           });
-          tex.colorSpace = THREE.SRGBColorSpace;
-          loadedTextures.push(tex);
-        } catch (err) {
-          // Generar textura botánica de alta resolución en Canvas (Monstera, Helecho, Palma, Filodendro)
-          const fallbackTex = createProceduralLeafTexture(i);
-          loadedTextures.push(fallbackTex);
-        }
-      }
-      return loadedTextures;
+
+          const mesh = new THREE.Mesh(planeGeo, material);
+          // Pequeño offset Z dentro de la misma capa para evitar Z-fighting entre hojas vecinas
+          const microZ = layerSpec.zDepth + (idx * 0.025);
+          mesh.position.set(slot.x, slot.y, microZ);
+          mesh.rotation.set(0, 0, slot.rotZ);
+
+          mesh.userData = {
+            layerIndex: layerSpec.layerIndex,
+            role: layerSpec.role,
+            isStatic: layerSpec.isStatic,
+            interactive: layerSpec.interactive,
+            windAmplitude: layerSpec.windAmplitude,
+            basePositions,
+            planeHeight: assetMeta.aspectHeight * slot.scale,
+            homePos: new THREE.Vector3(slot.x, slot.y, microZ),
+            homeRotZ: slot.rotZ,
+            velocity: new THREE.Vector2(0, 0),
+            rotVelocity: 0,
+            swaySpeed: 0.9 + (layerSpec.layerIndex * 0.14) + (idx % 3) * 0.18,
+            swayPhase: idx * 1.15 + layerSpec.layerIndex * 0.7
+          };
+
+          layerGroup.add(mesh);
+          state.foliagePlanes.push(mesh);
+        });
+      });
     }
 
-    // Generador procedimental de 4 tipos de hojas selváticas con nervaduras y canal alfa
-    function createProceduralLeafTexture(typeIndex) {
+    /**
+     * Calcula las coordenadas (X, Y) de cada planta en una capa dada asegurando que
+     * la zona del Bounding Box (clearRx, clearRy) permanezca despejada en el centro.
+     */
+    function computeLayerPlacementsAroundBoundingBox(layerSpec, clearRx, clearRy, centerY, pScale) {
+      const idx = layerSpec.layerIndex;
+      const rx = clearRx * layerSpec.clearingMultiplier;
+      const ry = clearRy * layerSpec.clearingMultiplier;
+
+      // CAPA 1 (Fondo lejano Z = -3.20): Dosel denso completo que cierra el horizonte
+      if (idx === 1) {
+        return [
+          { assetKey: 'tree',    x: -2.45, y:  0.85, scale: pScale * 1.15, rotZ: -0.10, flipX: false },
+          { assetKey: 'tree',    x:  0.00, y:  1.15, scale: pScale * 1.22, rotZ:  0.03, flipX: true  },
+          { assetKey: 'tree',    x:  2.45, y:  0.85, scale: pScale * 1.15, rotZ:  0.10, flipX: true  },
+          { assetKey: 'arbusto', x: -1.65, y: -0.95, scale: pScale * 1.10, rotZ:  0.04, flipX: false },
+          { assetKey: 'arbusto', x:  1.65, y: -0.95, scale: pScale * 1.10, rotZ: -0.04, flipX: true  }
+        ];
+      }
+
+      // CAPA 2 (Fondo medio Z = -2.15): Árboles antiguos y lianas enmarcando el claro lejano
+      if (idx === 2) {
+        return [
+          { assetKey: 'tree',    x: -1.95, y:  0.68, scale: pScale * 1.12, rotZ: -0.16, flipX: true  },
+          { assetKey: 'tree',    x:  1.95, y:  0.68, scale: pScale * 1.12, rotZ:  0.16, flipX: false },
+          { assetKey: 'plantas', x: -1.45, y: -0.75, scale: pScale * 1.05, rotZ:  0.12, flipX: false },
+          { assetKey: 'plantas', x:  1.45, y: -0.75, scale: pScale * 1.05, rotZ: -0.12, flipX: true  }
+        ];
+      }
+
+      // CAPA 3 (Fondo cercano Z = -1.15): Halo botánico detrás del modelo 3D
+      if (idx === 3) {
+        return [
+          { assetKey: 'tree',    x: -(rx + 0.65), y: centerY + 0.55, scale: pScale * 1.05, rotZ: -0.22, flipX: false },
+          { assetKey: 'tree',    x:  (rx + 0.65), y: centerY + 0.55, scale: pScale * 1.05, rotZ:  0.22, flipX: true  },
+          { assetKey: 'arbusto', x: -(rx + 0.45), y: centerY - 0.72, scale: pScale * 0.98, rotZ:  0.08, flipX: true  },
+          { assetKey: 'arbusto', x:  (rx + 0.45), y: centerY - 0.72, scale: pScale * 0.98, rotZ: -0.08, flipX: false }
+        ];
+      }
+
+      // CAPA 4 (Plano Medio Posterior Z = -0.35): Arbustos envolviendo los flancos del modelo
+      if (idx === 4) {
+        return [
+          { assetKey: 'arbusto', x: -(rx + 0.42), y: centerY - 0.48, scale: pScale * 0.96, rotZ:  0.14, flipX: false },
+          { assetKey: 'arbusto', x:  (rx + 0.42), y: centerY - 0.48, scale: pScale * 0.96, rotZ: -0.14, flipX: true  },
+          { assetKey: 'plantas', x: -(rx + 0.55), y: centerY + 0.38, scale: pScale * 0.95, rotZ: -0.24, flipX: true  },
+          { assetKey: 'plantas', x:  (rx + 0.55), y: centerY + 0.38, scale: pScale * 0.95, rotZ:  0.24, flipX: false }
+        ];
+      }
+
+      // CAPA 5 (Plano Medio Frontal Z = +0.45): Helechos laterales sin tapar el Bounding Box
+      if (idx === 5) {
+        return [
+          { assetKey: 'plantas', x: -(rx + 0.38), y: centerY - 0.62, scale: pScale * 0.94, rotZ:  0.18, flipX: false },
+          { assetKey: 'plantas', x:  (rx + 0.38), y: centerY - 0.62, scale: pScale * 0.94, rotZ: -0.18, flipX: true  },
+          { assetKey: 'tree',    x: -(rx + 0.68), y: centerY + 0.62, scale: pScale * 1.00, rotZ: -0.28, flipX: false },
+          { assetKey: 'tree',    x:  (rx + 0.68), y: centerY + 0.62, scale: pScale * 1.00, rotZ:  0.28, flipX: true  }
+        ];
+      }
+
+      // CAPA 6 (Primer Plano Inicial Z = +1.35): Arco tropical interactivo alrededor del claro
+      if (idx === 6) {
+        return [
+          { assetKey: 'tree',    x: -(rx + 0.48), y: centerY + 0.58, scale: pScale * 1.02, rotZ: -0.32, flipX: true  },
+          { assetKey: 'tree',    x:  (rx + 0.48), y: centerY + 0.58, scale: pScale * 1.02, rotZ:  0.32, flipX: false },
+          { assetKey: 'arbusto', x: -(rx + 0.32), y: centerY - 0.68, scale: pScale * 0.92, rotZ:  0.15, flipX: false },
+          { assetKey: 'arbusto', x:  (rx + 0.32), y: centerY - 0.68, scale: pScale * 0.92, rotZ: -0.15, flipX: true  }
+        ];
+      }
+
+      // CAPA 7 (Primer Plano Medio con DoF Z = +2.10): Hojas grandes en los bordes
+      if (idx === 7) {
+        return [
+          { assetKey: 'plantas', x: -(rx + 0.28), y: centerY + 0.45, scale: pScale * 1.04, rotZ: -0.38, flipX: false },
+          { assetKey: 'plantas', x:  (rx + 0.28), y: centerY + 0.45, scale: pScale * 1.04, rotZ:  0.38, flipX: true  },
+          { assetKey: 'arbusto', x: -(rx + 0.22), y: centerY - 0.64, scale: pScale * 0.98, rotZ:  0.22, flipX: true  },
+          { assetKey: 'arbusto', x:  (rx + 0.22), y: centerY - 0.64, scale: pScale * 0.98, rotZ: -0.22, flipX: false }
+        ];
+      }
+
+      // CAPA 8 (Primerísimo Plano Extremo con DoF intenso Z = +2.80): Efecto Viñeta Natural
+      return [
+        { assetKey: 'tree',    x: -(rx + 0.18), y:  (ry * 0.55), scale: pScale * 1.08, rotZ: -0.45, flipX: false },
+        { assetKey: 'tree',    x:  (rx + 0.18), y:  (ry * 0.55), scale: pScale * 1.08, rotZ:  0.45, flipX: true  },
+        { assetKey: 'plantas', x: -(rx + 0.14), y: -(ry * 0.58), scale: pScale * 1.02, rotZ:  0.28, flipX: false },
+        { assetKey: 'plantas', x:  (rx + 0.14), y: -(ry * 0.58), scale: pScale * 1.02, rotZ: -0.28, flipX: true  }
+      ];
+    }
+
+    /* =========================================================================
+       5. PROCESADOR DE TEXTURAS Y DESENFOQUE DEPTH-OF-FIELD (DoF) POR CAPA
+       ========================================================================= */
+    const dofTextureCache = new Map();
+
+    function getOrCreateLayerDoFTexture(assetKey, baseTexture, blurPx) {
+      if (!blurPx || blurPx <= 0) return baseTexture;
+
+      const cacheKey = `${assetKey}_blur_${blurPx}`;
+      if (dofTextureCache.has(cacheKey)) {
+        return dofTextureCache.get(cacheKey);
+      }
+
+      try {
+        const img = baseTexture.image;
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+
+        // Desenfoque gaussiano nativo en canvas para simular Depth of Field óptico en Capas 1, 7 y 8
+        ctx.filter = `blur(${blurPx}px)`;
+        const pad = blurPx * 2;
+        ctx.drawImage(img, pad, pad, canvas.width - pad * 2, canvas.height - pad * 2);
+
+        const blurredTex = new THREE.CanvasTexture(canvas);
+        blurredTex.colorSpace = THREE.SRGBColorSpace;
+        blurredTex.needsUpdate = true;
+        dofTextureCache.set(cacheKey, blurredTex);
+        return blurredTex;
+      } catch (e) {
+        return baseTexture;
+      }
+    }
+
+    async function loadBaseVegetationTextures() {
+      const texLoader = new THREE.TextureLoader();
+      texLoader.setCrossOrigin('anonymous');
+      const texturesByKey = {};
+
+      for (const asset of CONFIG.vegetationAssets) {
+        let loadedTex = null;
+        try {
+          loadedTex = await new Promise((resolve, reject) => {
+            texLoader.load(asset.localPath, resolve, undefined, reject);
+          });
+        } catch (err1) {
+          try {
+            loadedTex = await new Promise((resolve, reject) => {
+              texLoader.load(asset.rawUrl, resolve, undefined, reject);
+            });
+          } catch (err2) {
+            loadedTex = createIllustrativeBotanicalTexture(asset.key);
+          }
+        }
+        loadedTex.colorSpace = THREE.SRGBColorSpace;
+        loadedTex.anisotropy = 4;
+        texturesByKey[asset.key] = loadedTex;
+      }
+      return texturesByKey;
+    }
+
+    // Generador de respaldo con estilo "Ilustración Digital Semirealista"
+    function createIllustrativeBotanicalTexture(assetKey) {
       const canvas = document.createElement('canvas');
-      canvas.width = 512;
+      canvas.width = 640;
       canvas.height = 640;
       const ctx = canvas.getContext('2d');
+      const cx = canvas.width / 2;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-
-      // Sombra interna suave para separar visualmente unas hojas de otras
-      ctx.shadowColor = 'rgba(0, 15, 6, 0.55)';
+      ctx.shadowColor = 'rgba(2, 18, 11, 0.65)';
       ctx.shadowBlur = 18;
-      ctx.shadowOffsetX = 6;
-      ctx.shadowOffsetY = 10;
 
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-
-      // Paletas de verde selvático según el tipo de hoja
-      const palettes = [
-        ['#064e3b', '#059669', '#34d399'], // 0: Monstera Deliciosa
-        ['#14532d', '#16a34a', '#86efac'], // 1: Helecho de Selva
-        ['#022c22', '#0d9488', '#5eead4'], // 2: Hoja de Palma Tropical
-        ['#1e3a1e', '#4d7c0f', '#bef264']  // 3: Liana / Filodendro
-      ];
-      const pal = palettes[typeIndex % palettes.length];
-
-      const grad = ctx.createLinearGradient(80, 60, 430, 580);
-      grad.addColorStop(0, pal[2]);
-      grad.addColorStop(0.45, pal[1]);
-      grad.addColorStop(1, pal[0]);
-
-      if (typeIndex === 0) {
-        // TIPO 0: Hoja de Monstera con fenestraciones (recortes característicos)
-        ctx.beginPath();
-        ctx.moveTo(cx, 50);
-        ctx.bezierCurveTo(470, 90, 490, 390, cx, 570);
-        ctx.bezierCurveTo(22, 390, 42, 90, cx, 50);
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        // Fenestraciones (cortes transparentes con globalCompositeOperation)
-        ctx.globalCompositeOperation = 'destination-out';
-        const cuts = [
-          { y: 170, w: 120, h: 24 },
-          { y: 260, w: 155, h: 28 },
-          { y: 360, w: 130, h: 25 },
-          { y: 445, w: 95, h: 20 }
-        ];
-        cuts.forEach((c) => {
-          // Corte izquierdo
-          ctx.beginPath();
-          ctx.ellipse(cx - 115, c.y, c.w, c.h, -0.22, 0, Math.PI * 2);
-          ctx.fill();
-          // Corte derecho
-          ctx.beginPath();
-          ctx.ellipse(cx + 115, c.y, c.w, c.h, 0.22, 0, Math.PI * 2);
-          ctx.fill();
-        });
-        ctx.globalCompositeOperation = 'source-over';
-      } else if (typeIndex === 1) {
-        // TIPO 1: Fronda de Helecho Tropical multipinnada
-        for (let i = 0; i < 13; i++) {
-          const t = i / 12;
-          const y = 80 + t * 470;
-          const spread = Math.sin(t * Math.PI) * 185 + 25;
-          ctx.fillStyle = grad;
-
-          // Folíolo izquierdo
-          ctx.beginPath();
-          ctx.ellipse(cx - spread * 0.55, y, spread * 0.6, 19, -0.3, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Folíolo derecho
-          ctx.beginPath();
-          ctx.ellipse(cx + spread * 0.55, y, spread * 0.6, 19, 0.3, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (typeIndex === 2) {
-        // TIPO 2: Palma Abanico Selvática
-        const blades = 11;
-        for (let i = 0; i < blades; i++) {
-          const angle = ((i / (blades - 1)) - 0.5) * 1.45;
+      if (assetKey === 'arbusto') {
+        const count = 15;
+        for (let i = 0; i < count; i++) {
+          const angle = ((i / (count - 1)) - 0.5) * 2.15;
+          const len = 190 + (i % 3) * 48;
           ctx.save();
-          ctx.translate(cx, 540);
+          ctx.translate(cx, 560);
           ctx.rotate(angle);
+          const grad = ctx.createLinearGradient(0, 0, 0, -len);
+          grad.addColorStop(0, '#042f2e');
+          grad.addColorStop(0.55, '#0d9488');
+          grad.addColorStop(1, '#6ee7b7');
+          ctx.fillStyle = grad;
           ctx.beginPath();
           ctx.moveTo(0, 0);
-          ctx.quadraticCurveTo(-32, -250, 0, -480);
-          ctx.quadraticCurveTo(32, -250, 0, 0);
-          ctx.fillStyle = grad;
+          ctx.bezierCurveTo(-68, -len * 0.42, -52, -len * 0.85, 0, -len);
+          ctx.bezierCurveTo(52, -len * 0.85, 68, -len * 0.42, 0, 0);
           ctx.fill();
+
+          ctx.strokeStyle = 'rgba(167, 243, 208, 0.55)';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(0, -12);
+          ctx.lineTo(0, -len * 0.92);
+          ctx.stroke();
+          ctx.restore();
+        }
+      } else if (assetKey === 'plantas') {
+        for (let f = -2; f <= 2; f++) {
+          ctx.save();
+          ctx.translate(cx + f * 48, 575);
+          ctx.rotate(f * 0.25);
+          const grad = ctx.createLinearGradient(0, 0, 0, -450);
+          grad.addColorStop(0, '#064e3b');
+          grad.addColorStop(0.6, '#10b981');
+          grad.addColorStop(1, '#a7f3d0');
+          ctx.fillStyle = grad;
+          for (let j = 0; j < 14; j++) {
+            const t = j / 13;
+            const y = -55 - t * 375;
+            const w = Math.sin(t * Math.PI) * 98 + 18;
+            ctx.beginPath();
+            ctx.ellipse(-w * 0.55, y, w * 0.6, 14, -0.28, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(w * 0.55, y, w * 0.6, 14, 0.28, 0, Math.PI * 2);
+            ctx.fill();
+          }
           ctx.restore();
         }
       } else {
-        // TIPO 3: Hoja Acuminada de Filodendro Gigante
-        ctx.beginPath();
-        ctx.moveTo(cx, 35);
-        ctx.bezierCurveTo(445, 160, 450, 440, cx + 40, 560);
-        ctx.quadraticCurveTo(cx, 500, cx - 40, 560);
-        ctx.bezierCurveTo(62, 440, 67, 160, cx, 35);
-        ctx.fillStyle = grad;
-        ctx.fill();
-      }
-
-      // Dibujar nervadura central y venas secundarias luminosas
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(187, 247, 208, 0.45)';
-      ctx.lineWidth = 6;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(cx, 65);
-      ctx.lineTo(cx, 595);
-      ctx.stroke();
-
-      ctx.lineWidth = 2.5;
-      for (let y = 130; y < 500; y += 55) {
-        ctx.beginPath();
-        ctx.moveTo(cx, y);
-        ctx.quadraticCurveTo(cx - 70, y - 15, cx - 135, y - 45);
-        ctx.moveTo(cx, y);
-        ctx.quadraticCurveTo(cx + 70, y - 15, cx + 135, y - 45);
-        ctx.stroke();
+        const fronds = 14;
+        for (let i = 0; i < fronds; i++) {
+          const angle = ((i / (fronds - 1)) - 0.5) * 1.95;
+          ctx.save();
+          ctx.translate(cx, 590);
+          ctx.rotate(angle);
+          const grad = ctx.createLinearGradient(0, 0, 0, -500);
+          grad.addColorStop(0, '#022c22');
+          grad.addColorStop(0.55, '#0f766e');
+          grad.addColorStop(1, '#5eead4');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(-42, -250, 0, -500);
+          ctx.quadraticCurveTo(42, -250, 0, 0);
+          ctx.fill();
+          ctx.restore();
+        }
       }
 
       ctx.restore();
-
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.needsUpdate = true;
-      return texture;
-    }
-
-    // Partículas flotantes de polen / atmósfera para dar vida al pasillo
-    function createJungleParticles() {
-      const count = 45;
-      const geo = new THREE.BufferGeometry();
-      const positions = new Float32Array(count * 3);
-      for (let i = 0; i < count; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 4.5;
-        positions[i * 3 + 1] = (Math.random() - 0.3) * 3.5;
-        positions[i * 3 + 2] = (Math.random() - 0.2) * 3.2;
-      }
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      const mat = new THREE.PointsMaterial({
-        color: 0xa7f3d0,
-        size: 0.045,
-        transparent: true,
-        opacity: 0.65
-      });
-      dustParticles = new THREE.Points(geo, mat);
-      scene.add(dustParticles);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+      return tex;
     }
 
     /* =========================================================================
-       6. MECÁNICA TÁCTIL ("DESCUBRIMIENTO") CON INERCIA Y BLOQUEO AL 80%
+       6. PARTÍCULAS BIOLUMINISCENTES ENTRE LAS 8 CAPAS
+       ========================================================================= */
+    function createLuminescentParticles() {
+      if (bioParticles) scene.remove(bioParticles);
+
+      const count = CONFIG.particleCount;
+      const geo = new THREE.BufferGeometry();
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const sizes = new Float32Array(count);
+      const phases = new Float32Array(count);
+
+      const palette = [
+        new THREE.Color('#6ee7b7'),
+        new THREE.Color('#fde047'),
+        new THREE.Color('#5eead4'),
+        new THREE.Color('#bef264')
+      ];
+
+      state.particleData = [];
+
+      for (let i = 0; i < count; i++) {
+        const x = (Math.random() - 0.5) * 6.2;
+        const y = (Math.random() - 0.35) * 4.0;
+        const z = -2.8 + Math.random() * 5.2; // Distribuidas a través de las 8 capas
+
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+
+        const c = palette[i % palette.length];
+        colors[i * 3] = c.r;
+        colors[i * 3 + 1] = c.g;
+        colors[i * 3 + 2] = c.b;
+
+        sizes[i] = 0.5 + Math.random() * 1.1;
+        phases[i] = Math.random() * Math.PI * 2;
+
+        state.particleData.push({
+          baseX: x,
+          baseY: y,
+          baseZ: z,
+          speedY: 0.002 + Math.random() * 0.0035,
+          driftFreq: 0.45 + Math.random() * 0.8,
+          driftAmp: 0.14 + Math.random() * 0.2,
+          phase: phases[i]
+        });
+      }
+
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+      geo.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
+
+      const mat = new THREE.ShaderMaterial({
+        uniforms: {
+          uTime: { value: 0 },
+          uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
+        },
+        vertexShader: `
+          attribute float aSize;
+          attribute float aPhase;
+          varying vec3 vColor;
+          varying float vPulse;
+          uniform float uTime;
+          uniform float uPixelRatio;
+
+          void main() {
+            vColor = color;
+            float pulse = 0.5 + 0.5 * sin(uTime * 2.2 + aPhase);
+            vPulse = pulse;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = aSize * (26.0 * pulse) * uPixelRatio * (1.0 / -mvPosition.z);
+            gl_Position = projectionMatrix * mvPosition;
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vColor;
+          varying float vPulse;
+          void main() {
+            float dist = length(gl_PointCoord - vec2(0.5));
+            if (dist > 0.5) discard;
+            float core = smoothstep(0.5, 0.0, dist);
+            float halo = pow(core, 2.0);
+            vec3 finalColor = mix(vColor, vec3(1.0, 1.0, 0.95), pow(core, 4.0));
+            gl_FragColor = vec4(finalColor, halo * (0.4 + 0.6 * vPulse));
+          }
+        `,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexColors: true
+      });
+
+      bioParticles = new THREE.Points(geo, mat);
+      scene.add(bioParticles);
+    }
+
+    /* =========================================================================
+       7. INTERACCIÓN TÁCTIL Y AL PASO DEL RATÓN/DEDO EN CAPAS 6, 7 Y 8
        ========================================================================= */
     function setupInteractionEvents() {
-      const domElem = renderer.domElement;
+      const dom = renderer.domElement;
 
-      // Eventos unificados de Puntero y Touch para compatibilidad total iOS / Android / Desktop
-      domElem.addEventListener('pointerdown', onPointerDown, { passive: false });
+      dom.addEventListener('pointerdown', onPointerDown, { passive: false });
       window.addEventListener('pointermove', onPointerMove, { passive: false });
       window.addEventListener('pointerup', onPointerUp, { passive: false });
       window.addEventListener('pointercancel', onPointerUp, { passive: false });
 
-      // Botón Cámara AR (getUserMedia)
+      // Botón mostrar/ocultar Bounding Box del modelo 3D
+      document.getElementById('btn-toggle-bbox').addEventListener('click', () => {
+        state.showBoundingBoxHelper = !state.showBoundingBoxHelper;
+        if (bboxHelperGroup) bboxHelperGroup.visible = state.showBoundingBoxHelper;
+        showToast(
+          state.showBoundingBoxHelper
+            ? 'Bounding Box y Claro Central visibles'
+            : 'Bounding Box oculto'
+        );
+      });
+
+      // Botón Cámara AR
       document.getElementById('btn-toggle-camera').addEventListener('click', toggleARCamera);
 
-      // Botón Reiniciar Experiencia
-      document.getElementById('btn-reset').addEventListener('click', resetExperience);
+      // Botón Reset
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        state.foliagePlanes.forEach((leaf) => {
+          leaf.position.copy(leaf.userData.homePos);
+          leaf.rotation.z = leaf.userData.homeRotZ;
+          leaf.userData.velocity.set(0, 0);
+        });
+        state.modelTargetRotX = 0;
+        state.modelTargetRotY = 0;
+        playFoliageRustle(0.7);
+        showToast('Capas 6, 7 y 8 restauradas al encuadre original');
+      });
 
       // Botón Sonido
       document.getElementById('btn-sound').addEventListener('click', () => {
         state.soundEnabled = !state.soundEnabled;
         document.getElementById('icon-sound-on').classList.toggle('text-emerald-400', state.soundEnabled);
         document.getElementById('icon-sound-on').classList.toggle('text-stone-500', !state.soundEnabled);
-        showToast(state.soundEnabled ? 'Sonido botánico activado' : 'Sonido silenciado');
+        showToast(state.soundEnabled ? 'Audio reactivo activado' : 'Audio silenciado');
       });
 
-      // Subida de modelo .GLB en vivo para pruebas de clase
-      document.getElementById('glb-upload').addEventListener('change', handleCustomGLBUpload);
+      // Cargar nuevo .GLB y recalcular automáticamente las 8 capas según su nuevo Bounding Box
+      document.getElementById('glb-upload').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const loader = new GLTFLoader();
+        showToast(`Analizando Bounding Box de ${file.name}...`);
 
-      // Botones de cambio de iluminación en la tarjeta de descubrimiento
-      document.getElementById('btn-light-warm').addEventListener('click', () => {
-        dirLight.color.setHex(0xfff3d6);
-        rimLight.color.setHex(0xf59e0b);
-        spotLight.color.setHex(0xffedd5);
+        loader.load(url, (gltf) => {
+          mountAndComputeBoundingBox(gltf.scene);
+          generateEightLayerJungle(state.modelBoundingBox, cachedTexturesByKey);
+          assetSourceBadge.textContent = `Modelo activo: ${file.name} · 8 Capas recalculadas`;
+          showToast(`¡${file.name} encuadrado en el Claro Central!`);
+          URL.revokeObjectURL(url);
+        });
       });
 
-      document.getElementById('btn-light-jungle').addEventListener('click', () => {
-        dirLight.color.setHex(0x6ee7b7);
-        rimLight.color.setHex(0x2dd4bf);
-        spotLight.color.setHex(0x34d399);
+      // Modos de Iluminación
+      document.getElementById('btn-light-illustration').addEventListener('click', () => {
+        sunClearLight.color.setHex(0xfef08a);
+        rimTealLight.color.setHex(0x2dd4bf);
+        rimGoldLight.color.setHex(0xfbbf24);
+        scene.fog.color.setHex(0x072119);
+        showToast('Estilo: Ilustración Esmeralda y Turquesa');
+      });
+
+      document.getElementById('btn-light-golden').addEventListener('click', () => {
+        sunClearLight.color.setHex(0xfde68a);
+        rimTealLight.color.setHex(0xf59e0b);
+        rimGoldLight.color.setHex(0xfef3c7);
+        scene.fog.color.setHex(0x1c1917);
+        showToast('Estilo: Hora Dorada en la Selva');
       });
     }
 
-    // Convierte coordenadas de pantalla (px) a coordenadas normalizadas (-1 a +1)
-    function updatePointerNDC(clientX, clientY) {
-      pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
-      pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
+    function updatePointerCoords(clientX, clientY) {
+      state.pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
+      state.pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
+
+      const worldForeground = getPointerWorldAtZ(2.1);
+      if (worldForeground) {
+        state.pointerWorldAtForeground.copy(worldForeground);
+      }
     }
 
-    // Proyecta el dedo del usuario al plano Z de la hoja seleccionada
     function getPointerWorldAtZ(targetZ) {
-      raycaster.setFromCamera(pointerNDC, camera);
+      raycaster.setFromCamera(state.pointerNDC, camera);
       const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), -targetZ);
-      const intersectPoint = new THREE.Vector3();
-      raycaster.ray.intersectPlane(planeZ, intersectPoint);
-      return intersectPoint;
+      const hit = new THREE.Vector3();
+      raycaster.ray.intersectPlane(planeZ, hit);
+      return hit;
     }
 
     function onPointerDown(e) {
       e.preventDefault();
       initAudio();
       state.pointerDown = true;
-      updatePointerNDC(e.clientX, e.clientY);
+      updatePointerCoords(e.clientX, e.clientY);
 
-      // Si ya se descubrió el 80% de la escultura, el toque rota la escultura para inspeccionarla
-      if (state.isRevealed) {
-        state.inspectingSculpture = true;
-        state.lastInspectPos.x = e.clientX;
-        state.lastInspectPos.y = e.clientY;
-        return;
-      }
+      // Comprobar si el usuario tocó una hoja interactiva de Primer Plano (Capas 6, 7 u 8)
+      const interactiveLeaves = state.foliagePlanes.filter((p) => p.userData.interactive);
+      raycaster.setFromCamera(state.pointerNDC, camera);
+      const hits = raycaster.intersectObjects(interactiveLeaves, false);
 
-      // Lanzar rayo para detectar si el dedo tocó alguna hoja de la cortina
-      raycaster.setFromCamera(pointerNDC, camera);
-      const intersects = raycaster.intersectObjects(state.leaves, false);
-
-      if (intersects.length > 0) {
-        const pickedLeaf = intersects[0].object;
-        state.activeLeaf = pickedLeaf;
-        pickedLeaf.userData.velocity.set(0, 0);
-        state.lastPointerWorld.copy(getPointerWorldAtZ(pickedLeaf.position.z));
-        playLeafRustle(0.6);
-
-        // Ocultar el mensaje guía flotante tras el primer toque exitoso
-        touchCoach.classList.add('opacity-0', 'pointer-events-none');
+      if (hits.length > 0) {
+        state.activeDraggedLeaf = hits[0].object;
+        state.lastPointerWorld.copy(getPointerWorldAtZ(state.activeDraggedLeaf.position.z));
+        playFoliageRustle(0.6);
+      } else {
+        // Si toca en el Claro Central, permite rotar el modelo 3D central 360°
+        state.rotatingModel = true;
+        state.lastInspectClient.x = e.clientX;
+        state.lastInspectClient.y = e.clientY;
       }
     }
 
     function onPointerMove(e) {
-      if (!state.pointerDown) return;
-      e.preventDefault();
-      updatePointerNDC(e.clientX, e.clientY);
+      updatePointerCoords(e.clientX, e.clientY);
 
-      // Modo Inspección 360° (cuando la escultura ya fue descubierta)
-      if (state.isRevealed && state.inspectingSculpture) {
-        const deltaX = e.clientX - state.lastInspectPos.x;
-        const deltaY = e.clientY - state.lastInspectPos.y;
-        state.sculptureTargetRotationY += deltaX * 0.012;
-        state.sculptureTargetRotationX = THREE.MathUtils.clamp(
-          state.sculptureTargetRotationX + deltaY * 0.006,
-          -0.35,
-          0.45
-        );
-        state.lastInspectPos.x = e.clientX;
-        state.lastInspectPos.y = e.clientY;
-        return;
-      }
-
-      // Si el usuario desliza el dedo sin haber enganchado una hoja al inicio, permitir "apartar al paso"
-      if (!state.activeLeaf && !state.isRevealed) {
-        raycaster.setFromCamera(pointerNDC, camera);
-        const hits = raycaster.intersectObjects(state.leaves, false);
-        if (hits.length > 0) {
-          state.activeLeaf = hits[0].object;
-          state.lastPointerWorld.copy(getPointerWorldAtZ(state.activeLeaf.position.z));
-          playLeafRustle(0.45);
-        }
-      }
-
-      // Mover la hoja activa siguiendo el dedo con cálculo de velocidad instantánea
-      if (state.activeLeaf && !state.isRevealed) {
-        const leaf = state.activeLeaf;
+      // Si arrastra una hoja de las Capas 6, 7 u 8 directamente
+      if (state.pointerDown && state.activeDraggedLeaf) {
+        const leaf = state.activeDraggedLeaf;
         const currentWorld = getPointerWorldAtZ(leaf.position.z);
         if (currentWorld) {
           const dx = currentWorld.x - state.lastPointerWorld.x;
           const dy = currentWorld.y - state.lastPointerWorld.y;
-
           leaf.position.x += dx;
           leaf.position.y += dy;
-
-          // Guardar velocidad para que al soltar el dedo la hoja continúe con inercia
-          leaf.userData.velocity.set(dx * 1.35, dy * 1.35);
-          leaf.userData.rotVelocity = -dx * 0.45;
-          leaf.rotation.z += -dx * 0.25;
-
+          leaf.userData.velocity.set(dx * 1.25, dy * 1.25);
+          leaf.userData.rotVelocity = -dx * 0.32;
           state.lastPointerWorld.copy(currentWorld);
         }
+        return;
+      }
+
+      // Si gira el modelo 3D en el Claro Central
+      if (state.pointerDown && state.rotatingModel) {
+        const dx = e.clientX - state.lastInspectClient.x;
+        const dy = e.clientY - state.lastInspectClient.y;
+        state.modelTargetRotY += dx * 0.011;
+        state.modelTargetRotX = THREE.MathUtils.clamp(
+          state.modelTargetRotX + dy * 0.005,
+          -0.3,
+          0.35
+        );
+        state.lastInspectClient.x = e.clientX;
+        state.lastInspectClient.y = e.clientY;
       }
     }
 
     function onPointerUp() {
       state.pointerDown = false;
-      state.inspectingSculpture = false;
-
-      if (state.activeLeaf) {
-        const leaf = state.activeLeaf;
-        // Si el usuario empujó la hoja hacia afuera con suficiente velocidad o distancia, darle impulso extra hacia el borde
-        const radialDist = Math.hypot(leaf.position.x, leaf.position.y - 0.1);
-        const speed = leaf.userData.velocity.length();
-
-        if (radialDist > 0.85 || speed > 0.045) {
-          const pushDir = new THREE.Vector2(leaf.position.x || 0.1, leaf.position.y - 0.1).normalize();
-          leaf.userData.velocity.addScaledVector(pushDir, 0.085);
-          playLeafRustle(0.8);
-        }
-
-        state.activeLeaf = null;
-      }
+      state.activeDraggedLeaf = null;
+      state.rotatingModel = false;
     }
 
-    /* =========================================================================
-       7. ACTUALIZACIÓN DE PROGRESO Y EVENTO DE REVELACIÓN AL 80%
-       ========================================================================= */
-    function updateDiscoveryHUD() {
-      if (state.isRevealed) return;
-
-      let cleared = 0;
-      state.leaves.forEach((leaf) => {
-        const distFromCenter = Math.hypot(leaf.position.x, leaf.position.y - 0.12);
-        if (distFromCenter >= CONFIG.clearRadiusDistance) {
-          leaf.userData.isCleared = true;
-          cleared++;
-        } else {
-          leaf.userData.isCleared = false;
-        }
-      });
-
-      state.clearedCount = cleared;
-      const ratio = cleared / CONFIG.totalLeaves;
-      const percent = Math.min(100, Math.round((ratio / CONFIG.discoveryThreshold) * 100));
-
-      discoveryBar.style.width = `${percent}%`;
-      discoveryPercentage.textContent = `${percent}%`;
-
-      // Verificar si se alcanzó el umbral del 80% de las hojas apartadas
-      if (ratio >= CONFIG.discoveryThreshold && !state.isRevealed) {
-        triggerSculptureReveal();
-      }
-    }
-
-    function triggerSculptureReveal() {
-      state.isRevealed = true;
-      state.activeLeaf = null;
-      playDiscoveryChime();
-
-      // Actualizar HUD superior
-      discoveryBar.style.width = '100%';
-      discoveryPercentage.textContent = '100%';
-      discoveryInstruction.innerHTML = '✨ <strong class="text-amber-300">¡Escultura revelada!</strong> Gírala arrastrando con el dedo';
-
-      // Apartar suavemente las hojas restantes hacia el marco exterior de la pantalla
-      state.leaves.forEach((leaf) => {
-        const dir = new THREE.Vector2(leaf.position.x, leaf.position.y - 0.1);
-        if (dir.lengthSq() < 0.01) dir.set(Math.random() - 0.5, Math.random() - 0.5);
-        dir.normalize();
-
-        leaf.userData.targetFramePos = new THREE.Vector3(
-          dir.x * (2.35 + Math.random() * 0.4),
-          dir.y * (2.15 + Math.random() * 0.4),
-          leaf.position.z
-        );
-      });
-
-      // Mostrar tarjeta informativa inferior con animación
-      touchCoach.classList.add('opacity-0', 'pointer-events-none');
-      revealCard.classList.remove('hidden');
-      requestAnimationFrame(() => {
-        revealCard.classList.remove('translate-y-4', 'opacity-0');
-        revealCard.classList.add('translate-y-0', 'opacity-100');
-      });
-    }
-
-    function resetExperience() {
-      state.isRevealed = false;
-      state.clearedCount = 0;
-      state.sculptureTargetRotationX = 0;
-      state.sculptureTargetRotationY = 0;
-
-      // Ocultar tarjeta de revelación
-      revealCard.classList.add('translate-y-4', 'opacity-0');
-      setTimeout(() => revealCard.classList.add('hidden'), 400);
-
-      discoveryInstruction.innerHTML = '<span class="swipe-hand inline-block">👋</span> Desliza las hojas hacia los bordes para descubrir la escultura';
-
-      // Devolver todas las hojas a su posición inicial en la cortina selvática
-      state.leaves.forEach((leaf) => {
-        leaf.userData.isCleared = false;
-        leaf.userData.targetFramePos = null;
-        leaf.userData.velocity.set(0, 0);
-        leaf.position.copy(leaf.userData.homePos);
-        leaf.rotation.z = leaf.userData.homeRotZ;
-      });
-
-      updateDiscoveryHUD();
-      playLeafRustle(0.9);
-    }
-
-    /* =========================================================================
-       8. CÁMARA WEBAR (getUserMedia) Y CARGA DE ARCHIVOS .GLB EN VIVO
-       ========================================================================= */
     async function toggleARCamera() {
       const btnText = document.getElementById('camera-btn-text');
-      const statusDot = document.getElementById('ar-status-dot');
-
       if (state.cameraActive) {
-        // Apagar cámara y volver al Pasillo 3D Simulado
         const stream = videoElement.srcObject;
-        if (stream) stream.getTracks().forEach((track) => track.stop());
+        if (stream) stream.getTracks().forEach((t) => t.stop());
         videoElement.srcObject = null;
         videoElement.classList.remove('active');
-        hallwayGroup.visible = true;
+        backdropElement.style.opacity = '1';
+        if (studioEnvironmentGroup) studioEnvironmentGroup.visible = true;
         state.cameraActive = false;
-        btnText.textContent = 'Activar Cámara AR';
-        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0';
-        showToast('Modo Pasillo 3D Simulado activo');
+        btnText.textContent = 'Cámara AR';
+        showToast('Fondo de Ilustración Digital activo');
         return;
       }
 
-      // Activar cámara trasera del móvil para superponer la selva y la escultura en el pasillo real
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
+          video: { facingMode: { ideal: 'environment' } },
           audio: false
         });
         videoElement.srcObject = stream;
         await videoElement.play();
         videoElement.classList.add('active');
-
-        // Ocultar las paredes del pasillo 3D para ver el pasillo real a través de la cámara
-        hallwayGroup.visible = false;
+        backdropElement.style.opacity = '0';
+        if (studioEnvironmentGroup) studioEnvironmentGroup.visible = false;
         state.cameraActive = true;
-        btnText.textContent = 'Pasillo Virtual';
-        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0';
-        showToast('Cámara AR activa: apunta hacia tu pasillo');
+        btnText.textContent = 'Modo Ilustración';
+        showToast('Modo Cámara WebAR activo');
       } catch (err) {
-        showToast('Permiso de cámara no disponible. Usando Pasillo 3D.');
+        showToast('Cámara no disponible en este dispositivo.');
       }
     }
 
-    function handleCustomGLBUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const url = URL.createObjectURL(file);
-      const loader = new GLTFLoader();
-      showToast(`Cargando ${file.name}...`);
-
-      loader.load(
-        url,
-        (gltf) => {
-          mountCustomGLB(gltf.scene, `Modelo personalizado: ${file.name}`);
-          showToast(`¡${file.name} cargado en la escena!`);
-          URL.revokeObjectURL(url);
-        },
-        undefined,
-        () => {
-          showToast('Error al leer el archivo .GLB');
-        }
-      );
-    }
-
     /* =========================================================================
-       9. BUCLE PRINCIPAL DE ANIMACIÓN Y FÍSICAS (60 FPS)
+       8. BUCLE DE ANIMACIÓN: PARALAJE 3D + VIENTO DIFERENCIADO POR CAPAS
        ========================================================================= */
     function animate() {
       const elapsedTime = clock.getElapsedTime();
 
-      // 1. Física e inercia de cada hoja de la selva
-      state.leaves.forEach((leaf) => {
+      // 1. Paralaje 3D suave de cámara para apreciar la separación de las 8 capas
+      state.SmoothedParallax.x = THREE.MathUtils.lerp(state.SmoothedParallax.x, state.pointerNDC.x * 0.28, 0.05);
+      state.SmoothedParallax.y = THREE.MathUtils.lerp(state.SmoothedParallax.y, state.pointerNDC.y * 0.16, 0.05);
+      camera.position.x = state.SmoothedParallax.x;
+      camera.position.y = 0.22 + state.SmoothedParallax.y;
+      camera.lookAt(0, state.clearingEllipse.centerY, 0);
+
+      // 2. Comportamiento diferenciado de las 8 capas de vegetación
+      state.foliagePlanes.forEach((leaf) => {
         const data = leaf.userData;
 
-        if (state.isRevealed && data.targetFramePos) {
-          // Cuando ya se superó el 80%, las hojas enmarcan suavemente los bordes de la pantalla
-          leaf.position.lerp(data.targetFramePos, 0.06);
-          leaf.rotation.z += Math.sin(elapsedTime * data.swaySpeed + data.swayOffset) * 0.0015;
-          return;
-        }
+        // CAPAS 1, 2 y 3 (Fondo): Completamente ESTÁTICAS según dirección de arte
+        if (data.isStatic) return;
 
-        // Si esta hoja no está siendo arrastrada actualmente por el dedo
-        if (state.activeLeaf !== leaf) {
-          // Aplicar velocidad acumulada (Inercia)
+        // CAPAS 6, 7 y 8 (Primer Plano): Reacción dinámica al paso del ratón/dedo (repulsión magnética + arrastre)
+        if (data.interactive && state.activeDraggedLeaf !== leaf) {
+          const dxPointer = leaf.position.x - state.pointerWorldAtForeground.x;
+          const dyPointer = leaf.position.y - state.pointerWorldAtForeground.y;
+          const distSq = dxPointer * dxPointer + dyPointer * dyPointer;
+          const repulseR = CONFIG.pointerRepulsionRadius;
+
+          if (distSq < repulseR * repulseR && distSq > 0.0001) {
+            const dist = Math.sqrt(distSq);
+            // Empujar la hoja hacia el borde exterior para despejar aún más la vista al pasar el dedo/ratón
+            const strength = (1.0 - dist / repulseR) * 0.018;
+            data.velocity.x += (dxPointer / dist) * strength;
+            data.velocity.y += (dyPointer / dist) * strength;
+            data.rotVelocity += -dxPointer * strength * 0.35;
+          }
+
+          // Aplicar velocidad e inercia
           leaf.position.x += data.velocity.x;
           leaf.position.y += data.velocity.y;
           leaf.rotation.z += data.rotVelocity;
 
-          // Aplicar amortiguamiento (Damping)
           data.velocity.multiplyScalar(CONFIG.damping);
           data.rotVelocity *= CONFIG.damping;
 
-          // Distancia actual desde el centro
-          const dist = Math.hypot(leaf.position.x, leaf.position.y - 0.12);
-
-          // Si fue empujada casi hasta el umbral, ayudarla a deslizarse suavemente hacia la periferia
-          if (dist > 1.05 && dist < 2.25) {
-            const outDir = new THREE.Vector2(leaf.position.x, leaf.position.y - 0.12).normalize();
-            leaf.position.x += outDir.x * 0.018;
-            leaf.position.y += outDir.y * 0.018;
-          } else if (dist <= 1.05 && data.velocity.lengthSq() < 0.0001) {
-            // Si el usuario apenas la rozó sin apartarla, regresa elásticamente y mantiene un vaivén de brisa
-            leaf.position.x = THREE.MathUtils.lerp(leaf.position.x, data.homePos.x, CONFIG.springReturn);
-            leaf.position.y = THREE.MathUtils.lerp(leaf.position.y, data.homePos.y, CONFIG.springReturn);
-          }
-
-          // Movimiento orgánico de brisa tropical en reposo
-          const windSway = Math.sin(elapsedTime * data.swaySpeed + data.swayOffset) * 0.003;
-          leaf.position.x += windSway;
-          leaf.rotation.z += windSway * 0.8;
+          // Retorno elástico suave hacia su posición de marco fuera del Bounding Box
+          leaf.position.x = THREE.MathUtils.lerp(leaf.position.x, data.homePos.x, CONFIG.springReturn);
+          leaf.position.y = THREE.MathUtils.lerp(leaf.position.y, data.homePos.y, CONFIG.springReturn);
+          leaf.rotation.z = THREE.MathUtils.lerp(leaf.rotation.z, data.homeRotZ, CONFIG.springReturn);
         }
+
+        // ANIMACIÓN DE VÉRTICES (Sutil en Capas 4-5, Dinámica en Capas 6-8)
+        const posAttr = leaf.geometry.attributes.position;
+        const basePos = data.basePositions;
+        const halfH = data.planeHeight * 0.5;
+        const windAmp = data.windAmplitude;
+
+        for (let v = 0; v < posAttr.count; v++) {
+          const idx = v * 3;
+          const bx = basePos[idx];
+          const by = basePos[idx + 1];
+
+          const tipWeight = THREE.MathUtils.clamp((by + halfH) / data.planeHeight, 0.0, 1.0);
+          const wave1 = Math.sin(elapsedTime * data.swaySpeed + bx * 1.6 + by * 1.2 + data.swayPhase);
+          const wave2 = Math.cos(elapsedTime * (data.swaySpeed * 0.8) - by * 1.8 + data.swayPhase);
+
+          const offsetX = wave1 * windAmp * tipWeight - (data.velocity.x * 1.8 * tipWeight);
+          const offsetY = wave2 * (windAmp * 0.45) * tipWeight - (data.velocity.y * 1.4 * tipWeight);
+          const offsetZ = wave1 * (windAmp * 0.85) * tipWeight;
+
+          posAttr.setXYZ(v, bx + offsetX, by + offsetY, offsetZ);
+        }
+        posAttr.needsUpdate = true;
       });
 
-      // Actualizar porcentaje de hojas apartadas
-      if (!state.isRevealed) {
-        updateDiscoveryHUD();
-      }
-
-      // 2. Animación de la escultura (rotación suave o inspección táctil)
+      // 3. Animación del modelo 3D central en el Claro
       if (sculptureGroup) {
-        if (!state.isRevealed) {
-          // Mientras está oculta tras las hojas, gira muy lentamente de forma misteriosa
-          sculptureGroup.rotation.y = elapsedTime * 0.25;
-        } else {
-          // Una vez descubierta, hace un acercamiento suave de cámara y obedece al giro táctil del usuario
-          camera.position.z = THREE.MathUtils.lerp(camera.position.z, 3.65, 0.04);
-          if (!state.inspectingSculpture) {
-            state.sculptureTargetRotationY += 0.005; // Giro de exhibición automático suave
-          }
-          sculptureGroup.rotation.y = THREE.MathUtils.lerp(
-            sculptureGroup.rotation.y,
-            state.sculptureTargetRotationY,
-            0.1
-          );
-          sculptureGroup.rotation.x = THREE.MathUtils.lerp(
-            sculptureGroup.rotation.x,
-            state.sculptureTargetRotationX,
-            0.1
-          );
+        if (!state.rotatingModel) {
+          state.modelTargetRotY += 0.0035;
         }
+        sculptureGroup.rotation.y = THREE.MathUtils.lerp(sculptureGroup.rotation.y, state.modelTargetRotY, 0.08);
+        sculptureGroup.rotation.x = THREE.MathUtils.lerp(sculptureGroup.rotation.x, state.modelTargetRotX, 0.08);
 
-        // Si estamos usando la escultura procedimental, animar sutilmente su núcleo interior
-        const procSculpture = sculptureGroup.getObjectByName('ProceduralSculpture');
-        if (procSculpture && procSculpture.children[1]) {
-          procSculpture.children[1].rotation.y = -elapsedTime * 0.8;
-          procSculpture.children[1].position.y = 0.42 + Math.sin(elapsedTime * 2) * 0.04;
+        if (bboxHelperGroup && bboxHelperGroup.visible) {
+          state.modelBoundingBox.setFromObject(sculptureGroup);
         }
       }
 
-      // 3. Animación de las partículas de polen en el aire
-      if (dustParticles) {
-        dustParticles.rotation.y = elapsedTime * 0.04;
-        dustParticles.position.y = Math.sin(elapsedTime * 0.5) * 0.08;
+      // 4. Animación de partículas bioluminiscentes
+      if (bioParticles && state.particleData.length > 0) {
+        bioParticles.material.uniforms.uTime.value = elapsedTime;
+        const posAttr = bioParticles.geometry.attributes.position;
+        for (let i = 0; i < CONFIG.particleCount; i++) {
+          const p = state.particleData[i];
+          p.baseY += p.speedY;
+          if (p.baseY > 2.4) p.baseY = -1.4;
+          const x = p.baseX + Math.sin(elapsedTime * p.driftFreq + p.phase) * p.driftAmp;
+          const y = p.baseY + Math.cos(elapsedTime * p.driftFreq * 0.7 + p.phase) * (p.driftAmp * 0.5);
+          posAttr.setXYZ(i, x, y, p.baseZ);
+        }
+        posAttr.needsUpdate = true;
       }
 
       renderer.render(scene, camera);
@@ -1369,7 +1585,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // Iniciar la aplicación al cargar el documento
     window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
