@@ -218,6 +218,19 @@
 
       <!-- Controles Flotantes Traslúcidos -->
       <div class="flex items-center gap-1.5 interactive-ui">
+        
+        <!-- Botón Pantalla Completa (Icono) -->
+        <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+          <!-- Icono Expandir -->
+          <svg id="icon-expand" class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+          <!-- Icono Contraer -->
+          <svg id="icon-compress" class="w-4 h-4 text-emerald-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+          </svg>
+        </button>
+
         <!-- Cargar modelo .GLB propio -->
         <label for="glb-upload" title="Cargar escultura .GLB" class="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -244,8 +257,8 @@
       </div>
     </header>
 
-    <!-- Guía Gestual Central -->
-    <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none transition-opacity duration-500">
+    <!-- Guía Gestual Central (Se desvanece a los 3 segundos o al interactuar) -->
+    <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none transition-opacity duration-700">
       <div class="w-11 h-11 rounded-full bg-stone-950/60 border border-amber-300/40 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
         <svg class="w-6 h-6 text-amber-300 animate-swipe-hand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
@@ -278,16 +291,13 @@
 
     const REPO_RAW_BASE = 'https://raw.githubusercontent.com/blenderingforconservation-maker/recorridovirtual_Leonora/main/';
 
-    /**
-     * CONFIGURACIÓN DE ESCENA Y EXPERIENCIA
-     * - Modelo: escultura1.glb (según repositorio).
-     * - Fondo: Selva tropical densa generada proceduralmente.
-     */
     const CONFIG = {
       cameraDistance: 5.2,
       discoveryThreshold: 0.82,
+      // CORRECCIÓN DE INCLINACIÓN: Si el modelo .glb viene inclinado por defecto, ajusta estos valores (en radianes)
+      modelRotation: { x: 0, y: 0, z: 0 }, 
       modelPaths: [
-        'models/escultura1.glb', // Enlazado correctamente según la imagen del repo
+        'models/escultura1.glb',
         'assets/escultura1.glb',
         'escultura1.glb',
         `${REPO_RAW_BASE}models/escultura1.glb`,
@@ -364,12 +374,42 @@
     const hintText = document.getElementById('hint-text');
     const toastMessage = document.getElementById('toast-message');
     const touchRipple = document.getElementById('touch-ripple');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    const iconExpand = document.getElementById('icon-expand');
+    const iconCompress = document.getElementById('icon-compress');
 
     let scene, camera, renderer, raycaster;
     let jungleEnvironmentGroup, sculptureGroup, foliageRootGroup, bioParticles;
     let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight;
     let cachedTexturesByKey = null;
     const clock = new THREE.Clock();
+
+    /* =========================================================================
+       LÓGICA DE PANTALLA COMPLETA
+       ========================================================================= */
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          showToast(`Error al intentar pantalla completa: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        iconExpand.classList.add('hidden');
+        iconCompress.classList.remove('hidden');
+      } else {
+        iconExpand.classList.remove('hidden');
+        iconCompress.classList.add('hidden');
+      }
+    });
+
+    btnFullscreen.addEventListener('click', toggleFullscreen);
 
     /* =========================================================================
        1. MOTOR DE AUDIO
@@ -494,8 +534,15 @@
       window.addEventListener('resize', onWindowResize);
 
       updateLoading(100, '¡Experiencia lista!');
+      
       setTimeout(() => {
         loadingScreen.classList.add('opacity-0', 'pointer-events-none');
+        
+        // Ocultar mensaje de "Desliza tu dedo" después de 3 segundos
+        setTimeout(() => {
+          onboardingHint.classList.add('opacity-0');
+        }, 3000);
+
       }, 350);
 
       renderer.setAnimationLoop(animate);
@@ -544,17 +591,12 @@
       scene.add(centerSpotLight);
     }
 
-    /**
-     * Genera un telón panorámico 3D + suelo de selva.
-     * Se ha eliminado por completo la arquitectura de Xilitla y se ha sustituido por un dosel selvático.
-     */
     function createJungleSurrealBackground() {
       if (jungleEnvironmentGroup) scene.remove(jungleEnvironmentGroup);
       jungleEnvironmentGroup = new THREE.Group();
       jungleEnvironmentGroup.name = 'JungleEnvironment';
       scene.add(jungleEnvironmentGroup);
 
-      // 1. Lienzo panorámico curvo (Selva en Z = -4.6)
       const muralTex = createJunglePanoramaTexture();
       const muralGeo = new THREE.PlaneGeometry(16.5, 9.2, 24, 1);
       const pos = muralGeo.attributes.position;
@@ -573,7 +615,6 @@
       muralMesh.position.set(0, 0.55, -4.6);
       jungleEnvironmentGroup.add(muralMesh);
 
-      // 2. Suelo de la selva (tierra húmeda y musgo)
       const floorGeo = new THREE.CircleGeometry(6.8, 48);
       const floorMat = new THREE.MeshStandardMaterial({
         color: 0x0b291e,
@@ -586,7 +627,6 @@
       jungleFloor.receiveShadow = true;
       jungleEnvironmentGroup.add(jungleFloor);
 
-      // Anillos de luz alrededor del pedestal
       const rippleGeo = new THREE.RingGeometry(0.78, 1.65, 48);
       const rippleMat = new THREE.MeshBasicMaterial({
         color: 0x2dd4bf,
@@ -600,9 +640,6 @@
       jungleEnvironmentGroup.add(rippleMesh);
     }
 
-    /**
-     * Genera la textura de la selva (sin arcos ni escaleras).
-     */
     function createJunglePanoramaTexture() {
       const canvas = document.createElement('canvas');
       canvas.width = 1600;
@@ -611,7 +648,6 @@
       const w = canvas.width;
       const h = canvas.height;
 
-      // Cielo de niebla esmeralda profunda
       const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
       skyGrad.addColorStop(0.0, '#041a12');
       skyGrad.addColorStop(0.38, '#0d3b2b');
@@ -620,7 +656,6 @@
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, w, h);
 
-      // Resplandor solar difuso entrando por el dosel
       const sunGlow = ctx.createRadialGradient(w * 0.5, h * 0.26, 20, w * 0.5, h * 0.35, 580);
       sunGlow.addColorStop(0, 'rgba(254, 240, 138, 0.25)');
       sunGlow.addColorStop(0.45, 'rgba(52, 211, 153, 0.12)');
@@ -628,7 +663,6 @@
       ctx.fillStyle = sunGlow;
       ctx.fillRect(0, 0, w, h);
 
-      // Montañas selváticas de fondo (más capas y más oscuras)
       ctx.fillStyle = '#062419';
       ctx.beginPath();
       ctx.moveTo(0, h * 0.65);
@@ -647,10 +681,8 @@
       ctx.lineTo(0, h);
       ctx.fill();
 
-      // Siluetas de palmeras y helechos gigantes en los bordes
       ctx.save();
       ctx.fillStyle = '#02140d';
-      // Helechos izquierda
       for (let i = 0; i < 5; i++) {
         ctx.beginPath();
         ctx.moveTo(0, h);
@@ -658,7 +690,6 @@
         ctx.quadraticCurveTo(w * 0.15 + i * 20, h * 0.7, w * 0.05 + i * 30, h);
         ctx.fill();
       }
-      // Helechos derecha
       for (let i = 0; i < 5; i++) {
         ctx.beginPath();
         ctx.moveTo(w, h);
@@ -668,7 +699,6 @@
       }
       ctx.restore();
 
-      // Cascada natural al fondo (centro-derecha)
       const fallGrad = ctx.createLinearGradient(w * 0.6, h * 0.4, w * 0.6, h * 0.85);
       fallGrad.addColorStop(0, 'rgba(167, 243, 208, 0.0)');
       fallGrad.addColorStop(0.3, 'rgba(167, 243, 208, 0.2)');
@@ -677,7 +707,6 @@
       ctx.fillStyle = fallGrad;
       ctx.fillRect(w * 0.58, h * 0.4, 30, h * 0.45);
 
-      // Lianas y enredaderas colgantes desde el dosel superior
       for (let v = 0; v < 45; v++) {
         const vx = (v / 44) * w;
         const vLen = 100 + (v % 7) * 70;
@@ -689,7 +718,6 @@
         ctx.stroke();
       }
 
-      // Niebla baja intensa (humedad de la selva)
       const mistGrad = ctx.createLinearGradient(0, h * 0.55, 0, h * 0.95);
       mistGrad.addColorStop(0, 'rgba(52, 211, 153, 0)');
       mistGrad.addColorStop(0.5, 'rgba(110, 231, 183, 0.22)');
@@ -703,14 +731,13 @@
     }
 
     /* =========================================================================
-       3. CARGA DEL MODELO 3D CENTRAL (escultura1.glb)
+       3. CARGA DEL MODELO 3D CENTRAL Y CORRECCIÓN DE ROTACIÓN
        ========================================================================= */
     async function loadAndFrameCentralModel() {
       sculptureGroup = new THREE.Group();
       sculptureGroup.position.set(0, 0, 0);
       scene.add(sculptureGroup);
 
-      // Pedestal de piedra rústica
       const pedestalGroup = new THREE.Group();
       const stoneMat = new THREE.MeshStandardMaterial({
         color: 0x1b3329,
@@ -742,7 +769,7 @@
           loadedGLTF = await new Promise((resolve, reject) => {
             loader.load(path, resolve, undefined, reject);
           });
-          break; // Si carga con éxito, detiene el bucle
+          break;
         } catch (err) {
           console.warn(`No se pudo cargar ${path}, intentando siguiente...`);
         }
@@ -762,6 +789,16 @@
         sculptureGroup.remove(sculptureGroup.children[1]);
       }
 
+      // CORRECCIÓN DE INCLINACIÓN: Forzamos la rotación del nodo antes de calcular la caja
+      // Si el GLB viene diagonal, esto lo endereza. Si necesitas un ajuste fino, usa CONFIG.modelRotation.
+      modelNode.rotation.set(
+        CONFIG.modelRotation.x, 
+        CONFIG.modelRotation.y, 
+        CONFIG.modelRotation.z
+      );
+
+      modelNode.updateMatrixWorld(true); // Actualizar matriz antes de calcular la caja
+
       const rawBox = new THREE.Box3().setFromObject(modelNode);
       const rawSize = rawBox.getSize(new THREE.Vector3());
       const rawCenter = rawBox.getCenter(new THREE.Vector3());
@@ -773,6 +810,7 @@
       modelNode.scale.setScalar(scale);
       modelNode.position.x = -rawCenter.x * scale;
       modelNode.position.z = -rawCenter.z * scale;
+      // Alineación del pedestal
       modelNode.position.y = -0.68 - (rawBox.min.y * scale);
 
       modelNode.traverse((child) => {
@@ -1293,6 +1331,11 @@
       state.pointerDown = true;
       updatePointerCoords(e.clientX, e.clientY);
       touchRipple.classList.add('active');
+
+      // Intento de pantalla completa en el primer toque (si no está activa)
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
 
       if (!state.hasInteracted) {
         state.hasInteracted = true;
