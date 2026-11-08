@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>WebGL & WebAR: Arquitectura de Selva en 8 Capas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>WebAR Xilitla · Descubrimiento de Escultura en 8 Capas</title>
   
-  <!-- Tailwind CSS para la interfaz de usuario (UI) -->
+  <!-- Tailwind CSS para la interfaz de usuario (UI/UX) -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Google Fonts: Cinzel e Inter -->
+  <!-- Google Fonts: Cinzel (Arte Surrealista) e Inter (Lectura UI) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -37,7 +37,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #06140f;
+      background-color: #04120c;
       font-family: 'Inter', sans-serif;
       touch-action: none;
     }
@@ -46,31 +46,31 @@
       font-family: 'Cinzel', serif;
     }
 
-    /* Fondo atmosférico estilo ilustración digital semirealista */
+    /* Fondo atmosférico surrealista de Xilitla (Niebla de la Huasteca + Luz Esmeralda) */
     #illustration-backdrop {
       position: fixed;
       inset: 0;
       z-index: 0;
       background:
-        radial-gradient(circle at 50% 42%, rgba(52, 211, 153, 0.28) 0%, rgba(13, 148, 136, 0.18) 28%, rgba(6, 34, 24, 0.88) 65%, #030d09 100%),
-        linear-gradient(180deg, #0b2922 0%, #071c15 55%, #040e0a 100%);
+        radial-gradient(circle at 50% 34%, rgba(167, 243, 208, 0.34) 0%, rgba(20, 184, 166, 0.22) 30%, rgba(6, 46, 34, 0.90) 68%, #020c08 100%),
+        linear-gradient(180deg, #0d362b 0%, #07221a 52%, #030d09 100%);
       pointer-events: none;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.6s ease;
     }
 
-    /* Rayos de sol volumétricos (God Rays) hacia el claro central */
+    /* Rayos de sol volumétricos filtrándose entre las pozas y arcos de Xilitla */
     #god-rays {
       position: fixed;
       inset: 0;
       z-index: 1;
       pointer-events: none;
       background: conic-gradient(
-        from 165deg at 50% -10%,
+        from 160deg at 50% -15%,
         transparent 0deg,
-        rgba(167, 243, 208, 0.08) 12deg,
-        transparent 25deg,
-        rgba(253, 230, 138, 0.09) 36deg,
-        transparent 52deg
+        rgba(167, 243, 208, 0.14) 14deg,
+        transparent 28deg,
+        rgba(253, 230, 138, 0.16) 40deg,
+        transparent 56deg
       );
       mix-blend-mode: screen;
     }
@@ -102,39 +102,72 @@
       height: 100vh;
       z-index: 2;
       touch-action: none;
+      cursor: grab;
     }
 
-    /* Viñeta natural de contraste para las Capas 6, 7 y 8 */
+    #webgl-container:active {
+      cursor: grabbing;
+    }
+
+    /* Viñeta orgánica suave que enmarca la escena sin oscurecer el centro */
     .jungle-vignette {
       position: fixed;
       inset: 0;
       z-index: 3;
       pointer-events: none;
-      background: radial-gradient(circle at 50% 48%, transparent 46%, rgba(2, 14, 9, 0.72) 100%);
+      background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(1, 10, 6, 0.68) 100%);
     }
 
-    /* Capa de interfaz HUD */
+    /* Capa HUD minimalista optimizada para móvil horizontal y vertical */
     #ui-layer {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      inset: 0;
       z-index: 10;
       pointer-events: none;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      padding: env(safe-area-inset-top, 12px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 12px) env(safe-area-inset-left, 16px);
     }
 
     .interactive-ui {
       pointer-events: auto;
     }
+
+    /* Animación de la mano guía inicial */
+    @keyframes swipeHint {
+      0%, 100% { transform: translateX(-22px) rotate(-8deg); opacity: 0.5; }
+      50% { transform: translateX(22px) rotate(8deg); opacity: 1; }
+    }
+
+    .animate-swipe-hand {
+      animation: swipeHint 2.2s ease-in-out infinite;
+    }
+
+    /* Rastro visual del dedo al apartar hojas */
+    #touch-ripple {
+      position: fixed;
+      width: 44px;
+      height: 44px;
+      border-radius: 9999px;
+      pointer-events: none;
+      z-index: 9;
+      background: radial-gradient(circle, rgba(253, 224, 71, 0.45) 0%, rgba(52, 211, 153, 0.2) 55%, transparent 75%);
+      box-shadow: 0 0 20px rgba(110, 231, 183, 0.55);
+      transform: translate(-50%, -50%) scale(0.4);
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.15s ease;
+    }
+
+    #touch-ripple.active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
   </style>
 </head>
 <body>
 
-  <!-- 1. FONDO PICTÓRICO DE ILUSTRACIÓN DIGITAL Y RAYOS VOLUMÉTRICOS -->
+  <!-- 1. FONDO ATMOSFÉRICO DE XILITLA Y RAYOS DE SOL -->
   <div id="illustration-backdrop"></div>
   <div id="god-rays"></div>
 
@@ -144,129 +177,105 @@
   <!-- 3. CONTENEDOR WEBGL (THREE.JS) -->
   <div id="webgl-container"></div>
 
-  <!-- 4. VIÑETA DE CONTRASTE EN PRIMER PLANO -->
+  <!-- 4. VIÑETA NATURAL Y FEEDBACK TÁCTIL -->
   <div class="jungle-vignette"></div>
+  <div id="touch-ripple"></div>
 
   <!-- 5. PANTALLA DE CARGA -->
   <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-md transition-opacity duration-700 px-6 text-center">
-    <div class="w-16 h-16 mb-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-950/50">
-      <svg class="w-9 h-9 text-emerald-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="w-14 h-14 mb-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center shadow-lg shadow-emerald-950/60">
+      <svg class="w-8 h-8 text-emerald-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
       </svg>
     </div>
-    <h1 class="font-serif-art text-2xl sm:text-3xl text-emerald-50 tracking-wider mb-2">ARQUITECTURA 8 CAPAS</h1>
-    <p id="loading-status" class="text-sm text-emerald-300/80 mb-6 max-w-xs">Calculando Bounding Box del modelo 3D y generando 8 estratos de profundidad...</p>
-    <div class="w-64 sm:w-80 h-2 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
-      <div id="loading-bar" class="h-full bg-gradient-to-r from-emerald-600 to-teal-400 w-0 transition-all duration-300"></div>
+    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-1.5">JARDÍN SURREALISTA · XILITLA</h1>
+    <p id="loading-status" class="text-xs sm:text-sm text-emerald-300/80 mb-5 max-w-xs">Preparando vegetación con rocas, niebla y capas táctiles...</p>
+    <div class="w-60 sm:w-72 h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
+      <div id="loading-bar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 w-0 transition-all duration-300"></div>
     </div>
-    <span id="loading-percent" class="text-xs font-mono text-stone-400 mt-2">0%</span>
+    <span id="loading-percent" class="text-[11px] font-mono text-stone-400 mt-2">0%</span>
   </div>
 
-  <!-- 6. HUD DE CONTROL Y TELEMETRÍA DE ARQUITECTURA 3D -->
-  <div id="ui-layer" class="p-3 sm:p-5">
+  <!-- 6. INTERFAZ UI/UX MINIMALISTA E INMERSIVA -->
+  <div id="ui-layer" class="p-3 sm:p-4">
     
-    <!-- Barra Superior -->
-    <header class="w-full max-w-5xl mx-auto flex flex-col gap-2">
-      <div class="flex flex-wrap items-center justify-between gap-2 bg-stone-950/80 backdrop-blur-md border border-emerald-500/20 rounded-2xl px-3.5 py-2.5 shadow-2xl">
-        
-        <!-- Título y Estado de Capas -->
-        <div class="flex items-center gap-2.5 min-w-0">
-          <span id="ar-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
-          <div class="truncate">
-            <h2 class="text-xs sm:text-sm font-semibold text-white truncate">Selva Semirealista · 8 Capas de Paralaje 3D</h2>
-            <p id="asset-source-badge" class="text-[10px] sm:text-xs text-emerald-300/80 truncate">
-              Claro Central Activo · Capas 1-3 Estáticas · 4-5 Viento Sutil · 6-8 Dinámicas + DoF
-            </p>
+    <!-- Barra Superior Compacta: Progreso de Descubrimiento + Acciones Rápidas -->
+    <header class="w-full flex items-center justify-between gap-2">
+      
+      <!-- Píldora de Progreso de Descubrimiento (UX Feedback claro y no intrusivo) -->
+      <div id="discovery-pill" class="flex items-center gap-3 bg-stone-950/65 backdrop-blur-md border border-emerald-400/25 rounded-full pl-3.5 pr-4 py-1.5 shadow-xl transition-all duration-500">
+        <span id="status-dot" class="w-2 h-2 rounded-full bg-amber-300 animate-ping shrink-0"></span>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span id="discovery-label" class="text-[11px] sm:text-xs font-medium text-emerald-50 tracking-wide">Despeja la selva</span>
+            <span id="discovery-count" class="text-[11px] font-mono font-semibold text-amber-300">0%</span>
           </div>
-        </div>
-
-        <!-- Controles Interactivos -->
-        <div class="flex items-center gap-1.5 sm:gap-2 interactive-ui shrink-0">
-          <!-- Mostrar/Ocultar Bounding Box de Depuración (Tech Lead View) -->
-          <button id="btn-toggle-bbox" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-teal-950/90 hover:bg-teal-900 text-teal-200 border border-teal-500/30 transition-all" title="Ver Caja Delimitadora (Bounding Box) y Claro Central">
-            <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            <span class="hidden md:inline">Bounding Box</span>
-          </button>
-
-          <!-- Botón Cámara AR -->
-          <button id="btn-toggle-camera" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 text-white shadow-md transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span id="camera-btn-text">Cámara AR</span>
-          </button>
-
-          <!-- Subir modelo .GLB propio -->
-          <label for="glb-upload" title="Cargar modelo .GLB central" class="cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-stone-800/90 hover:bg-stone-700 active:scale-95 text-stone-200 border border-white/10 transition-all">
-            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            <span class="hidden sm:inline">Subir .GLB</span>
-          </label>
-          <input id="glb-upload" type="file" accept=".glb,.gltf" class="hidden" />
-
-          <!-- Reiniciar posición de hojas -->
-          <button id="btn-reset" title="Restaurar follaje" class="p-1.5 rounded-xl bg-stone-800/90 hover:bg-stone-700 text-stone-300 border border-white/10 transition-all">
-            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-
-          <!-- Sonido -->
-          <button id="btn-sound" title="Audio reactivo" class="p-1.5 rounded-xl bg-stone-800/90 hover:bg-stone-700 text-stone-300 border border-white/10 transition-all">
-            <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            </svg>
-          </button>
+          <div class="w-28 sm:w-36 h-1 bg-stone-800/90 rounded-full overflow-hidden mt-0.5">
+            <div id="discovery-bar" class="h-full bg-gradient-to-r from-emerald-400 to-amber-300 w-0 transition-all duration-300"></div>
+          </div>
         </div>
       </div>
 
-      <!-- Indicador Visual de las 8 Capas de Profundidad (Z-Depth Map) -->
-      <div class="grid grid-cols-3 gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
-        <div class="bg-stone-950/70 backdrop-blur-md border border-teal-500/20 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
-          <span class="text-teal-300 font-medium">Capas 1–3 (Fondo)</span>
-          <span class="px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-200 font-mono text-[10px]">ESTÁTICAS</span>
-        </div>
-        <div class="bg-stone-950/70 backdrop-blur-md border border-emerald-500/20 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
-          <span class="text-emerald-300 font-medium">Capas 4–5 (Medio)</span>
-          <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-200 font-mono text-[10px]">VIENTO SUTIL</span>
-        </div>
-        <div class="bg-stone-950/70 backdrop-blur-md border border-amber-500/25 rounded-xl px-2.5 py-1.5 flex items-center justify-between">
-          <span class="text-amber-300 font-medium">Capas 6–8 (Frente)</span>
-          <span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-200 font-mono text-[10px]">TÁCTIL + DoF</span>
-        </div>
+      <!-- Controles Flotantes Traslúcidos (Esquina Superior Derecha) -->
+      <div class="flex items-center gap-1.5 interactive-ui">
+        <!-- Cargar modelo .GLB propio -->
+        <label for="glb-upload" title="Cargar escultura .GLB" class="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span class="hidden sm:inline">Cargar .GLB</span>
+        </label>
+        <input id="glb-upload" type="file" accept=".glb,.gltf" class="hidden" />
+
+        <!-- Reiniciar experiencia (Volver a ocultar la escultura tras las hojas) -->
+        <button id="btn-reset" title="Cubrir escultura nuevamente" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="hidden md:inline">Reiniciar</span>
+        </button>
+
+        <!-- Sonido Ambiental / Hojas -->
+        <button id="btn-sound" title="Sonido de selva" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+          <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+        </button>
       </div>
     </header>
 
-    <!-- Notificación Toast -->
-    <div id="toast-message" class="self-center bg-stone-900/95 border border-emerald-500/40 text-emerald-100 px-4 py-2 rounded-xl text-xs shadow-2xl transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-2">
-      Mensaje del sistema
+    <!-- Guía Gestual Central (Se desvanece automáticamente en cuanto el usuario toca las hojas) -->
+    <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none transition-opacity duration-500">
+      <div class="w-11 h-11 rounded-full bg-stone-950/60 border border-amber-300/40 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
+        <svg class="w-6 h-6 text-amber-300 animate-swipe-hand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+        </svg>
+      </div>
+      <p id="hint-text" class="px-3.5 py-1 rounded-full bg-stone-950/70 backdrop-blur-md border border-white/10 text-emerald-50 text-xs font-medium shadow-xl">
+        Desliza tu dedo para apartar las plantas y descubrir la escultura
+      </p>
     </div>
 
-    <!-- Pie de Página: Controles de Iluminación e Instrucciones -->
-    <footer class="w-full max-w-2xl mx-auto flex flex-col items-center gap-2">
-      <div class="interactive-ui flex flex-wrap items-center justify-center gap-2 bg-stone-950/80 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-2.5 shadow-xl text-xs">
-        <span class="text-stone-300 flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-          Pasa el dedo/cursor por los bordes para apartar las <strong>Capas 6–8</strong> o arrastra el centro para girar el modelo 3D
-        </span>
-        <div class="flex items-center gap-1.5 pl-2 border-l border-white/10">
-          <button id="btn-light-illustration" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/30 transition">
-            Esmeralda Ilustración
-          </button>
-          <button id="btn-light-golden" class="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-200 border border-amber-500/30 hover:bg-amber-500/25 transition">
-            Hora Dorada
-          </button>
-        </div>
+    <!-- Pie de Página Minimalista: Toast de Estado + Botón Cámara AR -->
+    <footer class="w-full flex items-end justify-between gap-2">
+      <!-- Mensaje Toast -->
+      <div id="toast-message" class="bg-stone-950/80 backdrop-blur-md border border-emerald-400/30 text-emerald-100 px-3.5 py-1.5 rounded-full text-xs shadow-xl transition-all duration-300 opacity-0 pointer-events-none transform translate-y-2">
+        Selva de Xilitla lista
       </div>
+
+      <!-- Botón Cámara AR Minimalista en Esquina Inferior Derecha -->
+      <button id="btn-toggle-camera" class="interactive-ui flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 text-white border border-emerald-300/40 backdrop-blur-md shadow-xl transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span id="camera-btn-text">Cámara AR</span>
+      </button>
     </footer>
   </div>
 
   <!-- =========================================================================
-       ARQUITECTURA THREE.JS: 8 CAPAS DE PROFUNDIDAD + BOUNDING BOX CLEARING
+       ARQUITECTURA THREE.JS: SELVA XILITLA + PLANTAS CON ROCAS DETRÁS + CAPAS TÁCTILES
        ========================================================================= -->
   <script type="module">
     import * as THREE from 'three';
@@ -275,15 +284,16 @@
     const REPO_RAW_BASE = 'https://raw.githubusercontent.com/blenderingforconservation-maker/recorridovirtual_Leonora/main/';
 
     /**
-     * CONFIGURACIÓN TÉCNICA DE LAS 8 CAPAS Y DEL SUJETO CENTRAL
-     * - El modelo 3D se sitúa en Z = 0.0, a una distancia media de la cámara (Z = 5.4).
-     * - Capas 1, 2, 3 (Z < 0): Detrás del modelo, estáticas, atmósfera pictórica.
-     * - Capas 4, 5 (Z ≈ -0.45 a +0.45): Envolviendo los laterales del Bounding Box con viento sutil.
-     * - Capas 6, 7, 8 (Z > 1.25 a 2.85): Primer plano con efecto viñeta, desenfoque DoF,
-     *   silueta más oscura para alto contraste y repulsión/arrastre táctil dinámico.
+     * CONFIGURACIÓN DE ESCENA Y EXPERIENCIA DE USUARIO (UX)
+     * - Fondo: Panorama surrealista estilo Xilitla (arcos de piedra, cascada, niebla y selva).
+     * - Detrás del modelo (Capas 1 a 3): Arreglo de "plantas con rocas" (`tree-tropical.png`)
+     *   directamente detrás de la escultura (Z < 0) como altar botánico-mineral.
+     * - Frente al modelo (Capas 5 a 8): Cortina densa de vegetación que OCULTA la escultura al inicio
+     *   y que el usuario va apartando con el dedo hacia los bordes con física persistente.
      */
     const CONFIG = {
-      cameraDistance: 5.4, // Distancia media para encuadrar el cuerpo completo del modelo
+      cameraDistance: 5.2,
+      discoveryThreshold: 0.82, // Al despejar el 82% de las plantas centrales se completa el descubrimiento
       modelPaths: [
         'models/escultura.glb',
         'assets/escultura.glb',
@@ -293,170 +303,59 @@
       ],
       vegetationAssets: [
         {
-          key: 'tree',
+          // NOTA: En el repositorio `tree-tropical.png` corresponde a "tropical-plants-with-rocks"
+          key: 'plantas_rocas',
           name: 'tree-tropical.png',
           localPath: 'assets/tree-tropical.png',
           rawUrl: `${REPO_RAW_BASE}assets/tree-tropical.png`,
-          aspectWidth: 2.35,
-          aspectHeight: 2.55
+          aspectWidth: 2.55,
+          aspectHeight: 2.35
         },
         {
           key: 'arbusto',
           name: 'arbustotropical.png',
           localPath: 'assets/arbustotropical.png',
           rawUrl: `${REPO_RAW_BASE}assets/arbustotropical.png`,
-          aspectWidth: 1.95,
-          aspectHeight: 1.65
+          aspectWidth: 2.05,
+          aspectHeight: 1.75
         },
         {
           key: 'plantas',
           name: 'plantas.png',
           localPath: 'assets/plantas.png',
           rawUrl: `${REPO_RAW_BASE}assets/plantas.png`,
-          aspectWidth: 1.75,
-          aspectHeight: 1.95
+          aspectWidth: 1.85,
+          aspectHeight: 2.05
         }
       ],
-      /**
-       * ESPECIFICACIÓN ARQUITECTÓNICA DE LAS 8 CAPAS DE PARALAJE 3D
-       */
-      eightLayerSpecs: [
-        // --- CAPAS 1, 2 y 3: FONDO (Detrás del modelo 3D) -> ESTÁTICAS ---
-        {
-          layerIndex: 1,
-          role: 'BACKGROUND_DEEP_CANOPY',
-          zDepth: -3.20,
-          isStatic: true,
-          windAmplitude: 0.0,
-          interactive: false,
-          dofBlurPx: 2,
-          colorTint: '#164e43',    // Verde azulado profundo atmosférico
-          emissiveTint: '#07261f',
-          clearingMultiplier: 0.0, // Cubre el telón de fondo detrás de la escultura
-          scaleMultiplier: 1.75
-        },
-        {
-          layerIndex: 2,
-          role: 'BACKGROUND_TREES_AND_VINES',
-          zDepth: -2.15,
-          isStatic: true,
-          windAmplitude: 0.0,
-          interactive: false,
-          dofBlurPx: 1,
-          colorTint: '#236b56',    // Tonos medios esmeralda-teal
-          emissiveTint: '#0b3327',
-          clearingMultiplier: 0.55, // Abre un halo luminoso detrás de la silueta del modelo
-          scaleMultiplier: 1.50
-        },
-        {
-          layerIndex: 3,
-          role: 'BACKGROUND_RIM_CLEARING',
-          zDepth: -1.15,
-          isStatic: true,
-          windAmplitude: 0.0,
-          interactive: false,
-          dofBlurPx: 0,
-          colorTint: '#489e7a',    // Borde retroiluminado por los rayos de sol del claro
-          emissiveTint: '#114231',
-          clearingMultiplier: 0.92,
-          scaleMultiplier: 1.32
-        },
-
-        // --- CAPAS 4 y 5: PLANO MEDIO (Alrededor del modelo 3D) -> VIENTO MUY SUTIL ---
-        {
-          layerIndex: 4,
-          role: 'MIDGROUND_LATERAL_BUSHES',
-          zDepth: -0.35,
-          isStatic: false,
-          windAmplitude: 0.022,    // Animación de viento muy sutil en vértices
-          interactive: false,
-          dofBlurPx: 0,
-          colorTint: '#8CE6B4',    // Verde vibrante semirealista a la altura del sujeto
-          emissiveTint: '#0a291c',
-          clearingMultiplier: 1.18, // Respeta estrictamente el Bounding Box del modelo 3D
-          scaleMultiplier: 1.16
-        },
-        {
-          layerIndex: 5,
-          role: 'MIDGROUND_SURROUNDING_FERNS',
-          zDepth: 0.45,
-          isStatic: false,
-          windAmplitude: 0.034,    // Viento suave envolvente
-          interactive: false,
-          dofBlurPx: 0,
-          colorTint: '#a7f3d0',    // Iluminación directa del claro central
-          emissiveTint: '#092418',
-          clearingMultiplier: 1.24, // Despeja por completo el cuerpo entero del modelo 3D
-          scaleMultiplier: 1.10
-        },
-
-        // --- CAPAS 6, 7 y 8: PRIMER PLANO (Frente a cámara) -> DINÁMICAS + TÁCTIL + DoF + CONTRASTE ---
-        {
-          layerIndex: 6,
-          role: 'FOREGROUND_INTERACTIVE_FRAME',
-          zDepth: 1.35,
-          isStatic: false,
-          windAmplitude: 0.068,
-          interactive: true,
-          dofBlurPx: 2,
-          colorTint: '#4f8a69',    // Ligeramente más oscuro para iniciar el contraste de viñeta
-          emissiveTint: '#03120b',
-          clearingMultiplier: 1.15,
-          scaleMultiplier: 1.12
-        },
-        {
-          layerIndex: 7,
-          role: 'FOREGROUND_DOF_TROPICAL_LEAVES',
-          zDepth: 2.10,
-          isStatic: false,
-          windAmplitude: 0.088,
-          interactive: true,
-          dofBlurPx: 5,            // Desenfoque Depth-of-Field medio
-          colorTint: '#2b543d',    // Silueta verde oscura para forzar contraste con el centro
-          emissiveTint: '#020a06',
-          clearingMultiplier: 1.22,
-          scaleMultiplier: 1.22
-        },
-        {
-          layerIndex: 8,
-          role: 'FOREGROUND_EXTREME_VIGNETTE_DOF',
-          zDepth: 2.80,
-          isStatic: false,
-          windAmplitude: 0.115,
-          interactive: true,
-          dofBlurPx: 9,            // Desenfoque Depth-of-Field pronunciado en bordes extremos
-          colorTint: '#152e20',    // Silueta muy oscura de primerísimo plano (viñeta natural)
-          emissiveTint: '#010503',
-          clearingMultiplier: 1.32,
-          scaleMultiplier: 1.35
-        }
-      ],
-      particleCount: 200,
-      damping: 0.90,
-      springReturn: 0.045,
-      pointerRepulsionRadius: 1.25 // Radio de reacción al paso del ratón/dedo en Capas 6, 7 y 8
+      particleCount: 240,
+      damping: 0.89,
+      restLerpSpeed: 0.08,
+      brushRadius: 0.92 // Radio del dedo al barrer múltiples hojas de forma ergonómica
     };
 
-    // Estado reactivo de la escena
+    // Estado reactivo de la experiencia
     const state = {
       foliagePlanes: [],
+      coveringLeavesCount: 0,
+      clearedLeavesCount: 0,
+      discoveryCompleted: false,
       modelBoundingBox: new THREE.Box3(),
-      modelSize: new THREE.Vector3(1.4, 2.1, 1.4),
-      clearingEllipse: { radiusX: 1.15, radiusY: 1.35, centerY: 0.12 },
+      modelSize: new THREE.Vector3(1.4, 2.0, 1.4),
       activeDraggedLeaf: null,
       pointerDown: false,
       rotatingModel: false,
+      hasInteracted: false,
       pointerNDC: new THREE.Vector2(0, 0),
-      SmoothedParallax: new THREE.Vector2(0, 0),
-      pointerWorldAtForeground: new THREE.Vector3(999, 999, 2.0),
+      smoothedParallax: new THREE.Vector2(0, 0),
       lastPointerWorld: new THREE.Vector3(),
       lastInspectClient: { x: 0, y: 0 },
       modelTargetRotY: 0,
       modelTargetRotX: 0,
-      showBoundingBoxHelper: false,
       cameraActive: false,
       soundEnabled: true,
       audioCtx: null,
+      lastRustleTime: 0,
       particleData: []
     };
 
@@ -468,18 +367,24 @@
     const loadingBar = document.getElementById('loading-bar');
     const loadingPercent = document.getElementById('loading-percent');
     const loadingStatus = document.getElementById('loading-status');
-    const assetSourceBadge = document.getElementById('asset-source-badge');
+    const discoveryLabel = document.getElementById('discovery-label');
+    const discoveryCount = document.getElementById('discovery-count');
+    const discoveryBar = document.getElementById('discovery-bar');
+    const statusDot = document.getElementById('status-dot');
+    const onboardingHint = document.getElementById('onboarding-hint');
+    const hintText = document.getElementById('hint-text');
     const toastMessage = document.getElementById('toast-message');
+    const touchRipple = document.getElementById('touch-ripple');
 
-    // Instancias principales de Three.js
+    // Instancias de Three.js
     let scene, camera, renderer, raycaster;
-    let studioEnvironmentGroup, sculptureGroup, foliageRootGroup, bboxHelperGroup, bioParticles;
+    let xilitlaEnvironmentGroup, sculptureGroup, foliageRootGroup, bioParticles;
     let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight;
     let cachedTexturesByKey = null;
     const clock = new THREE.Clock();
 
     /* =========================================================================
-       1. AUDIO REACTIVO SINTETIZADO (Web Audio API)
+       1. MOTOR DE AUDIO SINTETIZADO (SONIDO DE HOJAS Y REVELACIÓN SURREALISTA)
        ========================================================================= */
     function initAudio() {
       if (!state.audioCtx && state.soundEnabled) {
@@ -491,11 +396,14 @@
       }
     }
 
-    function playFoliageRustle(intensity = 0.4) {
-      if (!state.soundEnabled || !state.audioCtx) return;
+    function playFoliageRustle(intensity = 0.45) {
+      const now = performance.now();
+      if (!state.soundEnabled || !state.audioCtx || now - state.lastRustleTime < 75) return;
+      state.lastRustleTime = now;
+
       try {
         const ctx = state.audioCtx;
-        const duration = 0.14;
+        const duration = 0.13;
         const bufferSize = Math.floor(ctx.sampleRate * duration);
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -507,11 +415,11 @@
 
         const filter = ctx.createBiquadFilter();
         filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(850 + Math.random() * 550, ctx.currentTime);
-        filter.Q.setValueAtTime(2.0, ctx.currentTime);
+        filter.frequency.setValueAtTime(750 + Math.random() * 650, ctx.currentTime);
+        filter.Q.setValueAtTime(1.8, ctx.currentTime);
 
         const gain = ctx.createGain();
-        const vol = Math.min(0.14, Math.max(0.02, intensity * 0.1));
+        const vol = Math.min(0.15, Math.max(0.025, intensity * 0.11));
         gain.gain.setValueAtTime(vol, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
@@ -522,31 +430,49 @@
       } catch (e) {}
     }
 
+    function playRevealChime() {
+      if (!state.soundEnabled || !state.audioCtx) return;
+      try {
+        const ctx = state.audioCtx;
+        const notes = [523.25, 659.25, 783.99, 1046.5]; // Acorde Mayor luminoso
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.11);
+          gain.gain.setValueAtTime(0.001, ctx.currentTime + idx * 0.11);
+          gain.gain.linearRampToValueAtTime(0.09, ctx.currentTime + idx * 0.11 + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.0008, ctx.currentTime + idx * 0.11 + 1.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.11);
+          osc.stop(ctx.currentTime + idx * 0.11 + 1.45);
+        });
+      } catch (e) {}
+    }
+
     function showToast(text) {
       toastMessage.textContent = text;
-      toastMessage.classList.remove('opacity-0', '-translate-y-2');
+      toastMessage.classList.remove('opacity-0', 'translate-y-2');
       toastMessage.classList.add('opacity-100', 'translate-y-0');
       clearTimeout(showToast.timer);
       showToast.timer = setTimeout(() => {
         toastMessage.classList.remove('opacity-100', 'translate-y-0');
-        toastMessage.classList.add('opacity-0', '-translate-y-2');
-      }, 3000);
+        toastMessage.classList.add('opacity-0', 'translate-y-2');
+      }, 3200);
     }
 
     /* =========================================================================
-       2. INICIALIZACIÓN DE CÁMARA (DISTANCIA MEDIA) Y DIRECCIÓN DE ARTE
+       2. INICIALIZACIÓN DE ESCENA Y ENTORNO SURREALISTA DE XILITLA
        ========================================================================= */
     async function init() {
-      updateLoading(12, 'Configurando cámara a distancia media y luces pictóricas...');
+      updateLoading(15, 'Generando arquitectura surrealista de Xilitla...');
 
       scene = new THREE.Scene();
-      // Niebla exponencial suave para fundir las Capas 1, 2 y 3 en la atmósfera de la selva
-      scene.fog = new THREE.FogExp2(0x072119, 0.075);
+      scene.fog = new THREE.FogExp2(0x062118, 0.062);
 
-      // Cámara situada a distancia media (Z = 5.4) para ver el modelo 3D de cuerpo completo
       camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 60);
-      camera.position.set(0, 0.22, CONFIG.cameraDistance);
-      camera.lookAt(0, 0.12, 0);
+      updateCameraFramingForAspect();
 
       renderer = new THREE.WebGLRenderer({
         antialias: true,
@@ -558,28 +484,28 @@
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.22;
+      renderer.toneMappingExposure = 1.25;
       container.appendChild(renderer.domElement);
 
       raycaster = new THREE.Raycaster();
 
-      setupIllustrationLighting();
-      createJungleClearingFloor();
+      setupXilitlaLighting();
+      createXilitlaSurrealBackground();
 
-      updateLoading(38, 'Cargando modelo 3D central y calculando Bounding Box...');
+      updateLoading(45, 'Cargando escultura 3D en el claro de Las Pozas...');
       await loadAndFrameCentralModel();
 
-      updateLoading(68, 'Generando las 8 capas de vegetación alrededor del Claro Central...');
+      updateLoading(72, 'Colocando plantas con rocas detrás y cortina táctil al frente...');
       cachedTexturesByKey = await loadBaseVegetationTextures();
-      generateEightLayerJungle(state.modelBoundingBox, cachedTexturesByKey);
+      buildXilitlaLayeredJungle(cachedTexturesByKey);
 
-      updateLoading(90, 'Generando partículas bioluminiscentes entre capas...');
+      updateLoading(92, 'Activando esporas bioluminiscentes de alto brillo...');
       createLuminescentParticles();
 
       setupInteractionEvents();
       window.addEventListener('resize', onWindowResize);
 
-      updateLoading(100, '¡Escena de 8 capas lista!');
+      updateLoading(100, '¡Experiencia lista!');
       setTimeout(() => {
         loadingScreen.classList.add('opacity-0', 'pointer-events-none');
       }, 350);
@@ -593,101 +519,239 @@
       if (message) loadingStatus.textContent = message;
     }
 
-    function setupIllustrationLighting() {
-      // Luz ambiental hemisférica rica en tonos esmeralda y ámbar suave
-      hemiLight = new THREE.HemisphereLight(0xa7f3d0, 0x051b13, 1.15);
+    // Ajusta automáticamente la distancia de cámara según si el teléfono está en horizontal o vertical
+    function updateCameraFramingForAspect() {
+      const aspect = window.innerWidth / window.innerHeight;
+      // En horizontal (landscape) acercamos ligeramente para aprovechar todo el ancho; en vertical damos aire lateral
+      CONFIG.cameraDistance = aspect >= 1.0 ? 4.95 : 5.65;
+      if (camera) {
+        camera.aspect = aspect;
+        camera.position.z = CONFIG.cameraDistance;
+        camera.updateProjectionMatrix();
+      }
+    }
+
+    function setupXilitlaLighting() {
+      hemiLight = new THREE.HemisphereLight(0xa7f3d0, 0x041a12, 1.25);
       scene.add(hemiLight);
 
-      // Luz cenital principal (simula el rayo de sol que entra al claro central donde está el modelo)
-      sunClearLight = new THREE.DirectionalLight(0xfef08a, 2.2);
-      sunClearLight.position.set(1.8, 5.2, 2.6);
+      sunClearLight = new THREE.DirectionalLight(0xfef08a, 2.35);
+      sunClearLight.position.set(1.6, 5.4, 2.8);
       sunClearLight.castShadow = true;
       sunClearLight.shadow.mapSize.width = 1024;
       sunClearLight.shadow.mapSize.height = 1024;
       sunClearLight.shadow.bias = -0.001;
       scene.add(sunClearLight);
 
-      // Luz de recorte izquierda (Rim Light Turquesa Ilustración)
-      rimTealLight = new THREE.PointLight(0x2dd4bf, 3.2, 10);
-      rimTealLight.position.set(-2.4, 1.4, -0.8);
+      rimTealLight = new THREE.PointLight(0x2dd4bf, 3.4, 11);
+      rimTealLight.position.set(-2.5, 1.5, -0.6);
       scene.add(rimTealLight);
 
-      // Luz de recorte derecha (Rim Light Cálida Dorada)
-      rimGoldLight = new THREE.PointLight(0xfbbf24, 2.4, 9);
-      rimGoldLight.position.set(2.3, 0.9, 1.2);
+      rimGoldLight = new THREE.PointLight(0xfbbf24, 2.6, 10);
+      rimGoldLight.position.set(2.4, 1.1, 1.4);
       scene.add(rimGoldLight);
 
-      // Foco dedicado exclusivamente al modelo 3D central para destacarlo frente a las Capas 6-8
-      centerSpotLight = new THREE.SpotLight(0xffffff, 2.8);
-      centerSpotLight.position.set(0, 3.4, 3.2);
-      centerSpotLight.angle = Math.PI / 5.5;
+      centerSpotLight = new THREE.SpotLight(0xfffbeb, 3.1);
+      centerSpotLight.position.set(0, 3.6, 3.2);
+      centerSpotLight.angle = Math.PI / 5.2;
       centerSpotLight.penumbra = 0.85;
       scene.add(centerSpotLight);
     }
 
-    function createJungleClearingFloor() {
-      studioEnvironmentGroup = new THREE.Group();
-      scene.add(studioEnvironmentGroup);
+    /**
+     * Genera un telón panorámico 3D + suelo de poza inspirado en el Jardín Surrealista de Xilitla:
+     * montañas húmedas de la Huasteca, arcos gótico-surrealistas de piedra con musgo, escaleras al cielo y cascada.
+     */
+    function createXilitlaSurrealBackground() {
+      if (xilitlaEnvironmentGroup) scene.remove(xilitlaEnvironmentGroup);
+      xilitlaEnvironmentGroup = new THREE.Group();
+      xilitlaEnvironmentGroup.name = 'XilitlaSurrealEnvironment';
+      scene.add(xilitlaEnvironmentGroup);
 
-      // Suelo orgánico del claro de la selva
-      const groundGeo = new THREE.CircleGeometry(6.5, 48);
-      const groundMat = new THREE.MeshStandardMaterial({
-        color: 0x0c241b,
-        roughness: 0.85,
-        metalness: 0.08
+      // 1. Lienzo panorámico curvo (Ciclorama de Xilitla en Z = -4.6)
+      const muralTex = createXilitlaPanoramaTexture();
+      const muralGeo = new THREE.PlaneGeometry(16.5, 9.2, 24, 1);
+      // Curvar sutilmente el telón para envolver la visión periférica en modo horizontal
+      const pos = muralGeo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const vx = pos.getX(i);
+        pos.setZ(i, Math.pow(vx * 0.14, 2) * 0.55);
+      }
+      muralGeo.computeVertexNormals();
+
+      const muralMat = new THREE.MeshBasicMaterial({
+        map: muralTex,
+        side: THREE.DoubleSide,
+        fog: false
       });
-      const ground = new THREE.Mesh(groundGeo, groundMat);
-      ground.rotation.x = -Math.PI / 2;
-      ground.position.y = -1.25;
-      ground.receiveShadow = true;
-      studioEnvironmentGroup.add(ground);
+      const muralMesh = new THREE.Mesh(muralGeo, muralMat);
+      muralMesh.position.set(0, 0.55, -4.6);
+      xilitlaEnvironmentGroup.add(muralMesh);
 
-      // Anillo de musgo bioluminiscente sutil que marca el claro central
-      const mossRingGeo = new THREE.RingGeometry(0.85, 1.45, 48);
-      const mossRingMat = new THREE.MeshBasicMaterial({
-        color: 0x34d399,
+      // 2. Suelo de piedra húmeda y espejo de agua ("Las Pozas")
+      const poolGeo = new THREE.CircleGeometry(6.8, 48);
+      const poolMat = new THREE.MeshStandardMaterial({
+        color: 0x0b291e,
+        roughness: 0.35,
+        metalness: 0.25
+      });
+      const poolFloor = new THREE.Mesh(poolGeo, poolMat);
+      poolFloor.rotation.x = -Math.PI / 2;
+      poolFloor.position.y = -1.25;
+      poolFloor.receiveShadow = true;
+      xilitlaEnvironmentGroup.add(poolFloor);
+
+      // Anillos de agua turquesa alrededor del pedestal
+      const rippleGeo = new THREE.RingGeometry(0.78, 1.65, 48);
+      const rippleMat = new THREE.MeshBasicMaterial({
+        color: 0x2dd4bf,
         transparent: true,
-        opacity: 0.16,
+        opacity: 0.18,
         side: THREE.DoubleSide
       });
-      const mossRing = new THREE.Mesh(mossRingGeo, mossRingMat);
-      mossRing.rotation.x = -Math.PI / 2;
-      mossRing.position.y = -1.24;
-      studioEnvironmentGroup.add(mossRing);
+      const rippleMesh = new THREE.Mesh(rippleGeo, rippleMat);
+      rippleMesh.rotation.x = -Math.PI / 2;
+      rippleMesh.position.y = -1.23;
+      xilitlaEnvironmentGroup.add(rippleMesh);
+    }
+
+    function createXilitlaPanoramaTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1600;
+      canvas.height = 900;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Cielo de niebla esmeralda y luz dorada de la Huasteca Potosina
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+      skyGrad.addColorStop(0.0, '#07261d');
+      skyGrad.addColorStop(0.38, '#114b3a');
+      skyGrad.addColorStop(0.72, '#092e22');
+      skyGrad.addColorStop(1.0, '#03120c');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Resplandor solar difuso en el claro central
+      const sunGlow = ctx.createRadialGradient(w * 0.5, h * 0.26, 20, w * 0.5, h * 0.35, 580);
+      sunGlow.addColorStop(0, 'rgba(254, 240, 138, 0.38)');
+      sunGlow.addColorStop(0.45, 'rgba(52, 211, 153, 0.18)');
+      sunGlow.addColorStop(1, 'rgba(4, 24, 17, 0)');
+      ctx.fillStyle = sunGlow;
+      ctx.fillRect(0, 0, w, h);
+
+      // Siluetas de montañas selváticas lejanas
+      ctx.fillStyle = '#093125';
+      ctx.beginPath();
+      ctx.moveTo(0, h * 0.65);
+      ctx.bezierCurveTo(w * 0.2, h * 0.32, w * 0.35, h * 0.55, w * 0.5, h * 0.44);
+      ctx.bezierCurveTo(w * 0.68, h * 0.32, w * 0.85, h * 0.48, w, h * 0.36);
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.fill();
+
+      // ARQUITECTURA SURREALISTA DE XILITLA: Arcos ojivales de concreto musgoso y escaleras al cielo
+      ctx.save();
+      ctx.fillStyle = '#133c2e';
+      ctx.strokeStyle = 'rgba(110, 231, 183, 0.22)';
+      ctx.lineWidth = 3;
+
+      const archPositions = [w * 0.16, w * 0.27, w * 0.73, w * 0.84];
+      archPositions.forEach((ax, i) => {
+        const archW = 95;
+        const archH = 310 + (i % 2) * 45;
+        const baseY = h * 0.78;
+        ctx.beginPath();
+        ctx.moveTo(ax - archW, baseY);
+        ctx.lineTo(ax - archW, baseY - archH * 0.6);
+        ctx.quadraticCurveTo(ax - archW, baseY - archH, ax, baseY - archH - 35);
+        ctx.quadraticCurveTo(ax + archW, baseY - archH, ax + archW, baseY - archH * 0.6);
+        ctx.lineTo(ax + archW, baseY);
+        // Hueco interior del arco
+        ctx.lineTo(ax + archW * 0.62, baseY);
+        ctx.lineTo(ax + archW * 0.62, baseY - archH * 0.56);
+        ctx.quadraticCurveTo(ax + archW * 0.62, baseY - archH * 0.86, ax, baseY - archH - 5);
+        ctx.quadraticCurveTo(ax - archW * 0.62, baseY - archH * 0.86, ax - archW * 0.62, baseY - archH * 0.56);
+        ctx.lineTo(ax - archW * 0.62, baseY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      // Escalera surrealista hacia las nubes (lado izquierdo medio)
+      ctx.fillStyle = '#0e3326';
+      let sx = w * 0.29;
+      let sy = h * 0.68;
+      for (let s = 0; s < 9; s++) {
+        ctx.fillRect(sx + s * 18, sy - s * 22, 34, 22 + s * 22);
+      }
+      ctx.restore();
+
+      // Cascada sutil de Las Pozas al fondo derecho
+      const fallGrad = ctx.createLinearGradient(w * 0.63, h * 0.38, w * 0.63, h * 0.82);
+      fallGrad.addColorStop(0, 'rgba(167, 243, 208, 0.0)');
+      fallGrad.addColorStop(0.3, 'rgba(167, 243, 208, 0.25)');
+      fallGrad.addColorStop(0.85, 'rgba(45, 212, 191, 0.32)');
+      fallGrad.addColorStop(1, 'rgba(167, 243, 208, 0.0)');
+      ctx.fillStyle = fallGrad;
+      ctx.fillRect(w * 0.61, h * 0.38, 42, h * 0.44);
+
+      // Helechos gigantes y lianas colgantes en el dosel de Xilitla
+      for (let v = 0; v < 28; v++) {
+        const vx = (v / 27) * w;
+        const vLen = 140 + (v % 5) * 65;
+        ctx.strokeStyle = v % 2 === 0 ? 'rgba(6, 59, 43, 0.7)' : 'rgba(16, 105, 78, 0.45)';
+        ctx.lineWidth = 4 + (v % 3) * 2;
+        ctx.beginPath();
+        ctx.moveTo(vx, 0);
+        ctx.quadraticCurveTo(vx + Math.sin(v) * 35, vLen * 0.5, vx + Math.cos(v) * 20, vLen);
+        ctx.stroke();
+      }
+
+      // Niebla baja al ras de las pozas
+      const mistGrad = ctx.createLinearGradient(0, h * 0.58, 0, h * 0.92);
+      mistGrad.addColorStop(0, 'rgba(52, 211, 153, 0)');
+      mistGrad.addColorStop(0.5, 'rgba(110, 231, 183, 0.16)');
+      mistGrad.addColorStop(1, 'rgba(4, 18, 12, 0.85)');
+      ctx.fillStyle = mistGrad;
+      ctx.fillRect(0, h * 0.58, w, h * 0.35);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
     }
 
     /* =========================================================================
-       3. CARGA Y ENCUADRE DEL MODELO 3D CENTRAL A DISTANCIA MEDIA (Z = 0)
+       3. CARGA DEL MODELO 3D CENTRAL (Z = 0)
        ========================================================================= */
     async function loadAndFrameCentralModel() {
       sculptureGroup = new THREE.Group();
       sculptureGroup.position.set(0, 0, 0);
       scene.add(sculptureGroup);
 
-      // Pedestal de piedra ancestral que sostiene el modelo en el claro
+      // Pedestal de concreto surrealista musgoso estilo Xilitla
       const pedestalGroup = new THREE.Group();
       const stoneMat = new THREE.MeshStandardMaterial({
-        color: 0x1c2e26,
-        roughness: 0.65,
-        metalness: 0.2
+        color: 0x1b3329,
+        roughness: 0.75,
+        metalness: 0.15
       });
-      const basePedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.68, 0.55, 32), stoneMat);
+      const basePedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.54, 0.68, 0.56, 32), stoneMat);
       basePedestal.position.y = -0.97;
       basePedestal.castShadow = true;
       basePedestal.receiveShadow = true;
       pedestalGroup.add(basePedestal);
 
-      const goldTrim = new THREE.Mesh(
-        new THREE.TorusGeometry(0.57, 0.02, 16, 48),
-        new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.25, metalness: 0.85 })
+      const mossTrim = new THREE.Mesh(
+        new THREE.TorusGeometry(0.55, 0.025, 16, 48),
+        new THREE.MeshStandardMaterial({ color: 0x34d399, roughness: 0.4, metalness: 0.3 })
       );
-      goldTrim.rotation.x = Math.PI / 2;
-      goldTrim.position.y = -0.70;
-      pedestalGroup.add(goldTrim);
+      mossTrim.rotation.x = Math.PI / 2;
+      mossTrim.position.y = -0.70;
+      pedestalGroup.add(mossTrim);
 
       sculptureGroup.add(pedestalGroup);
 
-      // Intentar cargar el modelo .GLB de las rutas configuradas
       const loader = new GLTFLoader();
       loader.setCrossOrigin('anonymous');
 
@@ -704,26 +768,20 @@
       if (loadedGLTF) {
         mountAndComputeBoundingBox(loadedGLTF.scene);
       } else {
-        const fallbackModel = createSemiRealisticSculpture();
+        const fallbackModel = createSurrealSculptureFallback();
         mountAndComputeBoundingBox(fallbackModel);
       }
     }
 
-    /**
-     * Normaliza el modelo 3D para que se vea de cuerpo completo en el centro (Z = 0)
-     * y calcula su Caja Delimitadora (THREE.Box3) exacta para despejar las 8 capas.
-     */
     function mountAndComputeBoundingBox(modelNode) {
       while (sculptureGroup.children.length > 1) {
         sculptureGroup.remove(sculptureGroup.children[1]);
       }
 
-      // Calcular dimensiones nativas del modelo
       const rawBox = new THREE.Box3().setFromObject(modelNode);
       const rawSize = rawBox.getSize(new THREE.Vector3());
       const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
-      // Escalar para que la altura total del cuerpo sea de ~1.75 unidades (encuadre medio ideal)
       const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
       const targetFullBodyHeight = 1.72;
       const scale = targetFullBodyHeight / maxDim;
@@ -743,25 +801,12 @@
       sculptureGroup.add(modelNode);
       sculptureGroup.updateMatrixWorld(true);
 
-      // Calcular el Bounding Box mundial definitivo (incluyendo pedestal + escultura completa)
       state.modelBoundingBox.setFromObject(sculptureGroup);
       state.modelSize = state.modelBoundingBox.getSize(new THREE.Vector3());
-      const boxCenter = state.modelBoundingBox.getCenter(new THREE.Vector3());
-
-      // Definir la elipse de seguridad del "Claro Central" para que ninguna hoja tape el núcleo del modelo
-      state.clearingEllipse = {
-        radiusX: Math.max(0.95, state.modelSize.x * 0.68),
-        radiusY: Math.max(1.22, state.modelSize.y * 0.56),
-        centerY: boxCenter.y
-      };
-
-      updateBoundingBoxVisualHelper();
     }
 
-    function createSemiRealisticSculpture() {
+    function createSurrealSculptureFallback() {
       const group = new THREE.Group();
-      group.name = 'ProceduralSculpture';
-
       const bronzeMat = new THREE.MeshStandardMaterial({
         color: 0xeab308,
         roughness: 0.24,
@@ -769,18 +814,17 @@
       });
       const jadeMat = new THREE.MeshStandardMaterial({
         color: 0x10b981,
-        roughness: 0.20,
-        metalness: 0.25,
+        roughness: 0.2,
+        metalness: 0.3,
         emissive: 0x065f46,
-        emissiveIntensity: 0.35
+        emissiveIntensity: 0.4
       });
       const stoneMat = new THREE.MeshStandardMaterial({
-        color: 0xe2e8f0,
-        roughness: 0.3,
+        color: 0xd6d3d1,
+        roughness: 0.4,
         metalness: 0.1
       });
 
-      // Cuerpo escultural estilizado de cuerpo completo
       const torusKnot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.42, 0.11, 128, 32, 2, 3), bronzeMat);
       torusKnot.position.y = 0.45;
       group.add(torusKnot);
@@ -800,89 +844,130 @@
       return group;
     }
 
-    // Visualizador técnico de la Caja Delimitadora (Bounding Box) y el Claro Central
-    function updateBoundingBoxVisualHelper() {
-      if (bboxHelperGroup) scene.remove(bboxHelperGroup);
-      bboxHelperGroup = new THREE.Group();
-      bboxHelperGroup.visible = state.showBoundingBoxHelper;
-
-      // 1. Box3Helper del modelo 3D completo
-      const boxHelper = new THREE.Box3Helper(state.modelBoundingBox, 0x2dd4bf);
-      bboxHelperGroup.add(boxHelper);
-
-      // 2. Elipse del Claro Central libre de obstrucciones
-      const curve = new THREE.EllipseCurve(
-        0, state.clearingEllipse.centerY,
-        state.clearingEllipse.radiusX, state.clearingEllipse.radiusY,
-        0, 2 * Math.PI, false, 0
-      );
-      const points = curve.getPoints(64).map((p) => new THREE.Vector3(p.x, p.y, 0));
-      const ellipseGeo = new THREE.BufferGeometry().setFromPoints(points);
-      const ellipseLine = new THREE.LineLoop(
-        ellipseGeo,
-        new THREE.LineBasicMaterial({ color: 0xfbbf24 })
-      );
-      bboxHelperGroup.add(ellipseLine);
-
-      scene.add(bboxHelperGroup);
-    }
-
     /* =========================================================================
-       4. FUNCIÓN PRINCIPAL TECH LEAD: GENERADOR PROCEDURAL DE LAS 8 CAPAS
-          Garantiza que la Bounding Box del modelo 3D quede en un claro visible.
+       4. ARQUITECTURA DE 8 CAPAS:
+          - DETRÁS DEL MODELO (Z < 0): "Plantas con rocas" (`tree-tropical.png`)
+          - FRENTE AL MODELO (Z > 0): Cortina de plantas que OCULTA la escultura
+            y que el usuario va quitando con el dedo hacia los lados.
        ========================================================================= */
-    function generateEightLayerJungle(modelBoundingBox, baseTextures) {
+    function buildXilitlaLayeredJungle(baseTextures) {
       if (foliageRootGroup) scene.remove(foliageRootGroup);
       foliageRootGroup = new THREE.Group();
-      foliageRootGroup.name = 'EightLayerJungleSystem';
+      foliageRootGroup.name = 'XilitlaEightLayers';
       scene.add(foliageRootGroup);
 
       state.foliagePlanes = [];
+      state.coveringLeavesCount = 0;
+      state.clearedLeavesCount = 0;
+      state.discoveryCompleted = false;
 
-      // Dimensiones de seguridad calculadas a partir del Bounding Box del modelo 3D
-      const bboxSize = modelBoundingBox.getSize(new THREE.Vector3());
-      const bboxCenter = modelBoundingBox.getCenter(new THREE.Vector3());
-      const clearRx = Math.max(0.95, bboxSize.x * 0.68);
-      const clearRy = Math.max(1.22, bboxSize.y * 0.56);
+      /**
+       * DEFINICIÓN DE LAS 8 CAPAS:
+       * - Capas 1, 2 y 3 (DETRÁS de la escultura, Z = -2.75 a -0.85):
+       *   Protagonizadas por la imagen de "plantas con rocas" (`plantas_rocas` -> `assets/tree-tropical.png`)
+       *   exactamente detrás del modelo central para enmarcarlo sobre un lecho rocoso-botánico.
+       * - Capa 4 (Z = -0.25): Enmarca los flancos laterales del pedestal con viento sutil.
+       * - Capas 5, 6, 7 y 8 (FRENTE a la escultura, Z = +0.65 a +2.35):
+       *   Cubren completamente la escultura al iniciar (`coversSculpture: true`).
+       *   El usuario las arrastra o barre con el dedo hacia los bordes hasta descubrir la obra.
+       */
+      const layerBlueprints = [
+        // CAPA 1 (Z = -2.75): Telón botánico-rocoso profundo
+        {
+          layerIndex: 1, zDepth: -2.75, isStatic: false, windAmp: 0.015, interactive: false, coversSculpture: false,
+          colorTint: '#2b7a62', emissiveTint: '#07261d',
+          slots: [
+            { key: 'plantas_rocas', x: -1.95, y: -0.05, scale: 1.55, rotZ: -0.06, flipX: false },
+            { key: 'plantas_rocas', x:  1.95, y: -0.05, scale: 1.55, rotZ:  0.06, flipX: true  },
+            { key: 'arbusto',       x:  0.00, y:  0.95, scale: 1.65, rotZ:  0.00, flipX: false }
+          ]
+        },
+        // CAPA 2 (Z = -1.75): Composición de Plantas con Rocas detrás del modelo
+        {
+          layerIndex: 2, zDepth: -1.75, isStatic: false, windAmp: 0.020, interactive: false, coversSculpture: false,
+          colorTint: '#52b793', emissiveTint: '#0c382a',
+          slots: [
+            { key: 'plantas_rocas', x: -1.05, y: -0.18, scale: 1.38, rotZ: -0.08, flipX: true  },
+            { key: 'plantas_rocas', x:  1.05, y: -0.18, scale: 1.38, rotZ:  0.08, flipX: false }
+          ]
+        },
+        // CAPA 3 (Z = -0.92): IMAGEN PRINCIPAL DE PLANTAS CON ROCAS DIRECTAMENTE DETRÁS DEL MODELO 3D
+        {
+          layerIndex: 3, zDepth: -0.92, isStatic: false, windAmp: 0.025, interactive: false, coversSculpture: false,
+          colorTint: '#a7f3d0', emissiveTint: '#114231',
+          slots: [
+            // Situada exactamente en X = 0.0 detrás de la escultura y su pedestal
+            { key: 'plantas_rocas', x:  0.00, y: -0.10, scale: 1.48, rotZ:  0.00, flipX: false },
+            { key: 'plantas',       x: -1.28, y: -0.35, scale: 1.12, rotZ: -0.18, flipX: false },
+            { key: 'plantas',       x:  1.28, y: -0.35, scale: 1.12, rotZ:  0.18, flipX: true  }
+          ]
+        },
+        // CAPA 4 (Z = -0.20): Flancos del claro central
+        {
+          layerIndex: 4, zDepth: -0.20, isStatic: false, windAmp: 0.032, interactive: false, coversSculpture: false,
+          colorTint: '#6ee7b7', emissiveTint: '#09261b',
+          slots: [
+            { key: 'arbusto', x: -1.55, y: -0.58, scale: 1.08, rotZ:  0.14, flipX: false },
+            { key: 'arbusto', x:  1.55, y: -0.58, scale: 1.08, rotZ: -0.14, flipX: true  }
+          ]
+        },
 
-      // Recorrer la especificación de las 8 capas (Z = -3.20 hasta Z = +2.80)
-      CONFIG.eightLayerSpecs.forEach((layerSpec) => {
+        // =====================================================================
+        // CAPAS 5, 6, 7 y 8 (Z > 0): CORTINA DENSA QUE OCULTA LA ESCULTURA
+        // El usuario debe quitar estas plantas con el dedo para descubrirla
+        // =====================================================================
+        {
+          layerIndex: 5, zDepth: 0.72, isStatic: false, windAmp: 0.045, interactive: true, coversSculpture: true,
+          colorTint: '#6ee7b7', emissiveTint: '#062016',
+          slots: [
+            { key: 'arbusto',       x: -0.42, y: -0.32, scale: 1.12, rotZ:  0.08, flipX: false },
+            { key: 'arbusto',       x:  0.42, y: -0.32, scale: 1.12, rotZ: -0.08, flipX: true  },
+            { key: 'plantas',       x:  0.00, y:  0.38, scale: 1.16, rotZ:  0.04, flipX: false }
+          ]
+        },
+        {
+          layerIndex: 6, zDepth: 1.25, isStatic: false, windAmp: 0.055, interactive: true, coversSculpture: true,
+          colorTint: '#52b788', emissiveTint: '#051b12',
+          slots: [
+            { key: 'plantas',       x: -0.52, y:  0.12, scale: 1.15, rotZ: -0.15, flipX: true  },
+            { key: 'plantas',       x:  0.52, y:  0.12, scale: 1.15, rotZ:  0.15, flipX: false },
+            { key: 'plantas_rocas', x:  0.00, y: -0.45, scale: 1.05, rotZ:  0.00, flipX: false }
+          ]
+        },
+        {
+          layerIndex: 7, zDepth: 1.78, isStatic: false, windAmp: 0.068, interactive: true, coversSculpture: true,
+          colorTint: '#3b8764', emissiveTint: '#04140d',
+          slots: [
+            { key: 'arbusto',       x: -0.28, y:  0.02, scale: 1.18, rotZ:  0.12, flipX: false },
+            { key: 'arbusto',       x:  0.32, y: -0.12, scale: 1.18, rotZ: -0.12, flipX: true  },
+            { key: 'plantas',       x: -0.68, y: -0.38, scale: 1.08, rotZ:  0.22, flipX: false },
+            { key: 'plantas',       x:  0.68, y: -0.38, scale: 1.08, rotZ: -0.22, flipX: true  }
+          ]
+        },
+        {
+          layerIndex: 8, zDepth: 2.28, isStatic: false, windAmp: 0.082, interactive: true, coversSculpture: true,
+          colorTint: '#245940', emissiveTint: '#020c07',
+          slots: [
+            { key: 'plantas_rocas', x: -0.18, y: -0.18, scale: 1.12, rotZ: -0.06, flipX: true  },
+            { key: 'plantas',       x:  0.22, y:  0.25, scale: 1.14, rotZ:  0.10, flipX: false },
+            { key: 'arbusto',       x: -0.58, y:  0.34, scale: 1.05, rotZ: -0.24, flipX: false },
+            { key: 'arbusto',       x:  0.58, y:  0.34, scale: 1.05, rotZ:  0.24, flipX: true  }
+          ]
+        }
+      ];
+
+      layerBlueprints.forEach((layerSpec) => {
         const layerGroup = new THREE.Group();
-        layerGroup.name = `Layer_${layerSpec.layerIndex}_${layerSpec.role}`;
+        layerGroup.name = `Layer_${layerSpec.layerIndex}`;
         foliageRootGroup.add(layerGroup);
 
-        // Compensación de escala por perspectiva según la distancia Z a la cámara
-        const distToCamera = Math.max(1.2, CONFIG.cameraDistance - layerSpec.zDepth);
-        const perspectiveScale = (distToCamera / CONFIG.cameraDistance) * layerSpec.scaleMultiplier;
+        layerSpec.slots.forEach((slot, idx) => {
+          const assetMeta = CONFIG.vegetationAssets.find((a) => a.key === slot.key);
+          const texture = baseTextures[slot.key];
 
-        // Generar la distribución de elementos botánicos específica para esta capa
-        const placements = computeLayerPlacementsAroundBoundingBox(
-          layerSpec,
-          clearRx,
-          clearRy,
-          bboxCenter.y,
-          perspectiveScale
-        );
-
-        placements.forEach((slot, idx) => {
-          const assetMeta = CONFIG.vegetationAssets.find((a) => a.key === slot.assetKey);
-
-          // Obtener textura con el nivel de desenfoque Depth of Field (DoF) propio de la capa
-          const layerTexture = getOrCreateLayerDoFTexture(
-            slot.assetKey,
-            baseTextures[slot.assetKey],
-            layerSpec.dofBlurPx
-          );
-
-          // Si la capa es estática (Capas 1, 2 y 3), usamos 1x1 segmentos para optimizar GPU.
-          // Si tiene viento o interacción táctil (Capas 4 a 8), subdividimos 10x10 para vertex displacement.
-          const segs = layerSpec.isStatic ? 1 : 10;
-          const planeGeo = new THREE.PlaneGeometry(
-            assetMeta.aspectWidth * slot.scale,
-            assetMeta.aspectHeight * slot.scale,
-            segs,
-            segs
-          );
+          const planeW = assetMeta.aspectWidth * slot.scale;
+          const planeH = assetMeta.aspectHeight * slot.scale;
+          const planeGeo = new THREE.PlaneGeometry(planeW, planeH, 10, 10);
 
           if (slot.flipX) {
             const uv = planeGeo.attributes.uv;
@@ -896,172 +981,66 @@
           const basePositions = new Float32Array(posAttr.array.length);
           basePositions.set(posAttr.array);
 
-          // Material con gradación cromática semirealista (fondo atmosférico vs primer plano en silueta oscura)
           const material = new THREE.MeshStandardMaterial({
-            map: layerTexture,
+            map: texture,
             color: new THREE.Color(layerSpec.colorTint),
             emissive: new THREE.Color(layerSpec.emissiveTint),
-            emissiveIntensity: layerSpec.layerIndex <= 3 ? 0.45 : 0.15,
+            emissiveIntensity: layerSpec.layerIndex === 3 ? 0.52 : 0.22,
             transparent: true,
             alphaTest: 0.05,
             side: THREE.DoubleSide,
-            roughness: 0.65,
+            roughness: 0.62,
             metalness: 0.05,
             depthWrite: true
           });
 
           const mesh = new THREE.Mesh(planeGeo, material);
-          // Pequeño offset Z dentro de la misma capa para evitar Z-fighting entre hojas vecinas
-          const microZ = layerSpec.zDepth + (idx * 0.025);
+          const microZ = layerSpec.zDepth + idx * 0.03;
           mesh.position.set(slot.x, slot.y, microZ);
           mesh.rotation.set(0, 0, slot.rotZ);
 
+          // Calcular hacia qué lado del borde se apartará esta planta cuando el usuario la despeje
+          const sideSign = slot.x === 0 ? (idx % 2 === 0 ? -1 : 1) : Math.sign(slot.x);
+          const partedX = sideSign * (1.95 + (layerSpec.layerIndex - 5) * 0.22 + (idx % 2) * 0.18);
+          const partedY = slot.y + (slot.y >= 0 ? 0.25 : -0.22);
+          const partedRotZ = slot.rotZ + sideSign * -0.38;
+
           mesh.userData = {
             layerIndex: layerSpec.layerIndex,
-            role: layerSpec.role,
-            isStatic: layerSpec.isStatic,
             interactive: layerSpec.interactive,
-            windAmplitude: layerSpec.windAmplitude,
+            coversSculpture: layerSpec.coversSculpture,
+            isCleared: false,
+            windAmplitude: layerSpec.windAmp,
             basePositions,
-            planeHeight: assetMeta.aspectHeight * slot.scale,
+            planeHeight: planeH,
             homePos: new THREE.Vector3(slot.x, slot.y, microZ),
             homeRotZ: slot.rotZ,
+            // Posición de reposo actual (se mueve cuando el usuario la empuja y NO regresa al centro)
+            restPos: new THREE.Vector3(slot.x, slot.y, microZ),
+            restRotZ: slot.rotZ,
+            partedPos: new THREE.Vector3(partedX, partedY, microZ),
+            partedRotZ,
             velocity: new THREE.Vector2(0, 0),
             rotVelocity: 0,
-            swaySpeed: 0.9 + (layerSpec.layerIndex * 0.14) + (idx % 3) * 0.18,
-            swayPhase: idx * 1.15 + layerSpec.layerIndex * 0.7
+            swaySpeed: 1.05 + layerSpec.layerIndex * 0.12 + (idx % 3) * 0.16,
+            swayPhase: idx * 1.3 + layerSpec.layerIndex * 0.85
           };
+
+          if (layerSpec.coversSculpture) {
+            state.coveringLeavesCount++;
+          }
 
           layerGroup.add(mesh);
           state.foliagePlanes.push(mesh);
         });
       });
-    }
 
-    /**
-     * Calcula las coordenadas (X, Y) de cada planta en una capa dada asegurando que
-     * la zona del Bounding Box (clearRx, clearRy) permanezca despejada en el centro.
-     */
-    function computeLayerPlacementsAroundBoundingBox(layerSpec, clearRx, clearRy, centerY, pScale) {
-      const idx = layerSpec.layerIndex;
-      const rx = clearRx * layerSpec.clearingMultiplier;
-      const ry = clearRy * layerSpec.clearingMultiplier;
-
-      // CAPA 1 (Fondo lejano Z = -3.20): Dosel denso completo que cierra el horizonte
-      if (idx === 1) {
-        return [
-          { assetKey: 'tree',    x: -2.45, y:  0.85, scale: pScale * 1.15, rotZ: -0.10, flipX: false },
-          { assetKey: 'tree',    x:  0.00, y:  1.15, scale: pScale * 1.22, rotZ:  0.03, flipX: true  },
-          { assetKey: 'tree',    x:  2.45, y:  0.85, scale: pScale * 1.15, rotZ:  0.10, flipX: true  },
-          { assetKey: 'arbusto', x: -1.65, y: -0.95, scale: pScale * 1.10, rotZ:  0.04, flipX: false },
-          { assetKey: 'arbusto', x:  1.65, y: -0.95, scale: pScale * 1.10, rotZ: -0.04, flipX: true  }
-        ];
-      }
-
-      // CAPA 2 (Fondo medio Z = -2.15): Árboles antiguos y lianas enmarcando el claro lejano
-      if (idx === 2) {
-        return [
-          { assetKey: 'tree',    x: -1.95, y:  0.68, scale: pScale * 1.12, rotZ: -0.16, flipX: true  },
-          { assetKey: 'tree',    x:  1.95, y:  0.68, scale: pScale * 1.12, rotZ:  0.16, flipX: false },
-          { assetKey: 'plantas', x: -1.45, y: -0.75, scale: pScale * 1.05, rotZ:  0.12, flipX: false },
-          { assetKey: 'plantas', x:  1.45, y: -0.75, scale: pScale * 1.05, rotZ: -0.12, flipX: true  }
-        ];
-      }
-
-      // CAPA 3 (Fondo cercano Z = -1.15): Halo botánico detrás del modelo 3D
-      if (idx === 3) {
-        return [
-          { assetKey: 'tree',    x: -(rx + 0.65), y: centerY + 0.55, scale: pScale * 1.05, rotZ: -0.22, flipX: false },
-          { assetKey: 'tree',    x:  (rx + 0.65), y: centerY + 0.55, scale: pScale * 1.05, rotZ:  0.22, flipX: true  },
-          { assetKey: 'arbusto', x: -(rx + 0.45), y: centerY - 0.72, scale: pScale * 0.98, rotZ:  0.08, flipX: true  },
-          { assetKey: 'arbusto', x:  (rx + 0.45), y: centerY - 0.72, scale: pScale * 0.98, rotZ: -0.08, flipX: false }
-        ];
-      }
-
-      // CAPA 4 (Plano Medio Posterior Z = -0.35): Arbustos envolviendo los flancos del modelo
-      if (idx === 4) {
-        return [
-          { assetKey: 'arbusto', x: -(rx + 0.42), y: centerY - 0.48, scale: pScale * 0.96, rotZ:  0.14, flipX: false },
-          { assetKey: 'arbusto', x:  (rx + 0.42), y: centerY - 0.48, scale: pScale * 0.96, rotZ: -0.14, flipX: true  },
-          { assetKey: 'plantas', x: -(rx + 0.55), y: centerY + 0.38, scale: pScale * 0.95, rotZ: -0.24, flipX: true  },
-          { assetKey: 'plantas', x:  (rx + 0.55), y: centerY + 0.38, scale: pScale * 0.95, rotZ:  0.24, flipX: false }
-        ];
-      }
-
-      // CAPA 5 (Plano Medio Frontal Z = +0.45): Helechos laterales sin tapar el Bounding Box
-      if (idx === 5) {
-        return [
-          { assetKey: 'plantas', x: -(rx + 0.38), y: centerY - 0.62, scale: pScale * 0.94, rotZ:  0.18, flipX: false },
-          { assetKey: 'plantas', x:  (rx + 0.38), y: centerY - 0.62, scale: pScale * 0.94, rotZ: -0.18, flipX: true  },
-          { assetKey: 'tree',    x: -(rx + 0.68), y: centerY + 0.62, scale: pScale * 1.00, rotZ: -0.28, flipX: false },
-          { assetKey: 'tree',    x:  (rx + 0.68), y: centerY + 0.62, scale: pScale * 1.00, rotZ:  0.28, flipX: true  }
-        ];
-      }
-
-      // CAPA 6 (Primer Plano Inicial Z = +1.35): Arco tropical interactivo alrededor del claro
-      if (idx === 6) {
-        return [
-          { assetKey: 'tree',    x: -(rx + 0.48), y: centerY + 0.58, scale: pScale * 1.02, rotZ: -0.32, flipX: true  },
-          { assetKey: 'tree',    x:  (rx + 0.48), y: centerY + 0.58, scale: pScale * 1.02, rotZ:  0.32, flipX: false },
-          { assetKey: 'arbusto', x: -(rx + 0.32), y: centerY - 0.68, scale: pScale * 0.92, rotZ:  0.15, flipX: false },
-          { assetKey: 'arbusto', x:  (rx + 0.32), y: centerY - 0.68, scale: pScale * 0.92, rotZ: -0.15, flipX: true  }
-        ];
-      }
-
-      // CAPA 7 (Primer Plano Medio con DoF Z = +2.10): Hojas grandes en los bordes
-      if (idx === 7) {
-        return [
-          { assetKey: 'plantas', x: -(rx + 0.28), y: centerY + 0.45, scale: pScale * 1.04, rotZ: -0.38, flipX: false },
-          { assetKey: 'plantas', x:  (rx + 0.28), y: centerY + 0.45, scale: pScale * 1.04, rotZ:  0.38, flipX: true  },
-          { assetKey: 'arbusto', x: -(rx + 0.22), y: centerY - 0.64, scale: pScale * 0.98, rotZ:  0.22, flipX: true  },
-          { assetKey: 'arbusto', x:  (rx + 0.22), y: centerY - 0.64, scale: pScale * 0.98, rotZ: -0.22, flipX: false }
-        ];
-      }
-
-      // CAPA 8 (Primerísimo Plano Extremo con DoF intenso Z = +2.80): Efecto Viñeta Natural
-      return [
-        { assetKey: 'tree',    x: -(rx + 0.18), y:  (ry * 0.55), scale: pScale * 1.08, rotZ: -0.45, flipX: false },
-        { assetKey: 'tree',    x:  (rx + 0.18), y:  (ry * 0.55), scale: pScale * 1.08, rotZ:  0.45, flipX: true  },
-        { assetKey: 'plantas', x: -(rx + 0.14), y: -(ry * 0.58), scale: pScale * 1.02, rotZ:  0.28, flipX: false },
-        { assetKey: 'plantas', x:  (rx + 0.14), y: -(ry * 0.58), scale: pScale * 1.02, rotZ: -0.28, flipX: true  }
-      ];
+      updateDiscoveryUI();
     }
 
     /* =========================================================================
-       5. PROCESADOR DE TEXTURAS Y DESENFOQUE DEPTH-OF-FIELD (DoF) POR CAPA
+       5. CARGA DE TEXTURAS PNG REALES + FALLBACK DE PLANTAS CON ROCAS
        ========================================================================= */
-    const dofTextureCache = new Map();
-
-    function getOrCreateLayerDoFTexture(assetKey, baseTexture, blurPx) {
-      if (!blurPx || blurPx <= 0) return baseTexture;
-
-      const cacheKey = `${assetKey}_blur_${blurPx}`;
-      if (dofTextureCache.has(cacheKey)) {
-        return dofTextureCache.get(cacheKey);
-      }
-
-      try {
-        const img = baseTexture.image;
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-
-        // Desenfoque gaussiano nativo en canvas para simular Depth of Field óptico en Capas 1, 7 y 8
-        ctx.filter = `blur(${blurPx}px)`;
-        const pad = blurPx * 2;
-        ctx.drawImage(img, pad, pad, canvas.width - pad * 2, canvas.height - pad * 2);
-
-        const blurredTex = new THREE.CanvasTexture(canvas);
-        blurredTex.colorSpace = THREE.SRGBColorSpace;
-        blurredTex.needsUpdate = true;
-        dofTextureCache.set(cacheKey, blurredTex);
-        return blurredTex;
-      } catch (e) {
-        return baseTexture;
-      }
-    }
-
     async function loadBaseVegetationTextures() {
       const texLoader = new THREE.TextureLoader();
       texLoader.setCrossOrigin('anonymous');
@@ -1089,7 +1068,7 @@
       return texturesByKey;
     }
 
-    // Generador de respaldo con estilo "Ilustración Digital Semirealista"
+    // Generador procedural semirealista (incluye rocas musgosas con plantas tropicales para `plantas_rocas`)
     function createIllustrativeBotanicalTexture(assetKey) {
       const canvas = document.createElement('canvas');
       canvas.width = 640;
@@ -1099,16 +1078,59 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      ctx.shadowColor = 'rgba(2, 18, 11, 0.65)';
-      ctx.shadowBlur = 18;
+      ctx.shadowColor = 'rgba(2, 16, 10, 0.65)';
+      ctx.shadowBlur = 16;
 
-      if (assetKey === 'arbusto') {
+      if (assetKey === 'plantas_rocas') {
+        // 1. Hojas tropicales altas y helechos brotando detrás
+        const fronds = 13;
+        for (let i = 0; i < fronds; i++) {
+          const angle = ((i / (fronds - 1)) - 0.5) * 1.85;
+          ctx.save();
+          ctx.translate(cx, 520);
+          ctx.rotate(angle);
+          const grad = ctx.createLinearGradient(0, 0, 0, -440);
+          grad.addColorStop(0, '#042f2e');
+          grad.addColorStop(0.55, '#0f766e');
+          grad.addColorStop(1, '#6ee7b7');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(-48, -220, 0, -440);
+          ctx.quadraticCurveTo(48, -220, 0, 0);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // 2. Arreglo de Rocas Volcánicas y Calizas con Musgo (Base de Xilitla)
+        const rocks = [
+          { rx: cx - 125, ry: 535, rw: 115, rh: 82, col1: '#44403c', col2: '#1c1917' },
+          { rx: cx + 115, ry: 540, rw: 110, rh: 78, col1: '#57534e', col2: '#292524' },
+          { rx: cx,       ry: 548, rw: 155, rh: 96, col1: '#78716c', col2: '#292524' }
+        ];
+        rocks.forEach((r) => {
+          const rGrad = ctx.createRadialGradient(r.rx - 20, r.ry - 25, 10, r.rx, r.ry, r.rw);
+          rGrad.addColorStop(0, r.col1);
+          rGrad.addColorStop(0.7, '#334139');
+          rGrad.addColorStop(1, r.col2);
+          ctx.fillStyle = rGrad;
+          ctx.beginPath();
+          ctx.ellipse(r.rx, r.ry, r.rw, r.rh, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Capa superior de musgo esmeralda húmedo sobre la roca
+          ctx.fillStyle = 'rgba(52, 211, 153, 0.35)';
+          ctx.beginPath();
+          ctx.ellipse(r.rx, r.ry - r.rh * 0.35, r.rw * 0.78, r.rh * 0.42, 0, Math.PI, Math.PI * 2);
+          ctx.fill();
+        });
+      } else if (assetKey === 'arbusto') {
         const count = 15;
         for (let i = 0; i < count; i++) {
           const angle = ((i / (count - 1)) - 0.5) * 2.15;
-          const len = 190 + (i % 3) * 48;
+          const len = 210 + (i % 3) * 52;
           ctx.save();
-          ctx.translate(cx, 560);
+          ctx.translate(cx, 565);
           ctx.rotate(angle);
           const grad = ctx.createLinearGradient(0, 0, 0, -len);
           grad.addColorStop(0, '#042f2e');
@@ -1117,58 +1139,32 @@
           ctx.fillStyle = grad;
           ctx.beginPath();
           ctx.moveTo(0, 0);
-          ctx.bezierCurveTo(-68, -len * 0.42, -52, -len * 0.85, 0, -len);
-          ctx.bezierCurveTo(52, -len * 0.85, 68, -len * 0.42, 0, 0);
+          ctx.bezierCurveTo(-72, -len * 0.42, -54, -len * 0.85, 0, -len);
+          ctx.bezierCurveTo(54, -len * 0.85, 72, -len * 0.42, 0, 0);
           ctx.fill();
-
-          ctx.strokeStyle = 'rgba(167, 243, 208, 0.55)';
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.moveTo(0, -12);
-          ctx.lineTo(0, -len * 0.92);
-          ctx.stroke();
           ctx.restore();
         }
-      } else if (assetKey === 'plantas') {
+      } else {
         for (let f = -2; f <= 2; f++) {
           ctx.save();
           ctx.translate(cx + f * 48, 575);
           ctx.rotate(f * 0.25);
-          const grad = ctx.createLinearGradient(0, 0, 0, -450);
+          const grad = ctx.createLinearGradient(0, 0, 0, -460);
           grad.addColorStop(0, '#064e3b');
           grad.addColorStop(0.6, '#10b981');
           grad.addColorStop(1, '#a7f3d0');
           ctx.fillStyle = grad;
           for (let j = 0; j < 14; j++) {
             const t = j / 13;
-            const y = -55 - t * 375;
-            const w = Math.sin(t * Math.PI) * 98 + 18;
+            const y = -55 - t * 380;
+            const w = Math.sin(t * Math.PI) * 102 + 20;
             ctx.beginPath();
-            ctx.ellipse(-w * 0.55, y, w * 0.6, 14, -0.28, 0, Math.PI * 2);
+            ctx.ellipse(-w * 0.55, y, w * 0.6, 15, -0.28, 0, Math.PI * 2);
             ctx.fill();
             ctx.beginPath();
-            ctx.ellipse(w * 0.55, y, w * 0.6, 14, 0.28, 0, Math.PI * 2);
+            ctx.ellipse(w * 0.55, y, w * 0.6, 15, 0.28, 0, Math.PI * 2);
             ctx.fill();
           }
-          ctx.restore();
-        }
-      } else {
-        const fronds = 14;
-        for (let i = 0; i < fronds; i++) {
-          const angle = ((i / (fronds - 1)) - 0.5) * 1.95;
-          ctx.save();
-          ctx.translate(cx, 590);
-          ctx.rotate(angle);
-          const grad = ctx.createLinearGradient(0, 0, 0, -500);
-          grad.addColorStop(0, '#022c22');
-          grad.addColorStop(0.55, '#0f766e');
-          grad.addColorStop(1, '#5eead4');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.quadraticCurveTo(-42, -250, 0, -500);
-          ctx.quadraticCurveTo(42, -250, 0, 0);
-          ctx.fill();
           ctx.restore();
         }
       }
@@ -1181,7 +1177,7 @@
     }
 
     /* =========================================================================
-       6. PARTÍCULAS BIOLUMINISCENTES ENTRE LAS 8 CAPAS
+       6. PARTÍCULAS BIOLUMINISCENTES DE ALTO BRILLO Y TAMAÑO (SHADER ADITIVO)
        ========================================================================= */
     function createLuminescentParticles() {
       if (bioParticles) scene.remove(bioParticles);
@@ -1194,18 +1190,18 @@
       const phases = new Float32Array(count);
 
       const palette = [
-        new THREE.Color('#6ee7b7'),
-        new THREE.Color('#fde047'),
-        new THREE.Color('#5eead4'),
-        new THREE.Color('#bef264')
+        new THREE.Color('#fde047'), // Oro bioluminiscente intenso
+        new THREE.Color('#6ee7b7'), // Esmeralda luminoso
+        new THREE.Color('#5eead4'), // Turquesa mágico de Las Pozas
+        new THREE.Color('#bef264')  // Destello lima
       ];
 
       state.particleData = [];
 
       for (let i = 0; i < count; i++) {
-        const x = (Math.random() - 0.5) * 6.2;
-        const y = (Math.random() - 0.35) * 4.0;
-        const z = -2.8 + Math.random() * 5.2; // Distribuidas a través de las 8 capas
+        const x = (Math.random() - 0.5) * 6.8;
+        const y = (Math.random() - 0.35) * 4.2;
+        const z = -2.6 + Math.random() * 5.2;
 
         positions[i * 3] = x;
         positions[i * 3 + 1] = y;
@@ -1216,16 +1212,17 @@
         colors[i * 3 + 1] = c.g;
         colors[i * 3 + 2] = c.b;
 
-        sizes[i] = 0.5 + Math.random() * 1.1;
+        // Mayor tamaño base para que resalten intensamente en el aire
+        sizes[i] = 0.85 + Math.random() * 1.65;
         phases[i] = Math.random() * Math.PI * 2;
 
         state.particleData.push({
           baseX: x,
           baseY: y,
           baseZ: z,
-          speedY: 0.002 + Math.random() * 0.0035,
-          driftFreq: 0.45 + Math.random() * 0.8,
-          driftAmp: 0.14 + Math.random() * 0.2,
+          speedY: 0.0022 + Math.random() * 0.004,
+          driftFreq: 0.5 + Math.random() * 0.85,
+          driftAmp: 0.16 + Math.random() * 0.22,
           phase: phases[i]
         });
       }
@@ -1250,10 +1247,11 @@
 
           void main() {
             vColor = color;
-            float pulse = 0.5 + 0.5 * sin(uTime * 2.2 + aPhase);
+            float pulse = 0.55 + 0.45 * sin(uTime * 2.5 + aPhase);
             vPulse = pulse;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = aSize * (26.0 * pulse) * uPixelRatio * (1.0 / -mvPosition.z);
+            // Tamaño aumentado (44.0) para que las partículas brillen con fuerza
+            gl_PointSize = aSize * (44.0 * pulse) * uPixelRatio * (1.0 / max(1.2, -mvPosition.z));
             gl_Position = projectionMatrix * mvPosition;
           }
         `,
@@ -1264,9 +1262,10 @@
             float dist = length(gl_PointCoord - vec2(0.5));
             if (dist > 0.5) discard;
             float core = smoothstep(0.5, 0.0, dist);
-            float halo = pow(core, 2.0);
-            vec3 finalColor = mix(vColor, vec3(1.0, 1.0, 0.95), pow(core, 4.0));
-            gl_FragColor = vec4(finalColor, halo * (0.4 + 0.6 * vPulse));
+            float halo = pow(core, 1.45);
+            // Núcleo incandescente blanco-dorado con halo saturado
+            vec3 finalColor = mix(vColor * 1.5, vec3(1.0, 1.0, 0.96), pow(core, 2.6));
+            gl_FragColor = vec4(finalColor, halo * (0.65 + 0.35 * vPulse));
           }
         `,
         transparent: true,
@@ -1280,7 +1279,9 @@
     }
 
     /* =========================================================================
-       7. INTERACCIÓN TÁCTIL Y AL PASO DEL RATÓN/DEDO EN CAPAS 6, 7 Y 8
+       7. MECÁNICA TÁCTIL OPTIMIZADA (UX): QUITAR PLANTAS CON EL DEDO
+          Soporta tanto arrastrar una planta individual como deslizar el dedo
+          por la pantalla para ir apartando varias capas de plantas.
        ========================================================================= */
     function setupInteractionEvents() {
       const dom = renderer.domElement;
@@ -1290,31 +1291,28 @@
       window.addEventListener('pointerup', onPointerUp, { passive: false });
       window.addEventListener('pointercancel', onPointerUp, { passive: false });
 
-      // Botón mostrar/ocultar Bounding Box del modelo 3D
-      document.getElementById('btn-toggle-bbox').addEventListener('click', () => {
-        state.showBoundingBoxHelper = !state.showBoundingBoxHelper;
-        if (bboxHelperGroup) bboxHelperGroup.visible = state.showBoundingBoxHelper;
-        showToast(
-          state.showBoundingBoxHelper
-            ? 'Bounding Box y Claro Central visibles'
-            : 'Bounding Box oculto'
-        );
-      });
-
       // Botón Cámara AR
       document.getElementById('btn-toggle-camera').addEventListener('click', toggleARCamera);
 
-      // Botón Reset
+      // Botón Reiniciar (Vuelve a ocultar la escultura detrás de las plantas)
       document.getElementById('btn-reset').addEventListener('click', () => {
+        state.clearedLeavesCount = 0;
+        state.discoveryCompleted = false;
         state.foliagePlanes.forEach((leaf) => {
-          leaf.position.copy(leaf.userData.homePos);
-          leaf.rotation.z = leaf.userData.homeRotZ;
-          leaf.userData.velocity.set(0, 0);
+          const d = leaf.userData;
+          d.isCleared = false;
+          d.restPos.copy(d.homePos);
+          d.restRotZ = d.homeRotZ;
+          d.velocity.set(0, 0);
+          d.rotVelocity = 0;
         });
         state.modelTargetRotX = 0;
         state.modelTargetRotY = 0;
-        playFoliageRustle(0.7);
-        showToast('Capas 6, 7 y 8 restauradas al encuadre original');
+        updateDiscoveryUI();
+        onboardingHint.classList.remove('opacity-0');
+        hintText.textContent = 'Desliza tu dedo para apartar las plantas y descubrir la escultura';
+        playFoliageRustle(0.8);
+        showToast('Vegetación restaurada: vuelve a descubrir la escultura');
       });
 
       // Botón Sonido
@@ -1322,41 +1320,22 @@
         state.soundEnabled = !state.soundEnabled;
         document.getElementById('icon-sound-on').classList.toggle('text-emerald-400', state.soundEnabled);
         document.getElementById('icon-sound-on').classList.toggle('text-stone-500', !state.soundEnabled);
-        showToast(state.soundEnabled ? 'Audio reactivo activado' : 'Audio silenciado');
+        showToast(state.soundEnabled ? 'Sonido de la selva activado' : 'Sonido silenciado');
       });
 
-      // Cargar nuevo .GLB y recalcular automáticamente las 8 capas según su nuevo Bounding Box
+      // Cargar nuevo modelo .GLB
       document.getElementById('glb-upload').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const url = URL.createObjectURL(file);
         const loader = new GLTFLoader();
-        showToast(`Analizando Bounding Box de ${file.name}...`);
+        showToast(`Cargando escultura ${file.name}...`);
 
         loader.load(url, (gltf) => {
           mountAndComputeBoundingBox(gltf.scene);
-          generateEightLayerJungle(state.modelBoundingBox, cachedTexturesByKey);
-          assetSourceBadge.textContent = `Modelo activo: ${file.name} · 8 Capas recalculadas`;
-          showToast(`¡${file.name} encuadrado en el Claro Central!`);
+          showToast(`¡${file.name} colocada frente a las plantas con rocas!`);
           URL.revokeObjectURL(url);
         });
-      });
-
-      // Modos de Iluminación
-      document.getElementById('btn-light-illustration').addEventListener('click', () => {
-        sunClearLight.color.setHex(0xfef08a);
-        rimTealLight.color.setHex(0x2dd4bf);
-        rimGoldLight.color.setHex(0xfbbf24);
-        scene.fog.color.setHex(0x072119);
-        showToast('Estilo: Ilustración Esmeralda y Turquesa');
-      });
-
-      document.getElementById('btn-light-golden').addEventListener('click', () => {
-        sunClearLight.color.setHex(0xfde68a);
-        rimTealLight.color.setHex(0xf59e0b);
-        rimGoldLight.color.setHex(0xfef3c7);
-        scene.fog.color.setHex(0x1c1917);
-        showToast('Estilo: Hora Dorada en la Selva');
       });
     }
 
@@ -1364,10 +1343,8 @@
       state.pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
       state.pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
 
-      const worldForeground = getPointerWorldAtZ(2.1);
-      if (worldForeground) {
-        state.pointerWorldAtForeground.copy(worldForeground);
-      }
+      touchRipple.style.left = `${clientX}px`;
+      touchRipple.style.top = `${clientY}px`;
     }
 
     function getPointerWorldAtZ(targetZ) {
@@ -1383,18 +1360,25 @@
       initAudio();
       state.pointerDown = true;
       updatePointerCoords(e.clientX, e.clientY);
+      touchRipple.classList.add('active');
 
-      // Comprobar si el usuario tocó una hoja interactiva de Primer Plano (Capas 6, 7 u 8)
+      if (!state.hasInteracted) {
+        state.hasInteracted = true;
+        onboardingHint.classList.add('opacity-0');
+      }
+
+      // Buscar plantas interactivas (Capas 5 a 8) que aún no estén despejadas
       const interactiveLeaves = state.foliagePlanes.filter((p) => p.userData.interactive);
       raycaster.setFromCamera(state.pointerNDC, camera);
       const hits = raycaster.intersectObjects(interactiveLeaves, false);
 
-      if (hits.length > 0) {
+      if (hits.length > 0 && !state.discoveryCompleted) {
         state.activeDraggedLeaf = hits[0].object;
-        state.lastPointerWorld.copy(getPointerWorldAtZ(state.activeDraggedLeaf.position.z));
-        playFoliageRustle(0.6);
+        const worldPt = getPointerWorldAtZ(state.activeDraggedLeaf.position.z);
+        if (worldPt) state.lastPointerWorld.copy(worldPt);
+        playFoliageRustle(0.65);
       } else {
-        // Si toca en el Claro Central, permite rotar el modelo 3D central 360°
+        // Si toca sobre la escultura ya despejada, permite girarla 360°
         state.rotatingModel = true;
         state.lastInspectClient.x = e.clientX;
         state.lastInspectClient.y = e.clientY;
@@ -1403,32 +1387,68 @@
 
     function onPointerMove(e) {
       updatePointerCoords(e.clientX, e.clientY);
+      if (!state.pointerDown) return;
 
-      // Si arrastra una hoja de las Capas 6, 7 u 8 directamente
-      if (state.pointerDown && state.activeDraggedLeaf) {
-        const leaf = state.activeDraggedLeaf;
-        const currentWorld = getPointerWorldAtZ(leaf.position.z);
-        if (currentWorld) {
-          const dx = currentWorld.x - state.lastPointerWorld.x;
-          const dy = currentWorld.y - state.lastPointerWorld.y;
-          leaf.position.x += dx;
-          leaf.position.y += dy;
-          leaf.userData.velocity.set(dx * 1.25, dy * 1.25);
-          leaf.userData.rotVelocity = -dx * 0.32;
-          state.lastPointerWorld.copy(currentWorld);
+      // 1. Si el usuario está arrastrando o deslizando el dedo para quitar plantas
+      if (!state.discoveryCompleted && !state.rotatingModel) {
+        // A) Arrastrar directamente la hoja seleccionada bajo el dedo
+        if (state.activeDraggedLeaf) {
+          const leaf = state.activeDraggedLeaf;
+          const d = leaf.userData;
+          const currentWorld = getPointerWorldAtZ(leaf.position.z);
+          if (currentWorld) {
+            const dx = currentWorld.x - state.lastPointerWorld.x;
+            const dy = currentWorld.y - state.lastPointerWorld.y;
+
+            d.restPos.x += dx * 1.35;
+            d.restPos.y += dy * 1.25;
+            d.velocity.set(dx * 1.5, dy * 1.5);
+            d.rotVelocity = -dx * 0.35;
+            d.restRotZ += -dx * 0.22;
+
+            state.lastPointerWorld.copy(currentWorld);
+            checkIfLeafCleared(leaf);
+          }
         }
+
+        // B) Barrido ergonómico (Swipe Brush): si el dedo pasa sobre otras hojas centrales, también las empuja hacia afuera
+        state.foliagePlanes.forEach((leaf) => {
+          const d = leaf.userData;
+          if (!d.interactive || d === state.activeDraggedLeaf?.userData) return;
+
+          const fingerAtLeafZ = getPointerWorldAtZ(leaf.position.z);
+          if (!fingerAtLeafZ) return;
+
+          const dx = leaf.position.x - fingerAtLeafZ.x;
+          const dy = leaf.position.y - fingerAtLeafZ.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < CONFIG.brushRadius) {
+            const pushDirX = dx === 0 ? (d.partedPos.x >= 0 ? 1 : -1) : dx / dist;
+            const pushDirY = dy / (dist || 1);
+            const force = (1.0 - dist / CONFIG.brushRadius) * 0.24;
+
+            d.restPos.x += pushDirX * force;
+            d.restPos.y += pushDirY * force * 0.65;
+            d.velocity.x += pushDirX * force * 0.5;
+            d.restRotZ += -pushDirX * force * 0.18;
+
+            playFoliageRustle(0.45);
+            checkIfLeafCleared(leaf);
+          }
+        });
         return;
       }
 
-      // Si gira el modelo 3D en el Claro Central
-      if (state.pointerDown && state.rotatingModel) {
+      // 2. Rotación 360° de la escultura cuando el centro está despejado
+      if (state.rotatingModel) {
         const dx = e.clientX - state.lastInspectClient.x;
         const dy = e.clientY - state.lastInspectClient.y;
-        state.modelTargetRotY += dx * 0.011;
+        state.modelTargetRotY += dx * 0.012;
         state.modelTargetRotX = THREE.MathUtils.clamp(
           state.modelTargetRotX + dy * 0.005,
-          -0.3,
-          0.35
+          -0.28,
+          0.32
         );
         state.lastInspectClient.x = e.clientX;
         state.lastInspectClient.y = e.clientY;
@@ -1439,6 +1459,66 @@
       state.pointerDown = false;
       state.activeDraggedLeaf = null;
       state.rotatingModel = false;
+      touchRipple.classList.remove('active');
+    }
+
+    /**
+     * Verifica si una planta que ocultaba la escultura ya fue apartada lo suficiente
+     * hacia los bordes para anclarla en el marco exterior (`partedPos`).
+     */
+    function checkIfLeafCleared(leaf) {
+      const d = leaf.userData;
+      if (!d.coversSculpture || d.isCleared) return;
+
+      const distFromCenter = Math.hypot(d.restPos.x * 1.15, d.restPos.y * 0.85);
+      if (distFromCenter > 0.92) {
+        d.isCleared = true;
+        // Se ancla suavemente en el borde exterior para que NO vuelva a tapar la escultura
+        const side = d.restPos.x >= 0 ? 1 : -1;
+        d.restPos.x = side * Math.max(Math.abs(d.partedPos.x), Math.abs(d.restPos.x) + 0.45);
+        d.restPos.y = THREE.MathUtils.clamp(d.restPos.y, -1.35, 1.35);
+        d.restRotZ = d.partedRotZ;
+
+        state.clearedLeavesCount++;
+        updateDiscoveryUI();
+      }
+    }
+
+    function updateDiscoveryUI() {
+      const total = Math.max(1, state.coveringLeavesCount);
+      const ratio = Math.min(1, state.clearedLeavesCount / total);
+      const percent = Math.round(ratio * 100);
+
+      discoveryCount.textContent = `${percent}%`;
+      discoveryBar.style.width = `${percent}%`;
+
+      if (ratio >= CONFIG.discoveryThreshold && !state.discoveryCompleted) {
+        triggerFullSculptureReveal();
+      } else if (!state.discoveryCompleted) {
+        discoveryLabel.textContent = 'Despeja la selva';
+        statusDot.className = 'w-2 h-2 rounded-full bg-amber-300 animate-ping shrink-0';
+      }
+    }
+
+    function triggerFullSculptureReveal() {
+      state.discoveryCompleted = true;
+      discoveryCount.textContent = '100%';
+      discoveryBar.style.width = '100%';
+      discoveryLabel.textContent = '¡Escultura descubierta!';
+      statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 shrink-0';
+
+      // Apartar automáticamente cualquier hoja restante hacia las esquinas como marco natural
+      state.foliagePlanes.forEach((leaf) => {
+        const d = leaf.userData;
+        if (d.coversSculpture) {
+          d.isCleared = true;
+          d.restPos.copy(d.partedPos);
+          d.restRotZ = d.partedRotZ;
+        }
+      });
+
+      playRevealChime();
+      showToast('¡Escultura descubierta! Arrastra el centro para girarla 360°');
     }
 
     async function toggleARCamera() {
@@ -1449,10 +1529,11 @@
         videoElement.srcObject = null;
         videoElement.classList.remove('active');
         backdropElement.style.opacity = '1';
-        if (studioEnvironmentGroup) studioEnvironmentGroup.visible = true;
+        if (xilitlaEnvironmentGroup) xilitlaEnvironmentGroup.visible = true;
+        scene.fog = new THREE.FogExp2(0x062118, 0.062);
         state.cameraActive = false;
         btnText.textContent = 'Cámara AR';
-        showToast('Fondo de Ilustración Digital activo');
+        showToast('Entorno surrealista de Xilitla activo');
         return;
       }
 
@@ -1465,110 +1546,88 @@
         await videoElement.play();
         videoElement.classList.add('active');
         backdropElement.style.opacity = '0';
-        if (studioEnvironmentGroup) studioEnvironmentGroup.visible = false;
+        if (xilitlaEnvironmentGroup) xilitlaEnvironmentGroup.visible = false;
+        scene.fog = null;
         state.cameraActive = true;
-        btnText.textContent = 'Modo Ilustración';
-        showToast('Modo Cámara WebAR activo');
+        btnText.textContent = 'Fondo Xilitla';
+        showToast('Cámara AR activa con capas de vegetación');
       } catch (err) {
-        showToast('Cámara no disponible en este dispositivo.');
+        showToast('Cámara no disponible en este navegador/dispositivo');
       }
     }
 
     /* =========================================================================
-       8. BUCLE DE ANIMACIÓN: PARALAJE 3D + VIENTO DIFERENCIADO POR CAPAS
+       8. BUCLE DE ANIMACIÓN: VIENTO ORGÁNICO + FÍSICA DE HOJAS + PARTÍCULAS
        ========================================================================= */
     function animate() {
       const elapsedTime = clock.getElapsedTime();
 
-      // 1. Paralaje 3D suave de cámara para apreciar la separación de las 8 capas
-      state.SmoothedParallax.x = THREE.MathUtils.lerp(state.SmoothedParallax.x, state.pointerNDC.x * 0.28, 0.05);
-      state.SmoothedParallax.y = THREE.MathUtils.lerp(state.SmoothedParallax.y, state.pointerNDC.y * 0.16, 0.05);
-      camera.position.x = state.SmoothedParallax.x;
-      camera.position.y = 0.22 + state.SmoothedParallax.y;
-      camera.lookAt(0, state.clearingEllipse.centerY, 0);
+      // 1. Paralaje 3D sutil para percibir la profundidad entre la escultura y las plantas con rocas detrás
+      state.smoothedParallax.x = THREE.MathUtils.lerp(state.smoothedParallax.x, state.pointerNDC.x * 0.22, 0.05);
+      state.smoothedParallax.y = THREE.MathUtils.lerp(state.smoothedParallax.y, state.pointerNDC.y * 0.12, 0.05);
+      camera.position.x = state.smoothedParallax.x;
+      camera.position.y = 0.18 + state.smoothedParallax.y;
+      camera.lookAt(0, 0.08, 0);
 
-      // 2. Comportamiento diferenciado de las 8 capas de vegetación
+      // 2. Actualizar física táctil y ondulación de viento en todas las capas de plantas
       state.foliagePlanes.forEach((leaf) => {
-        const data = leaf.userData;
+        const d = leaf.userData;
 
-        // CAPAS 1, 2 y 3 (Fondo): Completamente ESTÁTICAS según dirección de arte
-        if (data.isStatic) return;
+        if (d.interactive) {
+          leaf.position.x += d.velocity.x;
+          leaf.position.y += d.velocity.y;
+          leaf.rotation.z += d.rotVelocity;
 
-        // CAPAS 6, 7 y 8 (Primer Plano): Reacción dinámica al paso del ratón/dedo (repulsión magnética + arrastre)
-        if (data.interactive && state.activeDraggedLeaf !== leaf) {
-          const dxPointer = leaf.position.x - state.pointerWorldAtForeground.x;
-          const dyPointer = leaf.position.y - state.pointerWorldAtForeground.y;
-          const distSq = dxPointer * dxPointer + dyPointer * dyPointer;
-          const repulseR = CONFIG.pointerRepulsionRadius;
+          d.velocity.multiplyScalar(CONFIG.damping);
+          d.rotVelocity *= CONFIG.damping;
 
-          if (distSq < repulseR * repulseR && distSq > 0.0001) {
-            const dist = Math.sqrt(distSq);
-            // Empujar la hoja hacia el borde exterior para despejar aún más la vista al pasar el dedo/ratón
-            const strength = (1.0 - dist / repulseR) * 0.018;
-            data.velocity.x += (dxPointer / dist) * strength;
-            data.velocity.y += (dyPointer / dist) * strength;
-            data.rotVelocity += -dxPointer * strength * 0.35;
-          }
-
-          // Aplicar velocidad e inercia
-          leaf.position.x += data.velocity.x;
-          leaf.position.y += data.velocity.y;
-          leaf.rotation.z += data.rotVelocity;
-
-          data.velocity.multiplyScalar(CONFIG.damping);
-          data.rotVelocity *= CONFIG.damping;
-
-          // Retorno elástico suave hacia su posición de marco fuera del Bounding Box
-          leaf.position.x = THREE.MathUtils.lerp(leaf.position.x, data.homePos.x, CONFIG.springReturn);
-          leaf.position.y = THREE.MathUtils.lerp(leaf.position.y, data.homePos.y, CONFIG.springReturn);
-          leaf.rotation.z = THREE.MathUtils.lerp(leaf.rotation.z, data.homeRotZ, CONFIG.springReturn);
+          // Interpolar hacia la posición de reposo (`restPos`), que se queda abierta cuando el usuario la aparta
+          leaf.position.x = THREE.MathUtils.lerp(leaf.position.x, d.restPos.x, CONFIG.restLerpSpeed);
+          leaf.position.y = THREE.MathUtils.lerp(leaf.position.y, d.restPos.y, CONFIG.restLerpSpeed);
+          leaf.rotation.z = THREE.MathUtils.lerp(leaf.rotation.z, d.restRotZ, CONFIG.restLerpSpeed);
         }
 
-        // ANIMACIÓN DE VÉRTICES (Sutil en Capas 4-5, Dinámica en Capas 6-8)
+        // Desplazamiento de vértices (Viento suave anclado en la base de cada planta)
         const posAttr = leaf.geometry.attributes.position;
-        const basePos = data.basePositions;
-        const halfH = data.planeHeight * 0.5;
-        const windAmp = data.windAmplitude;
+        const basePos = d.basePositions;
+        const halfH = d.planeHeight * 0.5;
+        const windAmp = d.windAmplitude;
 
         for (let v = 0; v < posAttr.count; v++) {
           const idx = v * 3;
           const bx = basePos[idx];
           const by = basePos[idx + 1];
 
-          const tipWeight = THREE.MathUtils.clamp((by + halfH) / data.planeHeight, 0.0, 1.0);
-          const wave1 = Math.sin(elapsedTime * data.swaySpeed + bx * 1.6 + by * 1.2 + data.swayPhase);
-          const wave2 = Math.cos(elapsedTime * (data.swaySpeed * 0.8) - by * 1.8 + data.swayPhase);
+          const tipWeight = THREE.MathUtils.clamp((by + halfH) / d.planeHeight, 0.0, 1.0);
+          const wave1 = Math.sin(elapsedTime * d.swaySpeed + bx * 1.5 + by * 1.1 + d.swayPhase);
+          const wave2 = Math.cos(elapsedTime * (d.swaySpeed * 0.78) - by * 1.6 + d.swayPhase);
 
-          const offsetX = wave1 * windAmp * tipWeight - (data.velocity.x * 1.8 * tipWeight);
-          const offsetY = wave2 * (windAmp * 0.45) * tipWeight - (data.velocity.y * 1.4 * tipWeight);
-          const offsetZ = wave1 * (windAmp * 0.85) * tipWeight;
+          const offsetX = wave1 * windAmp * tipWeight - (d.velocity.x * 1.4 * tipWeight);
+          const offsetY = wave2 * (windAmp * 0.4) * tipWeight - (d.velocity.y * 1.1 * tipWeight);
+          const offsetZ = wave1 * (windAmp * 0.75) * tipWeight;
 
           posAttr.setXYZ(v, bx + offsetX, by + offsetY, offsetZ);
         }
         posAttr.needsUpdate = true;
       });
 
-      // 3. Animación del modelo 3D central en el Claro
+      // 3. Rotación suave del modelo 3D central
       if (sculptureGroup) {
         if (!state.rotatingModel) {
-          state.modelTargetRotY += 0.0035;
+          state.modelTargetRotY += 0.004;
         }
         sculptureGroup.rotation.y = THREE.MathUtils.lerp(sculptureGroup.rotation.y, state.modelTargetRotY, 0.08);
         sculptureGroup.rotation.x = THREE.MathUtils.lerp(sculptureGroup.rotation.x, state.modelTargetRotX, 0.08);
-
-        if (bboxHelperGroup && bboxHelperGroup.visible) {
-          state.modelBoundingBox.setFromObject(sculptureGroup);
-        }
       }
 
-      // 4. Animación de partículas bioluminiscentes
+      // 4. Movimiento ascendente y flotación de las partículas bioluminiscentes
       if (bioParticles && state.particleData.length > 0) {
         bioParticles.material.uniforms.uTime.value = elapsedTime;
         const posAttr = bioParticles.geometry.attributes.position;
         for (let i = 0; i < CONFIG.particleCount; i++) {
           const p = state.particleData[i];
           p.baseY += p.speedY;
-          if (p.baseY > 2.4) p.baseY = -1.4;
+          if (p.baseY > 2.5) p.baseY = -1.4;
           const x = p.baseX + Math.sin(elapsedTime * p.driftFreq + p.phase) * p.driftAmp;
           const y = p.baseY + Math.cos(elapsedTime * p.driftFreq * 0.7 + p.phase) * (p.driftAmp * 0.5);
           posAttr.setXYZ(i, x, y, p.baseZ);
@@ -1580,8 +1639,7 @@
     }
 
     function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+      updateCameraFramingForAspect();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
