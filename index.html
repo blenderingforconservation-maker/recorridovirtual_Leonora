@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>WebAR Selva Tropical · Descubrimiento de Escultura</title>
+  <title>WebAR Pasillo Xilitla · Descubrimiento de Escultura</title>
   
   <!-- Tailwind CSS para la interfaz de usuario (UI/UX) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -37,7 +37,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #04120c;
+      background-color: #07140e;
       font-family: 'Inter', sans-serif;
       touch-action: none;
     }
@@ -46,31 +46,33 @@
       font-family: 'Cinzel', serif;
     }
 
-    /* Fondo atmosférico de selva tropical (Niebla profunda + Luz Esmeralda) */
+    /* Fondo del Pasillo Selvático de Xilitla (CSS Backdrop + soporte de imagen) */
     #illustration-backdrop {
       position: fixed;
       inset: 0;
       z-index: 0;
-      background:
-        radial-gradient(circle at 50% 34%, rgba(167, 243, 208, 0.25) 0%, rgba(20, 184, 166, 0.15) 30%, rgba(6, 46, 34, 0.95) 68%, #020c08 100%),
-        linear-gradient(180deg, #0d362b 0%, #07221a 52%, #030d09 100%);
+      background-color: #0b1c14;
+      background-size: cover;
+      background-position: center 40%;
+      background-repeat: no-repeat;
+      filter: brightness(0.88) contrast(1.06);
       pointer-events: none;
-      transition: opacity 0.6s ease;
+      transition: opacity 0.6s ease, transform 0.2s ease-out;
     }
 
-    /* Rayos de sol volumétricos filtrándose entre el dosel de la selva */
+    /* Rayos de sol volumétricos filtrándose desde la apertura superior del pasillo */
     #god-rays {
       position: fixed;
       inset: 0;
       z-index: 1;
       pointer-events: none;
       background: conic-gradient(
-        from 160deg at 50% -15%,
+        from 155deg at 52% -10%,
         transparent 0deg,
-        rgba(167, 243, 208, 0.12) 14deg,
-        transparent 28deg,
-        rgba(253, 230, 138, 0.14) 40deg,
-        transparent 56deg
+        rgba(236, 253, 245, 0.14) 16deg,
+        transparent 32deg,
+        rgba(254, 240, 138, 0.12) 45deg,
+        transparent 62deg
       );
       mix-blend-mode: screen;
     }
@@ -109,13 +111,13 @@
       cursor: grabbing;
     }
 
-    /* Viñeta orgánica suave que enmarca la escena sin oscurecer el centro */
+    /* Viñeta orgánica suave que enmarca los muros de piedra */
     .jungle-vignette {
       position: fixed;
       inset: 0;
       z-index: 3;
       pointer-events: none;
-      background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(1, 10, 6, 0.68) 100%);
+      background: radial-gradient(circle at 50% 48%, transparent 52%, rgba(4, 12, 8, 0.72) 100%);
     }
 
     /* Capa HUD minimalista optimizada para móvil horizontal y vertical */
@@ -167,7 +169,7 @@
 </head>
 <body>
 
-  <!-- 1. FONDO ATMOSFÉRICO DE SELVA Y RAYOS DE SOL -->
+  <!-- 1. FONDO DEL PASILLO DE XILITLA Y LUZ CENITAL -->
   <div id="illustration-backdrop"></div>
   <div id="god-rays"></div>
 
@@ -188,8 +190,8 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
       </svg>
     </div>
-    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-1.5">SELVA TROPICAL · DESCUBRIMIENTO</h1>
-    <p id="loading-status" class="text-xs sm:text-sm text-emerald-300/80 mb-5 max-w-xs">Preparando vegetación con rocas, niebla y capas táctiles...</p>
+    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-1.5">PASILLO XILITLA · WEBAR</h1>
+    <p id="loading-status" class="text-xs sm:text-sm text-emerald-300/80 mb-5 max-w-xs">Integrando pasillo de piedra, orquídeas silvestres y capas táctiles...</p>
     <div class="w-60 sm:w-72 h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
       <div id="loading-bar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 w-0 transition-all duration-300"></div>
     </div>
@@ -219,17 +221,24 @@
       <!-- Controles Flotantes Traslúcidos -->
       <div class="flex items-center gap-1.5 interactive-ui">
         
-        <!-- Botón Pantalla Completa (Icono) -->
+        <!-- Botón Pantalla Completa -->
         <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
-          <!-- Icono Expandir -->
           <svg id="icon-expand" class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
           </svg>
-          <!-- Icono Contraer -->
           <svg id="icon-compress" class="w-4 h-4 text-emerald-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
           </svg>
         </button>
+
+        <!-- NUEVO: Cargar imagen del Pasillo Xilitla personalizada -->
+        <label for="bg-upload" title="Cambiar foto del Pasillo Xilitla" class="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-emerald-400/30 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span class="hidden sm:inline">Fondo Pasillo</span>
+        </label>
+        <input id="bg-upload" type="file" accept="image/*" class="hidden" />
 
         <!-- Cargar modelo .GLB propio -->
         <label for="glb-upload" title="Cargar escultura .GLB" class="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
@@ -257,7 +266,7 @@
       </div>
     </header>
 
-    <!-- Guía Gestual Central (Se desvanece a los 3 segundos o al interactuar) -->
+    <!-- Guía Gestual Central -->
     <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none transition-opacity duration-700">
       <div class="w-11 h-11 rounded-full bg-stone-950/60 border border-amber-300/40 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
         <svg class="w-6 h-6 text-amber-300 animate-swipe-hand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,14 +274,14 @@
         </svg>
       </div>
       <p id="hint-text" class="px-3.5 py-1 rounded-full bg-stone-950/70 backdrop-blur-md border border-white/10 text-emerald-50 text-xs font-medium shadow-xl">
-        Desliza tu dedo para apartar las plantas y descubrir la escultura
+        Desliza tu dedo para apartar las plantas del pasillo y descubrir la escultura
       </p>
     </div>
 
     <!-- Pie de Página Minimalista -->
     <footer class="w-full flex items-end justify-between gap-2">
       <div id="toast-message" class="bg-stone-950/80 backdrop-blur-md border border-emerald-400/30 text-emerald-100 px-3.5 py-1.5 rounded-full text-xs shadow-xl transition-all duration-300 opacity-0 pointer-events-none transform translate-y-2">
-        Selva lista
+        Pasillo de Xilitla listo
       </div>
 
       <button id="btn-toggle-camera" class="interactive-ui flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 text-white border border-emerald-300/40 backdrop-blur-md shadow-xl transition-all">
@@ -294,8 +303,18 @@
     const CONFIG = {
       cameraDistance: 5.2,
       discoveryThreshold: 0.82,
-      // CORRECCIÓN DE INCLINACIÓN: Si el modelo .glb viene inclinado por defecto, ajusta estos valores (en radianes)
-      modelRotation: { x: 0, y: 0, z: 0 }, 
+      // CORRECCIÓN DE INCLINACIÓN: Ajusta estos valores (en radianes) si el .glb viene inclinado
+      modelRotation: { x: 0, y: 0, z: 0 },
+      // RUTAS DEL FONDO DEL PASILLO DE XILITLA (Guarda la imagen generada con cualquiera de estos nombres)
+      corridorBgPaths: [
+        'assets/pasillo_xilitla.jpg',
+        'assets/pasillo_xilitla.png',
+        'pasillo_xilitla.jpg',
+        'pasillo_xilitla.png',
+        'assets/fondo_pasillo.jpg',
+        `${REPO_RAW_BASE}assets/pasillo_xilitla.jpg`,
+        `${REPO_RAW_BASE}assets/fondo_pasillo.jpg`
+      ],
       modelPaths: [
         'models/escultura1.glb',
         'assets/escultura1.glb',
@@ -329,7 +348,7 @@
           aspectHeight: 2.05
         }
       ],
-      particleCount: 240,
+      particleCount: 220,
       damping: 0.89,
       restLerpSpeed: 0.08,
       brushRadius: 0.92
@@ -379,7 +398,7 @@
     const iconCompress = document.getElementById('icon-compress');
 
     let scene, camera, renderer, raycaster;
-    let jungleEnvironmentGroup, sculptureGroup, foliageRootGroup, bioParticles;
+    let jungleEnvironmentGroup, muralMesh, sculptureGroup, foliageRootGroup, bioParticles;
     let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight;
     let cachedTexturesByKey = null;
     const clock = new THREE.Clock();
@@ -491,13 +510,14 @@
     }
 
     /* =========================================================================
-       2. INICIALIZACIÓN DE ESCENA
+       2. INICIALIZACIÓN DE ESCENA Y FONDO DEL PASILLO DE XILITLA
        ========================================================================= */
     async function init() {
-      updateLoading(15, 'Generando densa selva tropical...');
+      updateLoading(15, 'Cargando arquitectura y vegetación del pasillo de Xilitla...');
 
       scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x062118, 0.062);
+      // Niebla más sutil para respetar la nitidez de los muros de piedra y la puerta del fondo
+      scene.fog = new THREE.FogExp2(0x0c2218, 0.032);
 
       camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 60);
       updateCameraFramingForAspect();
@@ -512,37 +532,34 @@
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.25;
+      renderer.toneMappingExposure = 1.18;
       container.appendChild(renderer.domElement);
 
       raycaster = new THREE.Raycaster();
 
       setupLighting();
-      createJungleSurrealBackground();
+      await createXilitlaCorridorBackground();
 
-      updateLoading(45, 'Cargando escultura 3D en el claro de la selva...');
+      updateLoading(45, 'Colocando escultura 3D sobre el pasillo de piedra...');
       await loadAndFrameCentralModel();
 
-      updateLoading(72, 'Colocando plantas con rocas detrás y cortina táctil al frente...');
+      updateLoading(72, 'Generando cortina botánica interactiva...');
       cachedTexturesByKey = await loadBaseVegetationTextures();
       buildLayeredJungle(cachedTexturesByKey);
 
-      updateLoading(92, 'Activando esporas bioluminiscentes...');
+      updateLoading(92, 'Activando polen y esporas bioluminiscentes...');
       createLuminescentParticles();
 
       setupInteractionEvents();
       window.addEventListener('resize', onWindowResize);
 
-      updateLoading(100, '¡Experiencia lista!');
+      updateLoading(100, '¡Pasillo de Xilitla listo!');
       
       setTimeout(() => {
         loadingScreen.classList.add('opacity-0', 'pointer-events-none');
-        
-        // Ocultar mensaje de "Desliza tu dedo" después de 3 segundos
         setTimeout(() => {
           onboardingHint.classList.add('opacity-0');
         }, 3000);
-
       }, 350);
 
       renderer.setAnimationLoop(animate);
@@ -562,76 +579,107 @@
         camera.position.z = CONFIG.cameraDistance;
         camera.updateProjectionMatrix();
       }
+      updateMuralScaleForAspect();
+    }
+
+    // Ajusta la escala del plano de fondo 3D para cubrir tanto móvil vertical como horizontal
+    function updateMuralScaleForAspect() {
+      if (!muralMesh || !muralMesh.material.map) return;
+      const tex = muralMesh.material.map;
+      const imgW = tex.image?.width || 1080;
+      const imgH = tex.image?.height || 1350;
+      const imgAspect = imgW / imgH;
+      const screenAspect = window.innerWidth / window.innerHeight;
+
+      const baseHeight = 10.5;
+      let targetW = baseHeight * imgAspect;
+      let targetH = baseHeight;
+
+      const minCoverWidth = baseHeight * screenAspect * 1.18;
+      if (targetW < minCoverWidth) {
+        const factor = minCoverWidth / targetW;
+        targetW *= factor;
+        targetH *= factor;
+      }
+      muralMesh.scale.set(targetW / 10, targetH / 10, 1);
     }
 
     function setupLighting() {
-      hemiLight = new THREE.HemisphereLight(0xa7f3d0, 0x041a12, 1.25);
+      // Luz cenital natural como el cielo abierto del pasillo
+      hemiLight = new THREE.HemisphereLight(0xe2f8ec, 0x1c241e, 1.35);
       scene.add(hemiLight);
 
-      sunClearLight = new THREE.DirectionalLight(0xfef08a, 2.35);
-      sunClearLight.position.set(1.6, 5.4, 2.8);
+      sunClearLight = new THREE.DirectionalLight(0xfffbeb, 2.45);
+      sunClearLight.position.set(1.2, 6.2, 2.6);
       sunClearLight.castShadow = true;
       sunClearLight.shadow.mapSize.width = 1024;
       sunClearLight.shadow.mapSize.height = 1024;
       sunClearLight.shadow.bias = -0.001;
       scene.add(sunClearLight);
 
-      rimTealLight = new THREE.PointLight(0x2dd4bf, 3.4, 11);
-      rimTealLight.position.set(-2.5, 1.5, -0.6);
+      // Rebote verdoso de los helechos y musgo en los muros
+      rimTealLight = new THREE.PointLight(0x34d399, 2.8, 11);
+      rimTealLight.position.set(-2.4, 1.4, -0.5);
       scene.add(rimTealLight);
 
-      rimGoldLight = new THREE.PointLight(0xfbbf24, 2.6, 10);
-      rimGoldLight.position.set(2.4, 1.1, 1.4);
+      // Toque cálido de la piedra caliza y las orquídeas sutiles
+      rimGoldLight = new THREE.PointLight(0xfde047, 2.1, 10);
+      rimGoldLight.position.set(2.2, 1.2, 1.4);
       scene.add(rimGoldLight);
 
-      centerSpotLight = new THREE.SpotLight(0xfffbeb, 3.1);
-      centerSpotLight.position.set(0, 3.6, 3.2);
-      centerSpotLight.angle = Math.PI / 5.2;
-      centerSpotLight.penumbra = 0.85;
+      centerSpotLight = new THREE.SpotLight(0xffffff, 2.8);
+      centerSpotLight.position.set(0, 4.0, 3.2);
+      centerSpotLight.angle = Math.PI / 5.0;
+      centerSpotLight.penumbra = 0.88;
       scene.add(centerSpotLight);
     }
 
-    function createJungleSurrealBackground() {
+    async function createXilitlaCorridorBackground() {
       if (jungleEnvironmentGroup) scene.remove(jungleEnvironmentGroup);
       jungleEnvironmentGroup = new THREE.Group();
-      jungleEnvironmentGroup.name = 'JungleEnvironment';
+      jungleEnvironmentGroup.name = 'XilitlaCorridorEnvironment';
       scene.add(jungleEnvironmentGroup);
 
-      const muralTex = createJunglePanoramaTexture();
-      const muralGeo = new THREE.PlaneGeometry(16.5, 9.2, 24, 1);
+      const { texture, cssUrl } = await loadCorridorTextureWithFallback();
+      applyCorridorBackgroundTexture(texture, cssUrl);
+
+      // Plano curvo envolvente 3D para que el pasillo tenga profundidad y paralaje real
+      const muralGeo = new THREE.PlaneGeometry(10, 10, 28, 1);
       const pos = muralGeo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         const vx = pos.getX(i);
-        pos.setZ(i, Math.pow(vx * 0.14, 2) * 0.55);
+        pos.setZ(i, Math.pow(vx * 0.16, 2) * 0.48);
       }
       muralGeo.computeVertexNormals();
 
       const muralMat = new THREE.MeshBasicMaterial({
-        map: muralTex,
+        map: texture,
         side: THREE.DoubleSide,
         fog: false
       });
-      const muralMesh = new THREE.Mesh(muralGeo, muralMat);
-      muralMesh.position.set(0, 0.55, -4.6);
+      muralMesh = new THREE.Mesh(muralGeo, muralMat);
+      muralMesh.position.set(0, 0.35, -4.4);
       jungleEnvironmentGroup.add(muralMesh);
+      updateMuralScaleForAspect();
 
-      const floorGeo = new THREE.CircleGeometry(6.8, 48);
-      const floorMat = new THREE.MeshStandardMaterial({
-        color: 0x0b291e,
-        roughness: 0.45,
-        metalness: 0.15
+      // Piso receptor de sombras transparente: permite ver las lajas de piedra de la foto
+      // mientras proyecta la sombra real del modelo 3D y el pedestal sobre el suelo
+      const shadowFloorGeo = new THREE.PlaneGeometry(12, 12);
+      const shadowFloorMat = new THREE.ShadowMaterial({
+        opacity: 0.42
       });
-      const jungleFloor = new THREE.Mesh(floorGeo, floorMat);
-      jungleFloor.rotation.x = -Math.PI / 2;
-      jungleFloor.position.y = -1.25;
-      jungleFloor.receiveShadow = true;
-      jungleEnvironmentGroup.add(jungleFloor);
+      const shadowFloor = new THREE.Mesh(shadowFloorGeo, shadowFloorMat);
+      shadowFloor.rotation.x = -Math.PI / 2;
+      shadowFloor.position.y = -1.24;
+      shadowFloor.receiveShadow = true;
+      jungleEnvironmentGroup.add(shadowFloor);
 
-      const rippleGeo = new THREE.RingGeometry(0.78, 1.65, 48);
+      // Sutil halo de humedad bioluminiscente al pie de la escultura
+      const rippleGeo = new THREE.RingGeometry(0.68, 1.35, 48);
       const rippleMat = new THREE.MeshBasicMaterial({
-        color: 0x2dd4bf,
+        color: 0x34d399,
         transparent: true,
-        opacity: 0.18,
+        opacity: 0.14,
         side: THREE.DoubleSide
       });
       const rippleMesh = new THREE.Mesh(rippleGeo, rippleMat);
@@ -640,94 +688,203 @@
       jungleEnvironmentGroup.add(rippleMesh);
     }
 
-    function createJunglePanoramaTexture() {
+    async function loadCorridorTextureWithFallback() {
+      const texLoader = new THREE.TextureLoader();
+      texLoader.setCrossOrigin('anonymous');
+
+      for (const path of CONFIG.corridorBgPaths) {
+        try {
+          const loadedTex = await new Promise((resolve, reject) => {
+            texLoader.load(path, resolve, undefined, reject);
+          });
+          loadedTex.colorSpace = THREE.SRGBColorSpace;
+          loadedTex.anisotropy = 4;
+          return { texture: loadedTex, cssUrl: path };
+        } catch (err) {
+          // Continúa buscando en la siguiente ruta
+        }
+      }
+
+      // Si aún no se ha guardado el archivo local, dibuja una recreación procedural del pasillo de Xilitla
+      console.info('Usando recreación procedural del pasillo de Xilitla. Puedes subir la imagen con el botón "Fondo Pasillo".');
+      return createProceduralXilitlaCorridorTexture();
+    }
+
+    function applyCorridorBackgroundTexture(texture, cssUrl) {
+      if (cssUrl) {
+        backdropElement.style.backgroundImage = `url('${cssUrl}')`;
+      }
+      if (muralMesh && muralMesh.material) {
+        muralMesh.material.map = texture;
+        muralMesh.material.needsUpdate = true;
+        updateMuralScaleForAspect();
+      }
+    }
+
+    // Recreación procedural en Canvas 2D del pasillo de piedra con musgo, helechos, puerta de herrería y pocas orquídeas sutiles
+    function createProceduralXilitlaCorridorTexture() {
       const canvas = document.createElement('canvas');
-      canvas.width = 1600;
-      canvas.height = 900;
+      canvas.width = 1200;
+      canvas.height = 1500;
       const ctx = canvas.getContext('2d');
       const w = canvas.width;
       const h = canvas.height;
 
-      const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
-      skyGrad.addColorStop(0.0, '#041a12');
-      skyGrad.addColorStop(0.38, '#0d3b2b');
-      skyGrad.addColorStop(0.72, '#08261c');
-      skyGrad.addColorStop(1.0, '#03120c');
+      // 1. Cielo luminoso y follaje de copa en la apertura superior
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.28);
+      skyGrad.addColorStop(0, '#e0f2fe');
+      skyGrad.addColorStop(0.6, '#bae6fd');
+      skyGrad.addColorStop(1, '#64748b');
       ctx.fillStyle = skyGrad;
-      ctx.fillRect(0, 0, w, h);
+      ctx.fillRect(0, 0, w, h * 0.28);
 
-      const sunGlow = ctx.createRadialGradient(w * 0.5, h * 0.26, 20, w * 0.5, h * 0.35, 580);
-      sunGlow.addColorStop(0, 'rgba(254, 240, 138, 0.25)');
-      sunGlow.addColorStop(0.45, 'rgba(52, 211, 153, 0.12)');
-      sunGlow.addColorStop(1, 'rgba(4, 24, 17, 0)');
-      ctx.fillStyle = sunGlow;
-      ctx.fillRect(0, 0, w, h);
-
-      ctx.fillStyle = '#062419';
-      ctx.beginPath();
-      ctx.moveTo(0, h * 0.65);
-      ctx.bezierCurveTo(w * 0.2, h * 0.35, w * 0.35, h * 0.55, w * 0.5, h * 0.42);
-      ctx.bezierCurveTo(w * 0.68, h * 0.35, w * 0.85, h * 0.5, w, h * 0.38);
-      ctx.lineTo(w, h);
-      ctx.lineTo(0, h);
-      ctx.fill();
-
-      ctx.fillStyle = '#0a3325';
-      ctx.beginPath();
-      ctx.moveTo(0, h * 0.75);
-      ctx.bezierCurveTo(w * 0.25, h * 0.55, w * 0.4, h * 0.68, w * 0.55, h * 0.58);
-      ctx.bezierCurveTo(w * 0.7, h * 0.5, w * 0.9, h * 0.62, w, h * 0.55);
-      ctx.lineTo(w, h);
-      ctx.lineTo(0, h);
-      ctx.fill();
-
-      ctx.save();
-      ctx.fillStyle = '#02140d';
-      for (let i = 0; i < 5; i++) {
+      // Ramas de árboles asomándose arriba
+      ctx.fillStyle = '#1e3a29';
+      for (let i = 0; i < 18; i++) {
         ctx.beginPath();
-        ctx.moveTo(0, h);
-        ctx.quadraticCurveTo(w * 0.1 + i * 20, h * 0.6 - i * 30, w * 0.05 + i * 40, h * 0.3 - i * 20);
-        ctx.quadraticCurveTo(w * 0.15 + i * 20, h * 0.7, w * 0.05 + i * 30, h);
+        ctx.arc(w * 0.5 + (i - 9) * 45, 50 + (i % 3) * 30, 55, 0, Math.PI * 2);
         ctx.fill();
       }
-      for (let i = 0; i < 5; i++) {
-        ctx.beginPath();
-        ctx.moveTo(w, h);
-        ctx.quadraticCurveTo(w * 0.9 - i * 20, h * 0.6 - i * 30, w * 0.95 - i * 40, h * 0.3 - i * 20);
-        ctx.quadraticCurveTo(w * 0.85 - i * 20, h * 0.7, w * 0.95 - i * 30, h);
-        ctx.fill();
+
+      // 2. Muro del fondo con arco y puerta de herrería
+      ctx.fillStyle = '#78716c';
+      ctx.fillRect(w * 0.34, h * 0.14, w * 0.48, h * 0.54);
+
+      // Textura de sillares de piedra en el muro del fondo
+      for (let py = h * 0.15; py < h * 0.66; py += 26) {
+        for (let px = w * 0.35; px < w * 0.80; px += 48) {
+          ctx.fillStyle = (px + py) % 3 === 0 ? '#57534e' : '#8a817c';
+          ctx.fillRect(px + (py % 2) * 14, py, 42, 20);
+        }
       }
-      ctx.restore();
 
-      const fallGrad = ctx.createLinearGradient(w * 0.6, h * 0.4, w * 0.6, h * 0.85);
-      fallGrad.addColorStop(0, 'rgba(167, 243, 208, 0.0)');
-      fallGrad.addColorStop(0.3, 'rgba(167, 243, 208, 0.2)');
-      fallGrad.addColorStop(0.85, 'rgba(45, 212, 191, 0.3)');
-      fallGrad.addColorStop(1, 'rgba(167, 243, 208, 0.0)');
-      ctx.fillStyle = fallGrad;
-      ctx.fillRect(w * 0.58, h * 0.4, 30, h * 0.45);
+      // Arco de entrada y puerta de reja metálica con jardín al fondo
+      const gateX = w * 0.63;
+      const gateY = h * 0.31;
+      const gateW = w * 0.15;
+      const gateH = h * 0.33;
 
-      for (let v = 0; v < 45; v++) {
-        const vx = (v / 44) * w;
-        const vLen = 100 + (v % 7) * 70;
-        ctx.strokeStyle = v % 2 === 0 ? 'rgba(6, 59, 43, 0.8)' : 'rgba(16, 105, 78, 0.5)';
-        ctx.lineWidth = 2 + (v % 4) * 1.5;
+      ctx.fillStyle = '#143323';
+      ctx.fillRect(gateX, gateY, gateW, gateH);
+
+      // Reja de herrería vertical y horizontal
+      ctx.strokeStyle = '#292524';
+      ctx.lineWidth = 3;
+      for (let gx = gateX + 12; gx < gateX + gateW; gx += 16) {
         ctx.beginPath();
-        ctx.moveTo(vx, 0);
-        ctx.quadraticCurveTo(vx + Math.sin(v) * 45, vLen * 0.5, vx + Math.cos(v) * 25, vLen);
+        ctx.moveTo(gx, gateY);
+        ctx.lineTo(gx, gateY + gateH);
+        ctx.stroke();
+      }
+      for (let gy = gateY + 24; gy < gateY + gateH; gy += 36) {
+        ctx.beginPath();
+        ctx.moveTo(gateX, gy);
+        ctx.lineTo(gateX + gateW, gy);
         ctx.stroke();
       }
 
-      const mistGrad = ctx.createLinearGradient(0, h * 0.55, 0, h * 0.95);
-      mistGrad.addColorStop(0, 'rgba(52, 211, 153, 0)');
-      mistGrad.addColorStop(0.5, 'rgba(110, 231, 183, 0.22)');
-      mistGrad.addColorStop(1, 'rgba(4, 18, 12, 0.95)');
-      ctx.fillStyle = mistGrad;
-      ctx.fillRect(0, h * 0.55, w, h * 0.4);
+      // 3. Muro izquierdo en perspectiva (piedra rústica + ventanas rectangulares)
+      ctx.fillStyle = '#79716b';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(w * 0.56, h * 0.16);
+      ctx.lineTo(w * 0.56, h * 0.64);
+      ctx.lineTo(0, h * 0.84);
+      ctx.closePath();
+      ctx.fill();
 
+      // Ventanas con barrotes del muro izquierdo
+      const windows = [
+        { x: w * 0.04, y: h * 0.34, ww: w * 0.14, wh: h * 0.11 },
+        { x: w * 0.32, y: h * 0.41, ww: w * 0.08, wh: h * 0.08 }
+      ];
+      windows.forEach(win => {
+        ctx.fillStyle = '#a8a29e';
+        ctx.fillRect(win.x - 10, win.y - 10, win.ww + 20, win.wh + 20);
+        ctx.fillStyle = '#1c1917';
+        ctx.fillRect(win.x, win.y, win.ww, win.wh);
+      });
+
+      // 4. Muro derecho en perspectiva
+      ctx.fillStyle = '#68625d';
+      ctx.beginPath();
+      ctx.moveTo(w, 0);
+      ctx.lineTo(w * 0.82, h * 0.14);
+      ctx.lineTo(w * 0.82, h * 0.65);
+      ctx.lineTo(w, h * 0.86);
+      ctx.closePath();
+      ctx.fill();
+
+      // 5. Piso de lajas de piedra húmedas con musgo entre las juntas
+      const floorGrad = ctx.createLinearGradient(0, h * 0.64, 0, h);
+      floorGrad.addColorStop(0, '#57534e');
+      floorGrad.addColorStop(0.5, '#44403c');
+      floorGrad.addColorStop(1, '#292524');
+      ctx.fillStyle = floorGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, h * 0.82);
+      ctx.lineTo(w * 0.45, h * 0.64);
+      ctx.lineTo(w * 0.84, h * 0.64);
+      ctx.lineTo(w, h * 0.84);
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fill();
+
+      // Musgo orgánico en las juntas del pavimento
+      ctx.strokeStyle = '#2d6a4f';
+      ctx.lineWidth = 4;
+      for (let row = 0; row < 7; row++) {
+        const y = h * 0.66 + row * 48;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.25 - row * 35, y);
+        ctx.lineTo(w * 0.88 + row * 20, y);
+        ctx.stroke();
+      }
+
+      // 6. Helechos silvestres, alocasias (orejas de elefante) y musgo en los muros (sin macetas)
+      const drawLushPatch = (cx, cy, radius, count) => {
+        for (let i = 0; i < count; i++) {
+          const ang = (i / count) * Math.PI * 2;
+          const r = radius * (0.4 + Math.random() * 0.6);
+          ctx.fillStyle = i % 2 === 0 ? '#1b4332' : '#2d6a4f';
+          ctx.beginPath();
+          ctx.ellipse(cx + Math.cos(ang) * r * 0.5, cy + Math.sin(ang) * r * 0.5, r * 0.55, r * 0.28, ang, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      };
+
+      drawLushPatch(w * 0.16, h * 0.18, 150, 20);
+      drawLushPatch(w * 0.18, h * 0.78, 190, 26);
+      drawLushPatch(w * 0.88, h * 0.72, 175, 24);
+      drawLushPatch(w * 0.62, h * 0.18, 110, 16);
+
+      // 7. Orquídeas sutiles y aisladas en el muro izquierdo (tal como en la imagen recreada)
+      const subtleOrchids = [
+        { x: w * 0.18, y: h * 0.39, color: '#d946ef' },
+        { x: w * 0.34, y: h * 0.25, color: '#c084fc' },
+        { x: w * 0.48, y: h * 0.28, color: '#e879f9' },
+        { x: w * 0.29, y: h * 0.49, color: '#f8fafc' },
+        { x: w * 0.30, y: h * 0.67, color: '#d946ef' }
+      ];
+      subtleOrchids.forEach(o => {
+        ctx.fillStyle = o.color;
+        for (let p = 0; p < 5; p++) {
+          const a = (p / 5) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.ellipse(o.x + Math.cos(a) * 10, o.y + Math.sin(a) * 10, 10, 6, a, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(o.x, o.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
       const texture = new THREE.CanvasTexture(canvas);
       texture.colorSpace = THREE.SRGBColorSpace;
-      return texture;
+      return { texture, cssUrl: dataUrl };
     }
 
     /* =========================================================================
@@ -738,24 +895,25 @@
       sculptureGroup.position.set(0, 0, 0);
       scene.add(sculptureGroup);
 
+      // Pedestal de piedra integrado con musgo para posar sobre el suelo del pasillo
       const pedestalGroup = new THREE.Group();
       const stoneMat = new THREE.MeshStandardMaterial({
-        color: 0x1b3329,
-        roughness: 0.85,
+        color: 0x3a403a,
+        roughness: 0.88,
         metalness: 0.05
       });
-      const basePedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.54, 0.68, 0.56, 32), stoneMat);
-      basePedestal.position.y = -0.97;
+      const basePedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.64, 0.46, 32), stoneMat);
+      basePedestal.position.y = -1.01;
       basePedestal.castShadow = true;
       basePedestal.receiveShadow = true;
       pedestalGroup.add(basePedestal);
 
       const mossTrim = new THREE.Mesh(
-        new THREE.TorusGeometry(0.55, 0.025, 16, 48),
-        new THREE.MeshStandardMaterial({ color: 0x34d399, roughness: 0.4, metalness: 0.3 })
+        new THREE.TorusGeometry(0.53, 0.028, 16, 48),
+        new THREE.MeshStandardMaterial({ color: 0x2d6a4f, roughness: 0.6, metalness: 0.1 })
       );
       mossTrim.rotation.x = Math.PI / 2;
-      mossTrim.position.y = -0.70;
+      mossTrim.position.y = -0.78;
       pedestalGroup.add(mossTrim);
 
       sculptureGroup.add(pedestalGroup);
@@ -789,29 +947,26 @@
         sculptureGroup.remove(sculptureGroup.children[1]);
       }
 
-      // CORRECCIÓN DE INCLINACIÓN: Forzamos la rotación del nodo antes de calcular la caja
-      // Si el GLB viene diagonal, esto lo endereza. Si necesitas un ajuste fino, usa CONFIG.modelRotation.
       modelNode.rotation.set(
         CONFIG.modelRotation.x, 
         CONFIG.modelRotation.y, 
         CONFIG.modelRotation.z
       );
 
-      modelNode.updateMatrixWorld(true); // Actualizar matriz antes de calcular la caja
+      modelNode.updateMatrixWorld(true);
 
       const rawBox = new THREE.Box3().setFromObject(modelNode);
       const rawSize = rawBox.getSize(new THREE.Vector3());
       const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
       const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
-      const targetFullBodyHeight = 1.72;
+      const targetFullBodyHeight = 1.78;
       const scale = targetFullBodyHeight / maxDim;
 
       modelNode.scale.setScalar(scale);
       modelNode.position.x = -rawCenter.x * scale;
       modelNode.position.z = -rawCenter.z * scale;
-      // Alineación del pedestal
-      modelNode.position.y = -0.68 - (rawBox.min.y * scale);
+      modelNode.position.y = -0.76 - (rawBox.min.y * scale);
 
       modelNode.traverse((child) => {
         if (child.isMesh) {
@@ -829,31 +984,41 @@
 
     function createSurrealSculptureFallback() {
       const group = new THREE.Group();
-      const bronzeMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.24, metalness: 0.82 });
-      const jadeMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.2, metalness: 0.3, emissive: 0x065f46, emissiveIntensity: 0.4 });
-      const stoneMat = new THREE.MeshStandardMaterial({ color: 0xd6d3d1, roughness: 0.4, metalness: 0.1 });
+      const bronzeMat = new THREE.MeshStandardMaterial({
+        color: 0x5c7c74,
+        roughness: 0.35,
+        metalness: 0.65
+      });
 
-      const torusKnot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.42, 0.11, 128, 32, 2, 3), bronzeMat);
-      torusKnot.position.y = 0.45;
-      group.add(torusKnot);
+      // Silueta estilizada inspirada en el guardián felino de bronce del pasillo
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.26, 0.95, 24), bronzeMat);
+      body.position.y = 0.05;
+      group.add(body);
 
-      const innerCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 2), jadeMat);
-      innerCore.position.y = 0.45;
-      group.add(innerCore);
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.17, 0.62, 24), bronzeMat);
+      neck.position.set(0, 0.68, 0.03);
+      group.add(neck);
 
-      const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.035, 20, 64), stoneMat);
-      haloRing.position.y = 0.45;
-      group.add(haloRing);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 24, 24), bronzeMat);
+      head.scale.set(0.85, 0.9, 1.25);
+      head.position.set(0, 1.02, 0.08);
+      group.add(head);
 
-      const column = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 0.55, 24), stoneMat);
-      column.position.y = -0.22;
-      group.add(column);
+      const earL = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.11, 12), bronzeMat);
+      earL.position.set(-0.08, 1.13, 0.02);
+      earL.rotation.z = 0.25;
+      group.add(earL);
+
+      const earR = earL.clone();
+      earR.position.x = 0.08;
+      earR.rotation.z = -0.25;
+      group.add(earR);
 
       return group;
     }
 
     /* =========================================================================
-       4. ARQUITECTURA DE 8 CAPAS
+       4. ARQUITECTURA DE CAPAS BOTÁNICAS (ENMARCANDO EL PASILLO Y LA ESCULTURA)
        ========================================================================= */
     function buildLayeredJungle(baseTextures) {
       if (foliageRootGroup) scene.remove(foliageRootGroup);
@@ -866,48 +1031,48 @@
       state.clearedLeavesCount = 0;
       state.discoveryCompleted = false;
 
+      // Las capas traseras (1 a 4) se abren hacia los muros laterales para dejar ver el arco del pasillo
+      // Las capas delanteras (5 a 8) cubren la escultura y se apartan con el dedo
       const layerBlueprints = [
         {
           layerIndex: 1, zDepth: -2.75, isStatic: false, windAmp: 0.015, interactive: false, coversSculpture: false,
-          colorTint: '#2b7a62', emissiveTint: '#07261d',
+          colorTint: '#3b7a57', emissiveTint: '#072015',
           slots: [
-            { key: 'plantas_rocas', x: -1.95, y: -0.05, scale: 1.55, rotZ: -0.06, flipX: false },
-            { key: 'plantas_rocas', x:  1.95, y: -0.05, scale: 1.55, rotZ:  0.06, flipX: true  },
-            { key: 'arbusto',       x:  0.00, y:  0.95, scale: 1.65, rotZ:  0.00, flipX: false }
+            { key: 'plantas_rocas', x: -2.25, y: -0.15, scale: 1.48, rotZ: -0.06, flipX: false },
+            { key: 'plantas_rocas', x:  2.25, y: -0.15, scale: 1.48, rotZ:  0.06, flipX: true  }
           ]
         },
         {
           layerIndex: 2, zDepth: -1.75, isStatic: false, windAmp: 0.020, interactive: false, coversSculpture: false,
-          colorTint: '#52b793', emissiveTint: '#0c382a',
+          colorTint: '#52b788', emissiveTint: '#0b2e1f',
           slots: [
-            { key: 'plantas_rocas', x: -1.05, y: -0.18, scale: 1.38, rotZ: -0.08, flipX: true  },
-            { key: 'plantas_rocas', x:  1.05, y: -0.18, scale: 1.38, rotZ:  0.08, flipX: false }
+            { key: 'plantas_rocas', x: -1.65, y: -0.28, scale: 1.32, rotZ: -0.08, flipX: true  },
+            { key: 'plantas_rocas', x:  1.65, y: -0.28, scale: 1.32, rotZ:  0.08, flipX: false }
           ]
         },
         {
           layerIndex: 3, zDepth: -0.92, isStatic: false, windAmp: 0.025, interactive: false, coversSculpture: false,
-          colorTint: '#a7f3d0', emissiveTint: '#114231',
+          colorTint: '#74c69d', emissiveTint: '#0f3826',
           slots: [
-            { key: 'plantas_rocas', x:  0.00, y: -0.10, scale: 1.48, rotZ:  0.00, flipX: false },
-            { key: 'plantas',       x: -1.28, y: -0.35, scale: 1.12, rotZ: -0.18, flipX: false },
-            { key: 'plantas',       x:  1.28, y: -0.35, scale: 1.12, rotZ:  0.18, flipX: true  }
+            { key: 'plantas', x: -1.55, y: -0.38, scale: 1.12, rotZ: -0.18, flipX: false },
+            { key: 'plantas', x:  1.55, y: -0.38, scale: 1.12, rotZ:  0.18, flipX: true  }
           ]
         },
         {
           layerIndex: 4, zDepth: -0.20, isStatic: false, windAmp: 0.032, interactive: false, coversSculpture: false,
           colorTint: '#6ee7b7', emissiveTint: '#09261b',
           slots: [
-            { key: 'arbusto', x: -1.55, y: -0.58, scale: 1.08, rotZ:  0.14, flipX: false },
-            { key: 'arbusto', x:  1.55, y: -0.58, scale: 1.08, rotZ: -0.14, flipX: true  }
+            { key: 'arbusto', x: -1.65, y: -0.62, scale: 1.05, rotZ:  0.14, flipX: false },
+            { key: 'arbusto', x:  1.65, y: -0.62, scale: 1.05, rotZ: -0.14, flipX: true  }
           ]
         },
         {
           layerIndex: 5, zDepth: 0.72, isStatic: false, windAmp: 0.045, interactive: true, coversSculpture: true,
           colorTint: '#6ee7b7', emissiveTint: '#062016',
           slots: [
-            { key: 'arbusto',       x: -0.42, y: -0.32, scale: 1.12, rotZ:  0.08, flipX: false },
-            { key: 'arbusto',       x:  0.42, y: -0.32, scale: 1.12, rotZ: -0.08, flipX: true  },
-            { key: 'plantas',       x:  0.00, y:  0.38, scale: 1.16, rotZ:  0.04, flipX: false }
+            { key: 'arbusto', x: -0.42, y: -0.32, scale: 1.12, rotZ:  0.08, flipX: false },
+            { key: 'arbusto', x:  0.42, y: -0.32, scale: 1.12, rotZ: -0.08, flipX: true  },
+            { key: 'plantas', x:  0.00, y:  0.38, scale: 1.16, rotZ:  0.04, flipX: false }
           ]
         },
         {
@@ -923,10 +1088,10 @@
           layerIndex: 7, zDepth: 1.78, isStatic: false, windAmp: 0.068, interactive: true, coversSculpture: true,
           colorTint: '#3b8764', emissiveTint: '#04140d',
           slots: [
-            { key: 'arbusto',       x: -0.28, y:  0.02, scale: 1.18, rotZ:  0.12, flipX: false },
-            { key: 'arbusto',       x:  0.32, y: -0.12, scale: 1.18, rotZ: -0.12, flipX: true  },
-            { key: 'plantas',       x: -0.68, y: -0.38, scale: 1.08, rotZ:  0.22, flipX: false },
-            { key: 'plantas',       x:  0.68, y: -0.38, scale: 1.08, rotZ: -0.22, flipX: true  }
+            { key: 'arbusto', x: -0.28, y:  0.02, scale: 1.18, rotZ:  0.12, flipX: false },
+            { key: 'arbusto', x:  0.32, y: -0.12, scale: 1.18, rotZ: -0.12, flipX: true  },
+            { key: 'plantas', x: -0.68, y: -0.38, scale: 1.08, rotZ:  0.22, flipX: false },
+            { key: 'plantas', x:  0.68, y: -0.38, scale: 1.08, rotZ: -0.22, flipX: true  }
           ]
         },
         {
@@ -970,7 +1135,7 @@
             map: texture,
             color: new THREE.Color(layerSpec.colorTint),
             emissive: new THREE.Color(layerSpec.emissiveTint),
-            emissiveIntensity: layerSpec.layerIndex === 3 ? 0.52 : 0.22,
+            emissiveIntensity: layerSpec.layerIndex === 3 ? 0.42 : 0.18,
             transparent: true,
             alphaTest: 0.05,
             side: THREE.DoubleSide,
@@ -1022,7 +1187,7 @@
     }
 
     /* =========================================================================
-       5. CARGA DE TEXTURAS PNG REALES
+       5. CARGA DE TEXTURAS PNG DE VEGETACIÓN
        ========================================================================= */
     async function loadBaseVegetationTextures() {
       const texLoader = new THREE.TextureLoader();
@@ -1171,7 +1336,7 @@
       const palette = [
         new THREE.Color('#fde047'),
         new THREE.Color('#6ee7b7'),
-        new THREE.Color('#5eead4'),
+        new THREE.Color('#f5d0fe'), // Sutil destello lila en armonía con las orquídeas
         new THREE.Color('#bef264')
       ];
 
@@ -1191,7 +1356,7 @@
         colors[i * 3 + 1] = c.g;
         colors[i * 3 + 2] = c.b;
 
-        sizes[i] = 0.85 + Math.random() * 1.65;
+        sizes[i] = 0.85 + Math.random() * 1.55;
         phases[i] = Math.random() * Math.PI * 2;
 
         state.particleData.push({
@@ -1228,7 +1393,7 @@
             float pulse = 0.55 + 0.45 * sin(uTime * 2.5 + aPhase);
             vPulse = pulse;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = aSize * (44.0 * pulse) * uPixelRatio * (1.0 / max(1.2, -mvPosition.z));
+            gl_PointSize = aSize * (42.0 * pulse) * uPixelRatio * (1.0 / max(1.2, -mvPosition.z));
             gl_Position = projectionMatrix * mvPosition;
           }
         `,
@@ -1255,7 +1420,7 @@
     }
 
     /* =========================================================================
-       7. MECÁNICA TÁCTIL
+       7. MECÁNICA TÁCTIL Y CARGA DE IMAGEN PERSONALIZADA DEL PASILLO
        ========================================================================= */
     function setupInteractionEvents() {
       const dom = renderer.domElement;
@@ -1282,9 +1447,9 @@
         state.modelTargetRotY = 0;
         updateDiscoveryUI();
         onboardingHint.classList.remove('opacity-0');
-        hintText.textContent = 'Desliza tu dedo para apartar las plantas y descubrir la escultura';
+        hintText.textContent = 'Desliza tu dedo para apartar las plantas del pasillo y descubrir la escultura';
         playFoliageRustle(0.8);
-        showToast('Vegetación restaurada: vuelve a descubrir la escultura');
+        showToast('Vegetación restaurada en el pasillo de Xilitla');
       });
 
       document.getElementById('btn-sound').addEventListener('click', () => {
@@ -1292,6 +1457,20 @@
         document.getElementById('icon-sound-on').classList.toggle('text-emerald-400', state.soundEnabled);
         document.getElementById('icon-sound-on').classList.toggle('text-stone-500', !state.soundEnabled);
         showToast(state.soundEnabled ? 'Sonido de la selva activado' : 'Sonido silenciado');
+      });
+
+      // Selector de archivo para cargar al instante la imagen recreada del pasillo
+      document.getElementById('bg-upload').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const texLoader = new THREE.TextureLoader();
+        texLoader.load(url, (loadedTex) => {
+          loadedTex.colorSpace = THREE.SRGBColorSpace;
+          loadedTex.anisotropy = 4;
+          applyCorridorBackgroundTexture(loadedTex, url);
+          showToast('¡Fondo del pasillo de Xilitla aplicado!');
+        });
       });
 
       document.getElementById('glb-upload').addEventListener('change', (e) => {
@@ -1303,7 +1482,7 @@
 
         loader.load(url, (gltf) => {
           mountAndComputeBoundingBox(gltf.scene);
-          showToast(`¡${file.name} colocada frente a las plantas con rocas!`);
+          showToast(`¡${file.name} integrada en el pasillo de Xilitla!`);
           URL.revokeObjectURL(url);
         });
       });
@@ -1332,7 +1511,6 @@
       updatePointerCoords(e.clientX, e.clientY);
       touchRipple.classList.add('active');
 
-      // Intento de pantalla completa en el primer toque (si no está activa)
       if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch(() => {});
       }
@@ -1481,7 +1659,7 @@
       });
 
       playRevealChime();
-      showToast('¡Escultura descubierta! Arrastra el centro para girarla 360°');
+      showToast('¡Escultura descubierta en el pasillo! Arrastra para girarla 360°');
     }
 
     async function toggleARCamera() {
@@ -1493,10 +1671,10 @@
         videoElement.classList.remove('active');
         backdropElement.style.opacity = '1';
         if (jungleEnvironmentGroup) jungleEnvironmentGroup.visible = true;
-        scene.fog = new THREE.FogExp2(0x062118, 0.062);
+        scene.fog = new THREE.FogExp2(0x0c2218, 0.032);
         state.cameraActive = false;
         btnText.textContent = 'Cámara AR';
-        showToast('Entorno de selva activo');
+        showToast('Fondo del pasillo de Xilitla activo');
         return;
       }
 
@@ -1512,7 +1690,7 @@
         if (jungleEnvironmentGroup) jungleEnvironmentGroup.visible = false;
         scene.fog = null;
         state.cameraActive = true;
-        btnText.textContent = 'Fondo Selva';
+        btnText.textContent = 'Fondo Pasillo';
         showToast('Cámara AR activa con capas de vegetación');
       } catch (err) {
         showToast('Cámara no disponible en este navegador/dispositivo');
@@ -1530,6 +1708,12 @@
       camera.position.x = state.smoothedParallax.x;
       camera.position.y = 0.18 + state.smoothedParallax.y;
       camera.lookAt(0, 0.08, 0);
+
+      // Ligero contramovimiento del mural del pasillo para enfatizar la profundidad 3D
+      if (muralMesh) {
+        muralMesh.position.x = -state.smoothedParallax.x * 0.35;
+        muralMesh.position.y = 0.35 - state.smoothedParallax.y * 0.25;
+      }
 
       state.foliagePlanes.forEach((leaf) => {
         const d = leaf.userData;
