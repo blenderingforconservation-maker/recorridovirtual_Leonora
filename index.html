@@ -265,9 +265,21 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
         </svg>
       </div>
-      <p id="hint-text" class="px-3.5 py-1 rounded-full bg-stone-950/75 backdrop-blur-md border border-white/10 text-emerald-50 text-xs font-medium shadow-xl">
-        Toca dentro del portal y aparta 5 plantas (20% c/u) para descubrir la escultura
+      <p id="hint-text" class="px-3.5 py-1 rounded-full bg-stone-950/75 backdrop-blur-md border border-white/10 text-emerald-50 text-xs font-medium shadow-xl max-w-xs">
+        Aparta 5 plantas (20% c/u) · Arrastra para girar la cámara · Pellizca o usa +/− para acercarte
       </p>
+    </div>
+
+    <!-- Controles de zoom / entrar al portal -->
+    <div id="zoom-panel" class="interactive-ui absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
+      <button id="btn-zoom-in" title="Acercarse al portal" class="touch-none select-none w-10 h-10 rounded-full bg-stone-950/70 border border-amber-300/30 backdrop-blur-md text-amber-200 text-xl font-semibold active:scale-95 shadow-lg">+</button>
+      <div class="w-1.5 h-24 bg-stone-800/90 rounded-full overflow-hidden border border-white/10 flex items-end">
+        <div id="zoom-fill" class="w-full h-0 bg-gradient-to-t from-emerald-400 to-amber-300"></div>
+      </div>
+      <button id="btn-zoom-out" title="Alejarse" class="touch-none select-none w-10 h-10 rounded-full bg-stone-950/70 border border-amber-300/30 backdrop-blur-md text-amber-200 text-xl font-semibold active:scale-95 shadow-lg">−</button>
+      <button id="btn-enter" title="Entrar o salir del portal" class="mt-1 px-3 py-1.5 rounded-full bg-stone-950/70 border border-emerald-300/40 backdrop-blur-md text-emerald-200 text-xs font-medium active:scale-95 shadow-lg">
+        <span id="enter-text">Entrar</span>
+      </button>
     </div>
 
     <!-- Pie de Página -->
@@ -296,6 +308,20 @@
       baseCameraZ: 5.5,
       steppedInCameraZ: 3.15,
       portalZ: 1.55, // Plano donde flota la puerta del portal en el espacio real
+      // Imagen que se usa como marco del portal
+      frameImage: {
+        localPath: 'assets/image_c64162.jpg',
+        rawUrl: `${REPO_RAW_BASE}assets/image_c64162.jpg`
+      },
+      // Roca que sustituye al pedestal circular verde
+      rock: {
+        fileName: '', // si conoces el nombre exacto, ponlo aquí. Ej: 'roca.glb'
+        apiUrl: 'https://api.github.com/repos/blenderingforconservation-maker/recorridovirtual_Leonora/contents/models',
+        guessNames: ['rock.glb', 'Rock.glb', 'roca.glb', 'Roca.glb', 'rocks.glb', 'rock_model.glb', '3DRock.glb', 'piedra.glb'],
+        targetWidth: 1.5,   // ancho de la roca
+        maxHeight: 0.75,    // altura máxima de la roca
+        bottomY: -1.3       // dónde apoya en el piso del portal
+      },
       modelRotation: { x: 0, y: 0, z: 0 },
       // Rutas con '3DModel.glb' exacto como está en tu repositorio de GitHub
       modelPaths: [
@@ -363,6 +389,13 @@
       lastInspectClient: { x: 0, y: 0 },
       modelTargetRotY: 0,
       modelTargetRotX: 0,
+      // Cámara orbital / zoom
+      camYaw: 0, camPitch: 0, camYawS: 0, camPitchS: 0,
+      camDist: 5, camDistTarget: 5,
+      baseDist: undefined, steppedDist: 2.2, maxDist: 6,
+      zoomInput: 0, insidePortal: false,
+      dragMode: 'camera', pointers: new Map(), pinch: null, lastElapsed: 0,
+      rockNode: null, rockTopY: -0.68,
       // Giroscopio 3DoF para efecto de ventana espacial real
       cameraActive: false,
       gyroBaseline: { beta: null, gamma: null },
@@ -379,7 +412,6 @@
       burstStartTime: 0,
       sculptureMeshes: [],
       sculptureNode: null,
-      pedestalGroup: null,
       revealFlashActive: false,
       revealFlashStartTime: 0,
       revealFlashDuration: 1.85,
@@ -389,6 +421,11 @@
 
     const FLASH_COLOR_TARGET = new THREE.Color(0xfffef5);
     const FLASH_EMISSIVE_TARGET = new THREE.Color(0xfde047);
+
+    const PIVOT = new THREE.Vector3(0, -0.02, 0.9);
+    const interiorStencilMaterials = [];
+    let frameTexture = null;
+    let zoomFillEl = null;
 
     const container = document.getElementById('webgl-container');
     const videoElement = document.getElementById('ar-video');
@@ -428,7 +465,15 @@
       material.stencilFail = THREE.KeepStencilOp;
       material.stencilZFail = THREE.KeepStencilOp;
       material.stencilZPass = THREE.KeepStencilOp;
+      interiorStencilMaterials.push(material);
       return material;
+    }
+
+    // Dentro del portal el interior se ve completo (sin recorte)
+    function setInteriorStencilEnabled(enabled) {
+      interiorStencilMaterials.forEach((m) => {
+        m.stencilFunc = enabled ? THREE.EqualStencilFunc : THREE.AlwaysStencilFunc;
+      });
     }
 
     function toggleFullscreen() {
@@ -578,7 +623,7 @@
 
       scene = new THREE.Scene();
 
-      camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 60);
+      camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.03, 60);
       updateCameraFramingForAspect();
 
       // stencil: true es indispensable para recortar la dimensión de la selva dentro del arco
@@ -602,7 +647,7 @@
       worldAnchorGroup.name = 'WorldPortalAnchor';
       scene.add(worldAnchorGroup);
 
-      // Grupo de la ventana del portal (Máscara Stencil + Marco de piedra/luz en el mundo real)
+      // Grupo de la ventana del portal (Máscara Stencil + Marco en el mundo real)
       portalGatewayGroup = new THREE.Group();
       portalGatewayGroup.position.set(0, 0, CONFIG.portalZ);
       worldAnchorGroup.add(portalGatewayGroup);
@@ -616,10 +661,11 @@
 
       updateLoading(35, 'Construyendo arco dimensional y bóveda de selva...');
       cachedTexturesByKey = await loadBaseVegetationTextures();
+      frameTexture = await loadFrameTexture();
       buildDimensionalPortalArch(cachedTexturesByKey);
       createInteriorJungleCavern();
 
-      updateLoading(60, 'Cargando escultura 3D (models/3DModel.glb) dentro del portal...');
+      updateLoading(60, 'Cargando roca y escultura 3D dentro del portal...');
       await loadAndFrameCentralModel();
 
       updateLoading(82, 'Colocando capas de vegetación dentro del portal...');
@@ -651,12 +697,18 @@
 
     function updateCameraFramingForAspect() {
       const aspect = window.innerWidth / window.innerHeight;
+      const oldBase = state.baseDist;
       CONFIG.baseCameraZ = aspect >= 1.0 ? 5.15 : 5.85;
       CONFIG.steppedInCameraZ = aspect >= 1.0 ? 3.05 : 3.45;
-      if (!state.steppedInside) state.currentCameraZ = CONFIG.baseCameraZ;
+      state.baseDist = CONFIG.baseCameraZ - PIVOT.z;
+      state.steppedDist = CONFIG.steppedInCameraZ - PIVOT.z;
+      state.maxDist = state.baseDist + 1.2;
+      if (oldBase === undefined || Math.abs(state.camDistTarget - oldBase) < 0.01) {
+        state.camDistTarget = state.baseDist;
+        state.camDist = state.baseDist;
+      }
       if (camera) {
         camera.aspect = aspect;
-        camera.position.z = state.currentCameraZ;
         camera.updateProjectionMatrix();
       }
     }
@@ -689,7 +741,7 @@
     }
 
     /* =========================================================================
-       3. CONSTRUCCIÓN DE LA PUERTA DEL PORTAL (STENCIL MASK + MARCO REAL)
+       3. CONSTRUCCIÓN DE LA PUERTA DEL PORTAL (STENCIL MASK + MARCO CON IMAGEN)
        ========================================================================= */
     function createArchShape(width, height, archRadius) {
       const shape = new THREE.Shape();
@@ -703,6 +755,50 @@
       shape.absarc(0, straightTopY, hw, 0, Math.PI, false);
       shape.lineTo(-hw, bottomY);
       return shape;
+    }
+
+    async function loadFrameTexture() {
+      const loader = new THREE.TextureLoader();
+      loader.setCrossOrigin('anonymous');
+      for (const src of [CONFIG.frameImage.localPath, CONFIG.frameImage.rawUrl]) {
+        try {
+          const tex = await new Promise((res, rej) => loader.load(src, res, undefined, rej));
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.anisotropy = 8;
+          return tex;
+        } catch (e) {}
+      }
+      return null;
+    }
+
+    // Proyecta la imagen sobre el marco (modo "cover", sin deformarla)
+    function mapFrameUVs(geo, w, h) {
+      if (!frameTexture) return;
+      const img = frameTexture.image;
+      const imgA = img.width / img.height;
+      const frA = w / h;
+      const su = imgA > frA ? frA / imgA : 1;
+      const sv = imgA > frA ? 1 : imgA / frA;
+      const pos = geo.attributes.position;
+      const uv = geo.attributes.uv;
+      for (let i = 0; i < pos.count; i++) {
+        uv.setXY(i, 0.5 + (pos.getX(i) / w) * su, 0.5 + (pos.getY(i) / h) * sv);
+      }
+      uv.needsUpdate = true;
+    }
+
+    function createFrameMaterial() {
+      if (!frameTexture) {
+        return new THREE.MeshStandardMaterial({ color: 0x132a21, roughness: 0.72, metalness: 0.18, emissive: 0x062017, emissiveIntensity: 0.35 });
+      }
+      return new THREE.MeshStandardMaterial({
+        map: frameTexture,
+        emissiveMap: frameTexture,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.3,
+        roughness: 0.85,
+        metalness: 0.05
+      });
     }
 
     function buildDimensionalPortalArch(baseTextures) {
@@ -749,14 +845,9 @@
 
       const stoneFrameGeo = new THREE.ExtrudeGeometry(frameShape, extrudeSettings);
       stoneFrameGeo.translate(0, 0, -0.11);
+      mapFrameUVs(stoneFrameGeo, outerW, outerH);
 
-      const stoneFrameMat = new THREE.MeshStandardMaterial({
-        color: 0x132a21,
-        roughness: 0.72,
-        metalness: 0.18,
-        emissive: 0x062017,
-        emissiveIntensity: 0.35
-      });
+      const stoneFrameMat = createFrameMaterial();
 
       const stoneFrameMesh = new THREE.Mesh(stoneFrameGeo, stoneFrameMat);
       stoneFrameMesh.renderOrder = 3;
@@ -777,7 +868,7 @@
       energyRimMesh.renderOrder = 3;
       portalFrameGroup.add(energyRimMesh);
 
-      // Base/Umbral de piedra en el piso real debajo de la puerta del portal
+      // Base/Umbral en el piso real debajo de la puerta del portal
       const thresholdMesh = new THREE.Mesh(
         new THREE.BoxGeometry(outerW + 0.35, 0.12, 0.52),
         stoneFrameMat
@@ -904,39 +995,95 @@
     }
 
     /* =========================================================================
-       5. CARGA DE models/3DModel.glb DENTRO DEL PORTAL (CON STENCIL)
+       5. ROCA (REEMPLAZA EL PEDESTAL) Y ESCULTURA models/3DModel.glb
        ========================================================================= */
+    async function findRockModel() {
+      const loader = new GLTFLoader();
+      loader.setCrossOrigin('anonymous');
+      const urls = [];
+      const R = CONFIG.rock;
+      if (R.fileName) urls.push(`models/${R.fileName}`, `${REPO_RAW_BASE}models/${R.fileName}`);
+
+      // Lista la carpeta models/ de GitHub y elige el .glb que parezca la roca
+      try {
+        const res = await fetch(R.apiUrl);
+        if (res.ok) {
+          const files = (await res.json()).filter((f) => /\.(glb|gltf)$/i.test(f.name) && !/^3dmodel\./i.test(f.name));
+          const rocks = files.filter((f) => /rock|roca|piedra|stone/i.test(f.name));
+          (rocks.length ? rocks : files).forEach((f) => urls.push(f.download_url));
+        }
+      } catch (e) {}
+
+      R.guessNames.forEach((n) => urls.push(`models/${n}`, `${REPO_RAW_BASE}models/${n}`));
+
+      for (const url of urls) {
+        try {
+          const gltf = await new Promise((res, rej) => loader.load(url, res, undefined, rej));
+          console.log(`Roca cargada desde: ${url}`);
+          return gltf.scene;
+        } catch (e) {}
+      }
+      return null;
+    }
+
+    function createProceduralRock() {
+      const geo = new THREE.IcosahedronGeometry(0.8, 3);
+      const p = geo.attributes.position;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < p.count; i++) {
+        v.fromBufferAttribute(p, i);
+        const r = 1 + 0.18 * Math.sin(v.x * 3.1 + v.y * 2.3) * Math.cos(v.z * 2.7) + 0.08 * Math.sin(v.x * 8 + v.z * 6);
+        v.multiplyScalar(r);
+        v.y = THREE.MathUtils.clamp(v.y * 0.7, -0.3, 0.3);
+        p.setXYZ(i, v.x, v.y, v.z);
+      }
+      geo.computeVertexNormals();
+      return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x6f7468, roughness: 0.95, flatShading: true }));
+    }
+
+    function mountRock(node) {
+      if (state.rockNode) sculptureGroup.remove(state.rockNode);
+      node.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(node);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const R = CONFIG.rock;
+
+      let s = R.targetWidth / (Math.max(size.x, size.z) || 1);
+      if (size.y * s > R.maxHeight) s = R.maxHeight / size.y;
+      node.scale.setScalar(s);
+      node.position.set(-center.x * s, R.bottomY - box.min.y * s, -center.z * s);
+
+      node.traverse((c) => {
+        if (!c.isMesh) return;
+        c.castShadow = true;
+        c.receiveShadow = true;
+        c.renderOrder = 2;
+        c.material = Array.isArray(c.material)
+          ? c.material.map((m) => applyPortalInteriorStencil(m.clone()))
+          : applyPortalInteriorStencil(c.material.clone());
+      });
+
+      sculptureGroup.add(node);
+      state.rockNode = node;
+
+      // Altura real de la roca en el centro, para apoyar ahí la escultura
+      scene.updateMatrixWorld(true);
+      const origin = sculptureGroup.localToWorld(new THREE.Vector3(0, 4, 0));
+      const hit = new THREE.Raycaster(origin, new THREE.Vector3(0, -1, 0)).intersectObject(node, true)[0];
+      state.rockTopY = hit ? sculptureGroup.worldToLocal(hit.point.clone()).y : R.bottomY + size.y * s;
+    }
+
     async function loadAndFrameCentralModel() {
       sculptureGroup = new THREE.Group();
       // Situada dentro del portal (detrás del plano z = 1.55)
       sculptureGroup.position.set(0, -0.22, -0.35);
       portalInteriorGroup.add(sculptureGroup);
 
-      const pedestalGroup = new THREE.Group();
-      const stoneMat = applyPortalInteriorStencil(new THREE.MeshStandardMaterial({
-        color: 0x1b3329,
-        roughness: 0.85,
-        metalness: 0.05
-      }));
-      const basePedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.54, 0.68, 0.56, 32), stoneMat);
-      basePedestal.position.y = -0.97;
-      basePedestal.castShadow = true;
-      basePedestal.receiveShadow = true;
-      basePedestal.renderOrder = 2;
-      pedestalGroup.add(basePedestal);
+      // 1) Roca (reemplaza el pedestal circular verde)
+      mountRock((await findRockModel()) || createProceduralRock());
 
-      const mossTrim = new THREE.Mesh(
-        new THREE.TorusGeometry(0.55, 0.025, 16, 48),
-        applyPortalInteriorStencil(new THREE.MeshStandardMaterial({ color: 0x34d399, roughness: 0.4, metalness: 0.3 }))
-      );
-      mossTrim.rotation.x = Math.PI / 2;
-      mossTrim.position.y = -0.70;
-      mossTrim.renderOrder = 2;
-      pedestalGroup.add(mossTrim);
-
-      sculptureGroup.add(pedestalGroup);
-      state.pedestalGroup = pedestalGroup;
-
+      // 2) Escultura encima de la roca
       const loader = new GLTFLoader();
       loader.setCrossOrigin('anonymous');
 
@@ -955,15 +1102,11 @@
         }
       }
 
-      if (loadedGLTF) {
-        mountAndComputeBoundingBox(loadedGLTF.scene);
-      } else {
-        const fallbackModel = createSurrealSculptureFallback();
-        mountAndComputeBoundingBox(fallbackModel);
-      }
+      mountAndComputeBoundingBox(loadedGLTF ? loadedGLTF.scene : createSurrealSculptureFallback());
     }
 
     function mountAndComputeBoundingBox(modelNode) {
+      // Conserva la roca (hijo 0) y quita cualquier escultura anterior
       while (sculptureGroup.children.length > 1) {
         sculptureGroup.remove(sculptureGroup.children[1]);
       }
@@ -989,7 +1132,7 @@
       modelNode.scale.setScalar(scale);
       modelNode.position.x = -rawCenter.x * scale;
       modelNode.position.z = -rawCenter.z * scale;
-      modelNode.position.y = -0.68 - (rawBox.min.y * scale);
+      modelNode.position.y = (state.rockTopY - 0.03) - (rawBox.min.y * scale);
 
       state.sculptureNode = modelNode;
 
@@ -1237,6 +1380,7 @@
     }
 
     function triggerPortalRiftOpening() {
+      resetCameraRig(true);
       collapsePortalForOpening();
       state.portalOpening = true;
       state.portalOpenStartTime = clock.getElapsedTime();
@@ -1506,7 +1650,7 @@
     }
 
     /* =========================================================================
-       9. CÁMARA AR, SENSORES 3DoF E INTERACCIÓN A TRAVÉS DEL PORTAL
+       9. CÁMARA AR, SENSORES 3DoF, ZOOM, GIRO E INTERACCIÓN A TRAVÉS DEL PORTAL
        ========================================================================= */
     function setupSpatialGyroscope() {
       const attachListener = () => {
@@ -1536,8 +1680,92 @@
       state.gyroBaseline.gamma = null;
       state.gyroOffset.set(0, 0);
       state.smoothedGyro.set(0, 0);
-      state.manualOrbit.set(0, 0);
+      state.camYaw = 0;
+      state.camPitch = 0;
       showToast('Portal dimensional centrado frente a ti');
+    }
+
+    function setInside(flag) {
+      if (state.insidePortal === flag) return;
+      state.insidePortal = flag;
+      setInteriorStencilEnabled(!flag);
+      document.getElementById('enter-text').textContent = flag ? 'Salir' : 'Entrar';
+      showToast(flag ? 'Dentro del portal: arrastra para mirar a tu alrededor' : 'Fuera del portal');
+    }
+
+    function resetCameraRig(instant) {
+      state.camYaw = 0;
+      state.camPitch = 0;
+      state.camDistTarget = state.baseDist;
+      state.steppedInside = false;
+      document.getElementById('step-in-text').textContent = 'Asomarse';
+      if (instant) {
+        state.camYawS = 0;
+        state.camPitchS = 0;
+        state.camDist = state.baseDist;
+        setInside(false);
+      }
+    }
+
+    // El portal es una ventana: solo se puede cruzar por su abertura
+    function updatePortalPresence() {
+      const p = camera.position;
+      const planeZ = CONFIG.portalZ;
+      if (!state.insidePortal) {
+        if (p.z < planeZ + 0.03) {
+          const inOpening = state.interactionEnabled && Math.abs(p.x) < 1.1 && p.y > -1.5 && p.y < 1.5;
+          if (!inOpening) p.z = planeZ + 0.05;
+          else if (p.z < planeZ - 0.03) setInside(true);
+        }
+      } else if (p.z > planeZ + 0.05) {
+        setInside(false);
+      }
+    }
+
+    function updateCameraRig(elapsedTime) {
+      const dt = Math.min(0.05, elapsedTime - state.lastElapsed);
+      state.lastElapsed = elapsedTime;
+      const clamp = THREE.MathUtils.clamp;
+
+      if (state.zoomInput) state.camDistTarget += state.zoomInput * 2.4 * dt;
+      const maxD = state.insidePortal ? 3.2 : state.maxDist;
+      state.camDistTarget = clamp(state.camDistTarget, 0, maxD);
+
+      const kD = 1 - Math.exp(-dt * 4);
+      const kR = 1 - Math.exp(-dt * 10);
+      state.camDist += (state.camDistTarget - state.camDist) * kD;
+
+      // 0 = dentro del portal (giro libre 360°), 1 = fuera (giro limitado)
+      const out = THREE.MathUtils.smoothstep(state.camDist, 0.7, 1.7);
+
+      const wrap = Math.round(state.camYaw / (Math.PI * 2)) * Math.PI * 2;
+      state.camYaw -= wrap;
+      state.camYawS -= wrap;
+      const yawMax = THREE.MathUtils.lerp(Math.PI, 1.05, out);
+      state.camYaw = clamp(state.camYaw, -yawMax, yawMax);
+      state.camPitch = clamp(
+        state.camPitch,
+        -THREE.MathUtils.lerp(1.35, 0.4, out),
+        THREE.MathUtils.lerp(1.35, 0.5, out)
+      );
+
+      state.camYawS += (state.camYaw - state.camYawS) * kR;
+      state.camPitchS += (state.camPitch - state.camPitchS) * kR;
+      state.smoothedGyro.lerp(state.gyroOffset, 0.07);
+
+      const yaw = state.camYawS + state.smoothedGyro.x * 0.3;
+      const pitch = clamp(state.camPitchS - state.smoothedGyro.y * 0.3, -1.45, 1.45);
+      const d = state.camDist;
+      const cp = Math.cos(pitch);
+      camera.position.set(
+        PIVOT.x + d * Math.sin(yaw) * cp,
+        PIVOT.y - d * Math.sin(pitch),
+        PIVOT.z + d * Math.cos(yaw) * cp
+      );
+      camera.rotation.set(pitch, yaw, 0, 'YXZ');
+
+      updatePortalPresence();
+      if (zoomFillEl) zoomFillEl.style.height = `${clamp(100 * (1 - state.camDist / state.maxDist), 0, 100)}%`;
     }
 
     async function launchPortalExperience(useARCamera) {
@@ -1599,9 +1827,43 @@
 
       document.getElementById('btn-step-in').addEventListener('click', () => {
         state.steppedInside = !state.steppedInside;
+        state.camYaw = 0;
+        state.camPitch = 0;
+        state.camDistTarget = state.steppedInside ? state.steppedDist : state.baseDist;
         document.getElementById('step-in-text').textContent = state.steppedInside ? 'Alejarse' : 'Asomarse';
-        showToast(state.steppedInside ? 'Asomándote dentro del portal dimensional' : 'Vista panorámica del portal en tu espacio');
+        showToast(state.steppedInside ? 'Acercándote al portal' : 'Vista panorámica del portal en tu espacio');
       });
+
+      zoomFillEl = document.getElementById('zoom-fill');
+
+      const holdZoom = (id, dir) => {
+        const btn = document.getElementById(id);
+        btn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          initAudio();
+          state.zoomInput = dir;
+          state.camDistTarget += dir * 0.25;
+        });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) =>
+          btn.addEventListener(ev, () => { state.zoomInput = 0; })
+        );
+      };
+      holdZoom('btn-zoom-in', -1);
+      holdZoom('btn-zoom-out', 1);
+
+      document.getElementById('btn-enter').addEventListener('click', () => {
+        state.camYaw = 0;
+        state.camPitch = 0;
+        state.steppedInside = false;
+        document.getElementById('step-in-text').textContent = 'Asomarse';
+        state.camDistTarget = state.insidePortal ? state.steppedDist : 0.2;
+      });
+
+      dom.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (!state.interactionEnabled) return;
+        state.camDistTarget += e.deltaY * 0.004;
+      }, { passive: false });
 
       document.getElementById('btn-reset').addEventListener('click', () => {
         state.modelTargetRotX = 0;
@@ -1636,16 +1898,26 @@
 
     function getPointerWorldAtZ(targetZ) {
       raycaster.setFromCamera(state.pointerNDC, camera);
-      const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), -targetZ);
-      const hit = new THREE.Vector3();
-      raycaster.ray.intersectPlane(planeZ, hit);
-      return hit;
+      const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -targetZ);
+      return raycaster.ray.intersectPlane(plane, new THREE.Vector3()); // null si no corta
     }
 
     function onPointerDown(e) {
       e.preventDefault();
       initAudio();
       if (!state.interactionEnabled) return;
+
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      // Dos dedos: pellizcar para hacer zoom
+      if (state.pointers.size === 2) {
+        const [a, b] = [...state.pointers.values()];
+        state.pinch = { startDist: Math.hypot(a.x - b.x, a.y - b.y), startTarget: state.camDistTarget };
+        state.activeDraggedLeaf = null;
+        state.rotatingScene = false;
+        touchRipple.classList.remove('active');
+        return;
+      }
 
       state.pointerDown = true;
       updatePointerCoords(e.clientX, e.clientY);
@@ -1656,24 +1928,26 @@
         onboardingHint.classList.add('opacity-0');
       }
 
-      // Verificar primero que el toque pase por la ventana abierta del portal
       raycaster.setFromCamera(state.pointerNDC, camera);
-      const portalHits = raycaster.intersectObject(portalMaskMesh, false);
+      const canHitInterior = state.insidePortal || raycaster.intersectObject(portalMaskMesh, false).length > 0;
+      state.dragMode = 'camera';
 
-      if (portalHits.length > 0 && !state.discoveryCompleted) {
-        const interactiveLeaves = state.foliagePlanes.filter((p) => p.userData.interactive);
-        const leafHits = raycaster.intersectObjects(interactiveLeaves, false);
-
-        if (leafHits.length > 0) {
-          state.activeDraggedLeaf = leafHits[0].object;
-          const worldPt = getPointerWorldAtZ(state.activeDraggedLeaf.position.z);
-          if (worldPt) state.lastPointerWorld.copy(worldPt);
-          playFoliageRustle(0.75);
-          return;
+      if (canHitInterior) {
+        if (!state.discoveryCompleted) {
+          const leafHits = raycaster.intersectObjects(state.foliagePlanes.filter((p) => p.userData.interactive), false);
+          if (leafHits.length > 0) {
+            state.activeDraggedLeaf = leafHits[0].object;
+            const worldPt = getPointerWorldAtZ(state.activeDraggedLeaf.position.z);
+            if (worldPt) state.lastPointerWorld.copy(worldPt);
+            playFoliageRustle(0.75);
+            return;
+          }
+        } else if (raycaster.intersectObject(sculptureGroup, true).length > 0) {
+          state.dragMode = 'sculpture'; // arrastrar sobre la escultura/roca la gira
         }
       }
 
-      // Si arrastra fuera de las hojas o con la escultura ya descubierta, orbita la perspectiva del portal/escultura
+      // En cualquier otro lugar, arrastrar gira la cámara
       state.rotatingScene = true;
       state.lastInspectClient.x = e.clientX;
       state.lastInspectClient.y = e.clientY;
@@ -1681,7 +1955,17 @@
 
     function onPointerMove(e) {
       updatePointerCoords(e.clientX, e.clientY);
-      if (!state.pointerDown || !state.interactionEnabled) return;
+      if (state.pointers.has(e.pointerId)) state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (!state.interactionEnabled) return;
+
+      if (state.pinch && state.pointers.size >= 2) {
+        const [a, b] = [...state.pointers.values()];
+        const dist = Math.hypot(a.x - b.x, a.y - b.y);
+        state.camDistTarget = state.pinch.startTarget - (dist - state.pinch.startDist) * 0.012;
+        return;
+      }
+
+      if (!state.pointerDown) return;
 
       if (state.activeDraggedLeaf && !state.discoveryCompleted) {
         const leaf = state.activeDraggedLeaf;
@@ -1712,12 +1996,12 @@
         const dx = e.clientX - state.lastInspectClient.x;
         const dy = e.clientY - state.lastInspectClient.y;
 
-        if (state.discoveryCompleted) {
+        if (state.dragMode === 'sculpture') {
           state.modelTargetRotY += dx * 0.012;
           state.modelTargetRotX = THREE.MathUtils.clamp(state.modelTargetRotX + dy * 0.005, -0.28, 0.32);
         } else {
-          state.manualOrbit.x = THREE.MathUtils.clamp(state.manualOrbit.x - dx * 0.006, -1.25, 1.25);
-          state.manualOrbit.y = THREE.MathUtils.clamp(state.manualOrbit.y + dy * 0.004, -0.65, 0.65);
+          state.camYaw -= dx * 0.006;
+          state.camPitch -= dy * 0.005;
         }
 
         state.lastInspectClient.x = e.clientX;
@@ -1725,11 +2009,15 @@
       }
     }
 
-    function onPointerUp() {
-      state.pointerDown = false;
-      state.activeDraggedLeaf = null;
-      state.rotatingScene = false;
-      touchRipple.classList.remove('active');
+    function onPointerUp(e) {
+      state.pointers.delete(e.pointerId);
+      if (state.pointers.size < 2) state.pinch = null;
+      if (state.pointers.size === 0) {
+        state.pointerDown = false;
+        state.activeDraggedLeaf = null;
+        state.rotatingScene = false;
+        touchRipple.classList.remove('active');
+      }
     }
 
     function checkIfLeafCleared(leaf) {
@@ -1786,7 +2074,7 @@
       triggerBurstWave();
 
       playRevealChime();
-      showToast('¡Escultura descubierta dentro del portal! Arrastra para girarla 360°');
+      showToast('¡Escultura descubierta dentro del portal! Arrastra sobre ella para girarla 360°');
     }
 
     /* =========================================================================
@@ -1795,21 +2083,8 @@
     function animate() {
       const elapsedTime = clock.getElapsedTime();
 
-      // Transición suave de distancia al asomarse dentro del portal
-      const targetZ = state.steppedInside ? CONFIG.steppedInCameraZ : CONFIG.baseCameraZ;
-      state.currentCameraZ = THREE.MathUtils.lerp(state.currentCameraZ, targetZ, 0.06);
-
-      // Movimiento espacial de la cámara fuera del portal (Efecto ventana 3D real)
-      state.smoothedGyro.x = THREE.MathUtils.lerp(state.smoothedGyro.x, state.gyroOffset.x + state.manualOrbit.x, 0.07);
-      state.smoothedGyro.y = THREE.MathUtils.lerp(state.smoothedGyro.y, state.gyroOffset.y + state.manualOrbit.y, 0.07);
-      state.smoothedParallax.x = THREE.MathUtils.lerp(state.smoothedParallax.x, state.pointerNDC.x * 0.18, 0.05);
-      state.smoothedParallax.y = THREE.MathUtils.lerp(state.smoothedParallax.y, state.pointerNDC.y * 0.10, 0.05);
-
-      camera.position.x = state.smoothedParallax.x + state.smoothedGyro.x;
-      camera.position.y = 0.05 + state.smoothedParallax.y + state.smoothedGyro.y;
-      camera.position.z = state.currentCameraZ;
-      // La cámara mira a través del centro del portal hacia la escultura interior
-      camera.lookAt(0, -0.05, 0.25);
+      // Cámara orbital: giro, zoom y entrada al portal
+      updateCameraRig(elapsedTime);
 
       if (state.portalOpening) {
         updatePortalOpeningAnimation(elapsedTime);
@@ -1926,7 +2201,7 @@
       });
 
       if (sculptureGroup && state.interactionEnabled) {
-        if (!state.rotatingScene) {
+        if (!(state.rotatingScene && state.dragMode === 'sculpture')) {
           state.modelTargetRotY += 0.004;
         }
         sculptureGroup.rotation.y = THREE.MathUtils.lerp(sculptureGroup.rotation.y, state.modelTargetRotY, 0.08);
