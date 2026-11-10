@@ -46,7 +46,7 @@
       font-family: 'Cinzel', serif;
     }
 
-    /* Fondo atmosférico de selva tropical (Niebla profunda + Luz Esmeralda) */
+    /* Fondo atmosférico de selva tropical (Modo Virtual) */
     #illustration-backdrop {
       position: fixed;
       inset: 0;
@@ -58,7 +58,7 @@
       transition: opacity 0.6s ease;
     }
 
-    /* Rayos de sol volumétricos filtrándose entre el dosel de la selva */
+    /* Rayos de sol volumétricos sutiles */
     #god-rays {
       position: fixed;
       inset: 0;
@@ -67,12 +67,13 @@
       background: conic-gradient(
         from 160deg at 50% -15%,
         transparent 0deg,
-        rgba(167, 243, 208, 0.12) 14deg,
+        rgba(167, 243, 208, 0.10) 14deg,
         transparent 28deg,
-        rgba(253, 230, 138, 0.14) 40deg,
+        rgba(253, 230, 138, 0.12) 40deg,
         transparent 56deg
       );
       mix-blend-mode: screen;
+      transition: opacity 0.6s ease;
     }
 
     /* Video de cámara trasera para modo WebAR */
@@ -85,7 +86,7 @@
       object-fit: cover;
       z-index: 1;
       opacity: 0;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.6s ease;
       pointer-events: none;
     }
 
@@ -109,13 +110,13 @@
       cursor: grabbing;
     }
 
-    /* Viñeta orgánica suave que enmarca la escena */
+    /* Viñeta orgánica suave */
     .jungle-vignette {
       position: fixed;
       inset: 0;
       z-index: 3;
       pointer-events: none;
-      background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(1, 10, 6, 0.68) 100%);
+      background: radial-gradient(circle at 50% 50%, transparent 58%, rgba(1, 10, 6, 0.55) 100%);
     }
 
     /* Capa HUD minimalista */
@@ -128,6 +129,12 @@
       flex-direction: column;
       justify-content: space-between;
       padding: env(safe-area-inset-top, 12px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 12px) env(safe-area-inset-left, 16px);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    #ui-layer.visible {
+      opacity: 1;
     }
 
     .interactive-ui {
@@ -165,44 +172,71 @@
 </head>
 <body>
 
-  <!-- 1. FONDO ATMOSFÉRICO DE SELVA Y RAYOS DE SOL -->
+  <!-- 1. FONDO ATMOSFÉRICO Y RAYOS DE SOL -->
   <div id="illustration-backdrop"></div>
   <div id="god-rays"></div>
 
-  <!-- 2. VIDEO DE CÁMARA TRASERA PARA WEBAR -->
+  <!-- 2. VIDEO DE CÁMARA TRASERA PARA WEBAR ESPACIAL -->
   <video id="ar-video" autoplay playsinline muted></video>
 
   <!-- 3. CONTENEDOR WEBGL (THREE.JS) -->
   <div id="webgl-container"></div>
 
-  <!-- 4. VIÑETA NATURAL Y FEEDBACK TÁCTIL -->
+  <!-- 4. VIÑETA Y FEEDBACK TÁCTIL -->
   <div class="jungle-vignette"></div>
   <div id="touch-ripple"></div>
 
-  <!-- 5. PANTALLA DE CARGA -->
-  <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-md transition-opacity duration-700 px-6 text-center">
-    <div class="w-14 h-14 mb-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center shadow-lg shadow-emerald-950/60">
-      <svg class="w-8 h-8 text-emerald-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <!-- 5. PANTALLA DE PRECARGA Y PORTAL DE INICIO AR -->
+  <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-xl transition-opacity duration-700 px-6 text-center">
+    <div class="w-16 h-16 mb-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center shadow-lg shadow-emerald-950/70">
+      <svg class="w-9 h-9 text-emerald-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
       </svg>
     </div>
-    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-1.5">SELVA TROPICAL · DESCUBRIMIENTO</h1>
-    <p id="loading-status" class="text-xs sm:text-sm text-emerald-300/80 mb-5 max-w-xs">Preparando vegetación con rocas, niebla y capas táctiles...</p>
-    <div class="w-60 sm:w-72 h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
-      <div id="loading-bar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 w-0 transition-all duration-300"></div>
+
+    <span class="text-[10px] uppercase tracking-[0.25em] text-emerald-400/90 font-semibold mb-1">Instalación Espacial WebAR</span>
+    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-2">SELVA TROPICAL · DESCUBRIMIENTO</h1>
+    <p id="loading-status" class="text-xs sm:text-sm text-emerald-200/75 mb-5 max-w-xs leading-relaxed">
+      Preparando modelo 3D y capas botánicas...
+    </p>
+
+    <!-- Barra de progreso de carga -->
+    <div id="loading-progress-wrap" class="flex flex-col items-center">
+      <div class="w-60 sm:w-72 h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
+        <div id="loading-bar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 w-0 transition-all duration-300"></div>
+      </div>
+      <span id="loading-percent" class="text-[11px] font-mono text-stone-400 mt-2">0%</span>
     </div>
-    <span id="loading-percent" class="text-[11px] font-mono text-stone-400 mt-2">0%</span>
+
+    <!-- Portal de Despliegue AR (Aparece al llegar al 100% de carga) -->
+    <div id="ar-start-portal" class="hidden flex-col items-center gap-3 mt-2 max-w-xs w-full animate-fade-in">
+      <button id="btn-launch-ar" class="w-full py-3 px-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 text-stone-950 font-bold text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-950/80 border border-emerald-200/50 flex items-center justify-center gap-2 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span>Iniciar Experiencia AR</span>
+      </button>
+
+      <button id="btn-launch-virtual" class="w-full py-2 px-4 rounded-full bg-stone-900/80 hover:bg-stone-800 active:scale-95 text-emerald-200/90 font-medium text-xs border border-white/10 transition-all">
+        Explorar en Entorno Virtual 3D
+      </button>
+
+      <p class="text-[11px] text-stone-400 mt-1 leading-snug">
+        Apunta hacia el espacio frente a ti para desplegar y materializar la vegetación y la escultura en tu entorno.
+      </p>
+    </div>
   </div>
 
-  <!-- 6. INTERFAZ UI/UX -->
+  <!-- 6. INTERFAZ HUD DURANTE LA EXPERIENCIA -->
   <div id="ui-layer" class="p-3 sm:p-4">
     <header class="w-full flex items-center justify-between gap-2">
-      <!-- Progreso de Descubrimiento -->
+      <!-- Píldora de Progreso de Descubrimiento -->
       <div id="discovery-pill" class="flex items-center gap-3 bg-stone-950/65 backdrop-blur-md border border-emerald-400/25 rounded-full pl-3.5 pr-4 py-1.5 shadow-xl transition-all duration-500">
         <span id="status-dot" class="w-2 h-2 rounded-full bg-amber-300 animate-ping shrink-0"></span>
         <div class="flex flex-col">
           <div class="flex items-center gap-2">
-            <span id="discovery-label" class="text-[11px] sm:text-xs font-medium text-emerald-50 tracking-wide">Despeja la selva</span>
+            <span id="discovery-label" class="text-[11px] sm:text-xs font-medium text-emerald-50 tracking-wide">Materializando...</span>
             <span id="discovery-count" class="text-[11px] font-mono font-semibold text-amber-300">0%</span>
           </div>
           <div class="w-28 sm:w-36 h-1 bg-stone-800/90 rounded-full overflow-hidden mt-0.5">
@@ -211,8 +245,24 @@
         </div>
       </div>
 
-      <!-- Controles Superiores -->
+      <!-- Controles Flotantes -->
       <div class="flex items-center gap-1.5 interactive-ui">
+        <!-- Re-anclar en el espacio frente al usuario -->
+        <button id="btn-reanchor" title="Anclar escena frente a mí" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-amber-200 border border-amber-300/25 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.657-5.657l-2.828 2.828m-5.03 5.03l-2.828 2.828m0-10.686l2.828 2.828m5.03 5.03l2.828 2.828" />
+          </svg>
+          <span class="hidden sm:inline">Re-anclar</span>
+        </button>
+
+        <!-- Reiniciar y Re-materializar -->
+        <button id="btn-reset" title="Re-desplegar experiencia" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="hidden md:inline">Reiniciar</span>
+        </button>
+
         <!-- Pantalla Completa -->
         <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg id="icon-expand" class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,14 +271,6 @@
           <svg id="icon-compress" class="w-4 h-4 text-emerald-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
           </svg>
-        </button>
-
-        <!-- Reiniciar -->
-        <button id="btn-reset" title="Cubrir escultura nuevamente" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <span class="hidden md:inline">Reiniciar</span>
         </button>
 
         <!-- Sonido -->
@@ -241,14 +283,14 @@
     </header>
 
     <!-- Guía Gestual Central -->
-    <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none transition-opacity duration-700">
+    <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none opacity-0 transition-opacity duration-700">
       <div class="w-11 h-11 rounded-full bg-stone-950/60 border border-amber-300/40 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
         <svg class="w-6 h-6 text-amber-300 animate-swipe-hand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
         </svg>
       </div>
       <p id="hint-text" class="px-3.5 py-1 rounded-full bg-stone-950/70 backdrop-blur-md border border-white/10 text-emerald-50 text-xs font-medium shadow-xl">
-        Aparta las hojas una por una (20% por planta) para descubrir la escultura
+        Aparta las plantas una por una (20% por planta) para descubrir la escultura
       </p>
     </div>
 
@@ -276,18 +318,15 @@
 
     const CONFIG = {
       cameraDistance: 5.2,
-      discoveryThreshold: 0.82,
-      modelRotation: { x: 0, y: 0, z: 0 }, 
-      // Rutas corregidas: incluye '3DModel.glb' con mayúscula exacta del repositorio
+      modelRotation: { x: 0, y: 0, z: 0 },
+      // Rutas con '3DModel.glb' exacto como está en la carpeta models/ de GitHub
       modelPaths: [
         'models/3DModel.glb',
         `${REPO_RAW_BASE}models/3DModel.glb`,
         'models/3Dmodel.glb',
         `${REPO_RAW_BASE}models/3Dmodel.glb`,
         '3DModel.glb',
-        `${REPO_RAW_BASE}3DModel.glb`,
-        'assets/3DModel.glb',
-        `${REPO_RAW_BASE}assets/3DModel.glb`
+        `${REPO_RAW_BASE}3DModel.glb`
       ],
       vegetationAssets: [
         {
@@ -315,10 +354,10 @@
           aspectHeight: 2.05
         }
       ],
-      particleCount: 240,
+      particleCount: 220,
+      burstParticleCount: 160,
       damping: 0.89,
-      restLerpSpeed: 0.08,
-      brushRadius: 1.28
+      restLerpSpeed: 0.08
     };
 
     const state = {
@@ -326,6 +365,13 @@
       coveringLeavesCount: 0,
       clearedLeavesCount: 0,
       discoveryCompleted: false,
+      interactionEnabled: false,
+      // Control de la coreografía de materialización (2.2s)
+      materializing: false,
+      materializeStartTime: 0,
+      materializeDuration: 2.25,
+      lastMaterializeRustleStage: 0,
+      // Modelo y física táctil
       modelBoundingBox: new THREE.Box3(),
       modelSize: new THREE.Vector3(1.4, 2.0, 1.4),
       activeDraggedLeaf: null,
@@ -338,12 +384,26 @@
       lastInspectClient: { x: 0, y: 0 },
       modelTargetRotY: 0,
       modelTargetRotX: 0,
+      // Sensores espaciales 3DoF (Giroscopio para evitar efecto filtro pegado)
       cameraActive: false,
+      gyroAvailable: false,
+      gyroBaseline: { alpha: null, beta: null, gamma: null },
+      gyroOffset: new THREE.Vector2(0, 0),
+      smoothedGyro: new THREE.Vector2(0, 0),
+      // Audio
       soundEnabled: true,
       audioCtx: null,
       lastRustleTime: 0,
+      // Partículas y Destello
       particleData: [],
+      burstData: [],
+      burstActive: false,
+      burstStartTime: 0,
       sculptureMeshes: [],
+       sculptureNode: null,
+      pedestalGroup: null,
+      anchorRingGroup: null,
+      arShadowFloor: null,
       revealFlashActive: false,
       revealFlashStartTime: 0,
       revealFlashDuration: 1.85,
@@ -357,10 +417,14 @@
     const container = document.getElementById('webgl-container');
     const videoElement = document.getElementById('ar-video');
     const backdropElement = document.getElementById('illustration-backdrop');
+    const godRaysElement = document.getElementById('god-rays');
     const loadingScreen = document.getElementById('loading-screen');
+    const loadingProgressWrap = document.getElementById('loading-progress-wrap');
+    const arStartPortal = document.getElementById('ar-start-portal');
     const loadingBar = document.getElementById('loading-bar');
     const loadingPercent = document.getElementById('loading-percent');
     const loadingStatus = document.getElementById('loading-status');
+    const uiLayer = document.getElementById('ui-layer');
     const discoveryLabel = document.getElementById('discovery-label');
     const discoveryCount = document.getElementById('discovery-count');
     const discoveryBar = document.getElementById('discovery-bar');
@@ -374,35 +438,32 @@
     const iconCompress = document.getElementById('icon-compress');
 
     let scene, camera, renderer, raycaster;
-    let jungleEnvironmentGroup, sculptureGroup, foliageRootGroup, bioParticles;
+    let worldAnchorGroup, jungleEnvironmentGroup, sculptureGroup, foliageRootGroup, bioParticles, burstParticles;
     let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight;
     let cachedTexturesByKey = null;
     const clock = new THREE.Clock();
 
+    /* =========================================================================
+       PANTALLA COMPLETA
+       ========================================================================= */
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          showToast(`Pantalla completa: ${err.message}`);
-        });
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen();
       }
     }
 
     document.addEventListener('fullscreenchange', () => {
-      if (document.fullscreenElement) {
-        iconExpand.classList.add('hidden');
-        iconCompress.classList.remove('hidden');
-      } else {
-        iconExpand.classList.remove('hidden');
-        iconCompress.classList.add('hidden');
-      }
+      const isFull = !!document.fullscreenElement;
+      iconExpand.classList.toggle('hidden', isFull);
+      iconCompress.classList.toggle('hidden', !isFull);
     });
 
     btnFullscreen.addEventListener('click', toggleFullscreen);
 
     /* =========================================================================
-       AUDIO PROCEDURAL (ROCE GRANULAR Y DESTELLO)
+       1. AUDIO PROCEDURAL (ROCE GRANULAR DE HOJAS Y DESTELLO SUAVE)
        ========================================================================= */
     function initAudio() {
       if (!state.audioCtx && state.soundEnabled) {
@@ -458,7 +519,7 @@
         bp2.Q.setValueAtTime(1.05, ctx.currentTime);
 
         const gain = ctx.createGain();
-        const baseVol = THREE.MathUtils.clamp(intensity * 0.07, 0.02, 0.075);
+        const baseVol = THREE.MathUtils.clamp(intensity * 0.075, 0.02, 0.08);
         gain.gain.setValueAtTime(0.001, ctx.currentTime);
         gain.gain.linearRampToValueAtTime(baseVol, ctx.currentTime + 0.035);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
@@ -506,10 +567,10 @@
     }
 
     /* =========================================================================
-       INICIALIZACIÓN
+       2. INICIALIZACIÓN Y ANCLA ESPACIAL (WORLD ANCHOR)
        ========================================================================= */
     async function init() {
-      updateLoading(15, 'Generando densa selva tropical...');
+      updateLoading(15, 'Inicializando motor espacial Three.js...');
 
       scene = new THREE.Scene();
       scene.fog = new THREE.FogExp2(0x062118, 0.062);
@@ -532,30 +593,36 @@
 
       raycaster = new THREE.Raycaster();
 
+      // Nodo raíz de anclaje espacial en el mundo real
+      worldAnchorGroup = new THREE.Group();
+      worldAnchorGroup.name = 'WorldSpatialAnchor';
+      scene.add(worldAnchorGroup);
+
       setupLighting();
       createJungleSurrealBackground();
+      createSpatialARFloorAndReticle();
 
-      updateLoading(45, 'Cargando escultura 3D en el claro de la selva...');
+      updateLoading(45, 'Cargando escultura 3D (models/3DModel.glb)...');
       await loadAndFrameCentralModel();
 
-      updateLoading(72, 'Colocando plantas grandes y equilibradas...');
+      updateLoading(75, 'Preparando capas botánicas para materialización...');
       cachedTexturesByKey = await loadBaseVegetationTextures();
       buildLayeredJungle(cachedTexturesByKey);
 
-      updateLoading(92, 'Activando esporas bioluminiscentes...');
+      updateLoading(92, 'Preparando esporas y onda expansiva...');
       createLuminescentParticles();
+      createRevealBurstParticles();
+
+      // Ocultar inicialmente los elementos hasta que el usuario pulse "Iniciar Experiencia AR"
+      prepareForMaterialization();
 
       setupInteractionEvents();
       window.addEventListener('resize', onWindowResize);
 
-      updateLoading(100, '¡Experiencia lista!');
-      
-      setTimeout(() => {
-        loadingScreen.classList.add('opacity-0', 'pointer-events-none');
-        setTimeout(() => {
-          onboardingHint.classList.add('opacity-0');
-        }, 3000);
-      }, 350);
+      updateLoading(100, '¡Instalación AR lista para desplegarse en tu espacio!');
+      loadingProgressWrap.classList.add('hidden');
+      arStartPortal.classList.remove('hidden');
+      arStartPortal.classList.add('flex');
 
       renderer.setAnimationLoop(animate);
     }
@@ -590,24 +657,58 @@
 
       rimTealLight = new THREE.PointLight(0x2dd4bf, 3.4, 11);
       rimTealLight.position.set(-2.5, 1.5, -0.6);
-      scene.add(rimTealLight);
+      worldAnchorGroup.add(rimTealLight);
 
       rimGoldLight = new THREE.PointLight(0xfbbf24, 2.6, 10);
       rimGoldLight.position.set(2.4, 1.1, 1.4);
-      scene.add(rimGoldLight);
+      worldAnchorGroup.add(rimGoldLight);
 
       centerSpotLight = new THREE.SpotLight(0xfffbeb, state.baseCenterSpotIntensity);
       centerSpotLight.position.set(0, 3.6, 3.2);
       centerSpotLight.angle = Math.PI / 5.2;
       centerSpotLight.penumbra = 0.85;
-      scene.add(centerSpotLight);
+      worldAnchorGroup.add(centerSpotLight);
+    }
+
+    /* Receptor de sombras y anillo holográfico de anclaje en el suelo real */
+    function createSpatialARFloorAndReticle() {
+      const shadowFloorGeo = new THREE.PlaneGeometry(14, 14);
+      const shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0.42 });
+      const shadowFloor = new THREE.Mesh(shadowFloorGeo, shadowFloorMat);
+      shadowFloor.rotation.x = -Math.PI / 2;
+      shadowFloor.position.y = -1.24;
+      shadowFloor.receiveShadow = true;
+      shadowFloor.visible = false;
+      worldAnchorGroup.add(shadowFloor);
+      state.arShadowFloor = shadowFloor;
+
+      const reticleGroup = new THREE.Group();
+      reticleGroup.position.y = -1.23;
+
+      const outerRing = new THREE.Mesh(
+        new THREE.RingGeometry(1.15, 1.22, 64),
+        new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+      );
+      outerRing.rotation.x = -Math.PI / 2;
+      reticleGroup.add(outerRing);
+
+      const innerGlowRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.65, 1.12, 64),
+        new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.16, side: THREE.DoubleSide })
+      );
+      innerGlowRing.rotation.x = -Math.PI / 2;
+      reticleGroup.add(innerGlowRing);
+
+      reticleGroup.scale.setScalar(0.001);
+      worldAnchorGroup.add(reticleGroup);
+      state.anchorRingGroup = reticleGroup;
     }
 
     function createJungleSurrealBackground() {
-      if (jungleEnvironmentGroup) scene.remove(jungleEnvironmentGroup);
+      if (jungleEnvironmentGroup) worldAnchorGroup.remove(jungleEnvironmentGroup);
       jungleEnvironmentGroup = new THREE.Group();
       jungleEnvironmentGroup.name = 'JungleEnvironment';
-      scene.add(jungleEnvironmentGroup);
+      worldAnchorGroup.add(jungleEnvironmentGroup);
 
       const muralTex = createJunglePanoramaTexture();
       const muralGeo = new THREE.PlaneGeometry(16.5, 9.2, 24, 1);
@@ -638,18 +739,6 @@
       jungleFloor.position.y = -1.25;
       jungleFloor.receiveShadow = true;
       jungleEnvironmentGroup.add(jungleFloor);
-
-      const rippleGeo = new THREE.RingGeometry(0.78, 1.65, 48);
-      const rippleMat = new THREE.MeshBasicMaterial({
-        color: 0x2dd4bf,
-        transparent: true,
-        opacity: 0.18,
-        side: THREE.DoubleSide
-      });
-      const rippleMesh = new THREE.Mesh(rippleGeo, rippleMat);
-      rippleMesh.rotation.x = -Math.PI / 2;
-      rippleMesh.position.y = -1.23;
-      jungleEnvironmentGroup.add(rippleMesh);
     }
 
     function createJunglePanoramaTexture() {
@@ -684,52 +773,6 @@
       ctx.lineTo(0, h);
       ctx.fill();
 
-      ctx.fillStyle = '#0a3325';
-      ctx.beginPath();
-      ctx.moveTo(0, h * 0.75);
-      ctx.bezierCurveTo(w * 0.25, h * 0.55, w * 0.4, h * 0.68, w * 0.55, h * 0.58);
-      ctx.bezierCurveTo(w * 0.7, h * 0.5, w * 0.9, h * 0.62, w, h * 0.55);
-      ctx.lineTo(w, h);
-      ctx.lineTo(0, h);
-      ctx.fill();
-
-      ctx.save();
-      ctx.fillStyle = '#02140d';
-      for (let i = 0; i < 5; i++) {
-        ctx.beginPath();
-        ctx.moveTo(0, h);
-        ctx.quadraticCurveTo(w * 0.1 + i * 20, h * 0.6 - i * 30, w * 0.05 + i * 40, h * 0.3 - i * 20);
-        ctx.quadraticCurveTo(w * 0.15 + i * 20, h * 0.7, w * 0.05 + i * 30, h);
-        ctx.fill();
-      }
-      for (let i = 0; i < 5; i++) {
-        ctx.beginPath();
-        ctx.moveTo(w, h);
-        ctx.quadraticCurveTo(w * 0.9 - i * 20, h * 0.6 - i * 30, w * 0.95 - i * 40, h * 0.3 - i * 20);
-        ctx.quadraticCurveTo(w * 0.85 - i * 20, h * 0.7, w * 0.95 - i * 30, h);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      const fallGrad = ctx.createLinearGradient(w * 0.6, h * 0.4, w * 0.6, h * 0.85);
-      fallGrad.addColorStop(0, 'rgba(167, 243, 208, 0.0)');
-      fallGrad.addColorStop(0.3, 'rgba(167, 243, 208, 0.2)');
-      fallGrad.addColorStop(0.85, 'rgba(45, 212, 191, 0.3)');
-      fallGrad.addColorStop(1, 'rgba(167, 243, 208, 0.0)');
-      ctx.fillStyle = fallGrad;
-      ctx.fillRect(w * 0.58, h * 0.4, 30, h * 0.45);
-
-      for (let v = 0; v < 45; v++) {
-        const vx = (v / 44) * w;
-        const vLen = 100 + (v % 7) * 70;
-        ctx.strokeStyle = v % 2 === 0 ? 'rgba(6, 59, 43, 0.8)' : 'rgba(16, 105, 78, 0.5)';
-        ctx.lineWidth = 2 + (v % 4) * 1.5;
-        ctx.beginPath();
-        ctx.moveTo(vx, 0);
-        ctx.quadraticCurveTo(vx + Math.sin(v) * 45, vLen * 0.5, vx + Math.cos(v) * 25, vLen);
-        ctx.stroke();
-      }
-
       const mistGrad = ctx.createLinearGradient(0, h * 0.55, 0, h * 0.95);
       mistGrad.addColorStop(0, 'rgba(52, 211, 153, 0)');
       mistGrad.addColorStop(0.5, 'rgba(110, 231, 183, 0.22)');
@@ -743,12 +786,12 @@
     }
 
     /* =========================================================================
-       CARGA DEL MODELO 3D DESDE GITHUB
+       3. CARGA DE models/3DModel.glb DESDE GITHUB
        ========================================================================= */
     async function loadAndFrameCentralModel() {
       sculptureGroup = new THREE.Group();
       sculptureGroup.position.set(0, 0, 0);
-      scene.add(sculptureGroup);
+      worldAnchorGroup.add(sculptureGroup);
 
       const pedestalGroup = new THREE.Group();
       const stoneMat = new THREE.MeshStandardMaterial({
@@ -771,6 +814,7 @@
       pedestalGroup.add(mossTrim);
 
       sculptureGroup.add(pedestalGroup);
+      state.pedestalGroup = pedestalGroup;
 
       const loader = new GLTFLoader();
       loader.setCrossOrigin('anonymous');
@@ -782,18 +826,17 @@
             loader.load(path, resolve, undefined, reject);
           });
           if (loadedGLTF) {
-            console.log(`Modelo cargado exitosamente desde: ${path}`);
+            console.log(`Modelo 3D cargado desde: ${path}`);
             break;
           }
         } catch (err) {
-          console.warn(`No se pudo cargar desde ${path}, intentando siguiente...`);
+          console.warn(`Ruta no disponible: ${path}`);
         }
       }
 
       if (loadedGLTF) {
         mountAndComputeBoundingBox(loadedGLTF.scene);
       } else {
-        console.warn("No se pudo cargar 3DModel.glb, usando respaldo procedural.");
         const fallbackModel = createSurrealSculptureFallback();
         mountAndComputeBoundingBox(fallbackModel);
       }
@@ -808,11 +851,10 @@
       state.revealFlashActive = false;
 
       modelNode.rotation.set(
-        CONFIG.modelRotation.x, 
-        CONFIG.modelRotation.y, 
+        CONFIG.modelRotation.x,
+        CONFIG.modelRotation.y,
         CONFIG.modelRotation.z
       );
-
       modelNode.updateMatrixWorld(true);
 
       const rawBox = new THREE.Box3().setFromObject(modelNode);
@@ -827,6 +869,10 @@
       modelNode.position.x = -rawCenter.x * scale;
       modelNode.position.z = -rawCenter.z * scale;
       modelNode.position.y = -0.68 - (rawBox.min.y * scale);
+
+      modelNode.userData.baseScale = scale;
+      modelNode.userData.baseY = modelNode.position.y;
+      state.sculptureNode = modelNode;
 
       modelNode.traverse((child) => {
         if (child.isMesh) {
@@ -867,8 +913,6 @@
           mesh.material.emissive.copy(orig.emissive);
           mesh.material.emissiveIntensity = orig.emissiveIntensity;
         }
-        if (mesh.material.roughness !== undefined) mesh.material.roughness = orig.roughness;
-        if (mesh.material.metalness !== undefined) mesh.material.metalness = orig.metalness;
       });
       if (centerSpotLight) centerSpotLight.intensity = state.baseCenterSpotIntensity;
       if (renderer) renderer.toneMappingExposure = state.baseExposure;
@@ -878,35 +922,23 @@
       const group = new THREE.Group();
       const bronzeMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.24, metalness: 0.82 });
       const jadeMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.2, metalness: 0.3, emissive: 0x065f46, emissiveIntensity: 0.4 });
-      const stoneMat = new THREE.MeshStandardMaterial({ color: 0xd6d3d1, roughness: 0.4, metalness: 0.1 });
-
       const torusKnot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.42, 0.11, 128, 32, 2, 3), bronzeMat);
       torusKnot.position.y = 0.45;
       group.add(torusKnot);
-
       const innerCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 2), jadeMat);
       innerCore.position.y = 0.45;
       group.add(innerCore);
-
-      const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.035, 20, 64), stoneMat);
-      haloRing.position.y = 0.45;
-      group.add(haloRing);
-
-      const column = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 0.55, 24), stoneMat);
-      column.position.y = -0.22;
-      group.add(column);
-
       return group;
     }
 
     /* =========================================================================
-       8 CAPAS DE VEGETACIÓN
+       4. CAPAS DE VEGETACIÓN GRANDES Y DESAGLOMERADAS
        ========================================================================= */
     function buildLayeredJungle(baseTextures) {
-      if (foliageRootGroup) scene.remove(foliageRootGroup);
+      if (foliageRootGroup) worldAnchorGroup.remove(foliageRootGroup);
       foliageRootGroup = new THREE.Group();
       foliageRootGroup.name = 'LayeredJungle';
-      scene.add(foliageRootGroup);
+      worldAnchorGroup.add(foliageRootGroup);
 
       state.foliagePlanes = [];
       state.coveringLeavesCount = 0;
@@ -915,7 +947,7 @@
 
       const layerBlueprints = [
         {
-          layerIndex: 1, zDepth: -2.75, isStatic: false, windAmp: 0.015, interactive: false, coversSculpture: false,
+          layerIndex: 1, zDepth: -2.75, windAmp: 0.015, interactive: false, coversSculpture: false,
           colorTint: '#2b7a62', emissiveTint: '#07261d',
           slots: [
             { key: 'plantas_rocas', x: -2.45, y: -0.08, scale: 1.95, rotZ: -0.06, flipX: false },
@@ -924,7 +956,7 @@
           ]
         },
         {
-          layerIndex: 2, zDepth: -1.75, isStatic: false, windAmp: 0.020, interactive: false, coversSculpture: false,
+          layerIndex: 2, zDepth: -1.75, windAmp: 0.020, interactive: false, coversSculpture: false,
           colorTint: '#52b793', emissiveTint: '#0c382a',
           slots: [
             { key: 'plantas_rocas', x: -1.55, y: -0.22, scale: 1.75, rotZ: -0.08, flipX: true  },
@@ -932,7 +964,7 @@
           ]
         },
         {
-          layerIndex: 3, zDepth: -0.92, isStatic: false, windAmp: 0.025, interactive: false, coversSculpture: false,
+          layerIndex: 3, zDepth: -0.92, windAmp: 0.025, interactive: false, coversSculpture: false,
           colorTint: '#a7f3d0', emissiveTint: '#114231',
           slots: [
             { key: 'plantas_rocas', x:  0.00, y: -0.12, scale: 1.82, rotZ:  0.00, flipX: false },
@@ -941,7 +973,7 @@
           ]
         },
         {
-          layerIndex: 4, zDepth: -0.20, isStatic: false, windAmp: 0.032, interactive: false, coversSculpture: false,
+          layerIndex: 4, zDepth: -0.20, windAmp: 0.032, interactive: false, coversSculpture: false,
           colorTint: '#6ee7b7', emissiveTint: '#09261b',
           slots: [
             { key: 'arbusto', x: -1.98, y: -0.62, scale: 1.54, rotZ:  0.14, flipX: false },
@@ -949,16 +981,16 @@
           ]
         },
         {
-          layerIndex: 5, zDepth: 0.72, isStatic: false, windAmp: 0.045, interactive: true, coversSculpture: true,
+          layerIndex: 5, zDepth: 0.72, windAmp: 0.045, interactive: true, coversSculpture: true,
           colorTint: '#6ee7b7', emissiveTint: '#062016',
           slots: [
-            { key: 'arbusto',       x: -0.78, y: -0.38, scale: 1.52, rotZ:  0.09, flipX: false },
-            { key: 'arbusto',       x:  0.78, y: -0.38, scale: 1.52, rotZ: -0.09, flipX: true  },
-            { key: 'plantas',       x:  0.00, y:  0.56, scale: 1.56, rotZ:  0.04, flipX: false }
+            { key: 'arbusto', x: -0.78, y: -0.38, scale: 1.52, rotZ:  0.09, flipX: false },
+            { key: 'arbusto', x:  0.78, y: -0.38, scale: 1.52, rotZ: -0.09, flipX: true  },
+            { key: 'plantas', x:  0.00, y:  0.56, scale: 1.56, rotZ:  0.04, flipX: false }
           ]
         },
         {
-          layerIndex: 6, zDepth: 1.25, isStatic: false, windAmp: 0.055, interactive: true, coversSculpture: true,
+          layerIndex: 6, zDepth: 1.25, windAmp: 0.055, interactive: true, coversSculpture: true,
           colorTint: '#52b788', emissiveTint: '#051b12',
           slots: [
             { key: 'plantas',       x: -0.88, y:  0.22, scale: 1.55, rotZ: -0.15, flipX: true  },
@@ -967,16 +999,16 @@
           ]
         },
         {
-          layerIndex: 7, zDepth: 1.78, isStatic: false, windAmp: 0.068, interactive: true, coversSculpture: true,
+          layerIndex: 7, zDepth: 1.78, windAmp: 0.068, interactive: true, coversSculpture: true,
           colorTint: '#3b8764', emissiveTint: '#04140d',
           slots: [
-            { key: 'arbusto',       x: -0.64, y: -0.14, scale: 1.58, rotZ:  0.12, flipX: false },
-            { key: 'arbusto',       x:  0.64, y: -0.18, scale: 1.58, rotZ: -0.12, flipX: true  },
-            { key: 'plantas',       x:  0.00, y:  0.42, scale: 1.50, rotZ:  0.16, flipX: false }
+            { key: 'arbusto', x: -0.64, y: -0.14, scale: 1.58, rotZ:  0.12, flipX: false },
+            { key: 'arbusto', x:  0.64, y: -0.18, scale: 1.58, rotZ: -0.12, flipX: true  },
+            { key: 'plantas', x:  0.00, y:  0.42, scale: 1.50, rotZ:  0.16, flipX: false }
           ]
         },
         {
-          layerIndex: 8, zDepth: 2.28, isStatic: false, windAmp: 0.082, interactive: true, coversSculpture: true,
+          layerIndex: 8, zDepth: 2.28, windAmp: 0.082, interactive: true, coversSculpture: true,
           colorTint: '#245940', emissiveTint: '#020c07',
           slots: [
             { key: 'plantas_rocas', x:  0.00, y: -0.32, scale: 1.48, rotZ: -0.05, flipX: true  },
@@ -988,7 +1020,6 @@
 
       layerBlueprints.forEach((layerSpec) => {
         const layerGroup = new THREE.Group();
-        layerGroup.name = `Layer_${layerSpec.layerIndex}`;
         foliageRootGroup.add(layerGroup);
 
         layerSpec.slots.forEach((slot, idx) => {
@@ -1034,6 +1065,12 @@
           const partedY = slot.y + (slot.y >= 0 ? 0.32 : -0.28);
           const partedRotZ = slot.rotZ + sideSign * -0.42;
 
+          // Tiempos escalonados de materialización por capa
+          const isBackLayer = layerSpec.layerIndex <= 4;
+          const matDelay = isBackLayer
+            ? 0.22 + (layerSpec.layerIndex - 1) * 0.14 + idx * 0.05
+            : 1.05 + (layerSpec.layerIndex - 5) * 0.15 + idx * 0.06;
+
           mesh.userData = {
             layerIndex: layerSpec.layerIndex,
             interactive: layerSpec.interactive,
@@ -1051,21 +1088,128 @@
             velocity: new THREE.Vector2(0, 0),
             rotVelocity: 0,
             swaySpeed: 1.05 + layerSpec.layerIndex * 0.12 + (idx % 3) * 0.16,
-            swayPhase: idx * 1.3 + layerSpec.layerIndex * 0.85
+            swayPhase: idx * 1.3 + layerSpec.layerIndex * 0.85,
+            matDelay,
+            matDuration: 0.55
           };
 
-          if (layerSpec.coversSculpture) {
-            state.coveringLeavesCount++;
-          }
+          if (layerSpec.coversSculpture) state.coveringLeavesCount++;
 
           layerGroup.add(mesh);
           state.foliagePlanes.push(mesh);
         });
       });
-
-      updateDiscoveryUI();
     }
 
+    /* =========================================================================
+       5. SECUENCIA COREOGRAFIADA DE MATERIALIZACIÓN (2.2s)
+       ========================================================================= */
+    function easeOutBack(x) {
+      const c1 = 1.70158;
+      const c3 = c1 + 1;
+      return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+    }
+
+    function prepareForMaterialization() {
+      state.interactionEnabled = false;
+      state.clearedLeavesCount = 0;
+      state.discoveryCompleted = false;
+      state.revealFlashActive = false;
+      restoreSculptureOriginalMaterials();
+
+      discoveryCount.textContent = '0%';
+      discoveryBar.style.width = '0%';
+      discoveryLabel.textContent = 'Materializando...';
+      statusDot.className = 'w-2 h-2 rounded-full bg-teal-300 animate-ping shrink-0';
+      onboardingHint.classList.add('opacity-0');
+
+      if (state.anchorRingGroup) state.anchorRingGroup.scale.setScalar(0.001);
+      if (state.pedestalGroup) state.pedestalGroup.scale.setScalar(0.001);
+      if (state.sculptureNode) {
+        state.sculptureNode.scale.setScalar(0.0001);
+      }
+
+      state.foliagePlanes.forEach((leaf) => {
+        const d = leaf.userData;
+        d.isCleared = false;
+        d.restPos.copy(d.homePos);
+        d.restRotZ = d.homeRotZ;
+        d.velocity.set(0, 0);
+        d.rotVelocity = 0;
+        leaf.scale.setScalar(0.0001);
+        leaf.position.set(d.homePos.x, d.homePos.y - d.planeHeight * 0.45, d.homePos.z);
+      });
+
+      if (bioParticles) bioParticles.visible = false;
+    }
+
+    function startMaterializationSequence() {
+      prepareForMaterialization();
+      state.materializing = true;
+      state.materializeStartTime = clock.getElapsedTime();
+      state.lastMaterializeRustleStage = 0;
+      showToast('Materializando ecosistema y escultura en el espacio...');
+    }
+
+    function updateMaterialization(elapsedTime) {
+      if (!state.materializing) return;
+      const t = elapsedTime - state.materializeStartTime;
+
+      // Etapa 1: Anillo de anclaje y Pedestal (0.0s - 0.55s)
+      const pedP = THREE.MathUtils.clamp(t / 0.52, 0, 1);
+      const pedEase = easeOutBack(pedP);
+      if (state.anchorRingGroup) state.anchorRingGroup.scale.setScalar(Math.max(0.001, pedEase));
+      if (state.pedestalGroup) state.pedestalGroup.scale.setScalar(Math.max(0.001, pedEase));
+
+      // Etapa 2: Escultura 3DModel.glb emerge sobre el pedestal (0.65s - 1.35s)
+      if (state.sculptureNode) {
+        const sculpP = THREE.MathUtils.clamp((t - 0.65) / 0.68, 0, 1);
+        const sculpEase = easeOutBack(sculpP);
+        const targetS = state.sculptureNode.userData.baseScale * Math.max(0.0001, sculpEase);
+        state.sculptureNode.scale.setScalar(targetS);
+        state.sculptureNode.position.y = state.sculptureNode.userData.baseY - (1 - sculpP) * 0.45;
+      }
+
+      // Etapa 3 y 4: Capas de vegetación brotan desde su raíz inferior
+      state.foliagePlanes.forEach((leaf) => {
+        const d = leaf.userData;
+        const leafP = THREE.MathUtils.clamp((t - d.matDelay) / d.matDuration, 0, 1);
+        const leafEase = easeOutBack(leafP);
+        const s = Math.max(0.0001, leafEase);
+        leaf.scale.set(s, s, s);
+        leaf.position.x = d.homePos.x;
+        leaf.position.y = d.homePos.y - (1 - leafP) * (d.planeHeight * 0.45);
+        leaf.rotation.z = d.homeRotZ + (1 - leafP) * 0.18;
+      });
+
+      // Sonidos sutiles de brote durante la materialización
+      if (t > 0.3 && state.lastMaterializeRustleStage < 1) {
+        state.lastMaterializeRustleStage = 1;
+        playFoliageRustle(0.5);
+      } else if (t > 1.15 && state.lastMaterializeRustleStage < 2) {
+        state.lastMaterializeRustleStage = 2;
+        playFoliageRustle(0.75);
+      }
+
+      // Fin de materialización -> Activar dinámica interactiva
+      if (t >= state.materializeDuration) {
+        state.materializing = false;
+        state.interactionEnabled = true;
+        if (bioParticles) bioParticles.visible = true;
+        discoveryLabel.textContent = 'Despeja la selva';
+        statusDot.className = 'w-2 h-2 rounded-full bg-amber-300 animate-ping shrink-0';
+        onboardingHint.classList.remove('opacity-0');
+        showToast('¡Escena anclada! Aparta 5 plantas para descubrir la escultura');
+
+        setTimeout(() => {
+          if (!state.hasInteracted) onboardingHint.classList.add('opacity-0');
+        }, 4000);
+      }
+    }
+
+    /* =========================================================================
+       6. TEXTURAS BOTÁNICAS Y PARTÍCULAS (AMBIENTE + ONDA EXPANSIVA)
+       ========================================================================= */
     async function loadBaseVegetationTextures() {
       const texLoader = new THREE.TextureLoader();
       texLoader.setCrossOrigin('anonymous');
@@ -1124,22 +1268,6 @@
           ctx.fill();
           ctx.restore();
         }
-
-        const rocks = [
-          { rx: cx - 125, ry: 535, rw: 115, rh: 82, col1: '#44403c', col2: '#1c1917' },
-          { rx: cx + 115, ry: 540, rw: 110, rh: 78, col1: '#57534e', col2: '#292524' },
-          { rx: cx,       ry: 548, rw: 155, rh: 96, col1: '#78716c', col2: '#292524' }
-        ];
-        rocks.forEach((r) => {
-          const rGrad = ctx.createRadialGradient(r.rx - 20, r.ry - 25, 10, r.rx, r.ry, r.rw);
-          rGrad.addColorStop(0, r.col1);
-          rGrad.addColorStop(0.7, '#334139');
-          rGrad.addColorStop(1, r.col2);
-          ctx.fillStyle = rGrad;
-          ctx.beginPath();
-          ctx.ellipse(r.rx, r.ry, r.rw, r.rh, 0, 0, Math.PI * 2);
-          ctx.fill();
-        });
       } else if (assetKey === 'arbusto') {
         const count = 15;
         for (let i = 0; i < count; i++) {
@@ -1192,11 +1320,8 @@
       return tex;
     }
 
-    /* =========================================================================
-       PARTÍCULAS BIOLUMINISCENTES
-       ========================================================================= */
     function createLuminescentParticles() {
-      if (bioParticles) scene.remove(bioParticles);
+      if (bioParticles) worldAnchorGroup.remove(bioParticles);
 
       const count = CONFIG.particleCount;
       const geo = new THREE.BufferGeometry();
@@ -1265,7 +1390,7 @@
             float pulse = 0.55 + 0.45 * sin(uTime * 2.5 + aPhase);
             vPulse = pulse;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = aSize * (44.0 * pulse) * uPixelRatio * (1.0 / max(1.2, -mvPosition.z));
+            gl_PointSize = aSize * (42.0 * pulse) * uPixelRatio * (1.0 / max(1.2, -mvPosition.z));
             gl_Position = projectionMatrix * mvPosition;
           }
         `,
@@ -1288,43 +1413,187 @@
       });
 
       bioParticles = new THREE.Points(geo, mat);
-      scene.add(bioParticles);
+      worldAnchorGroup.add(bioParticles);
+    }
+
+    function createRevealBurstParticles() {
+      if (burstParticles) worldAnchorGroup.remove(burstParticles);
+
+      const count = CONFIG.burstParticleCount;
+      const geo = new THREE.BufferGeometry();
+      const positions = new Float32Array(count * 3);
+      const colors = new Float32Array(count * 3);
+      const sizes = new Float32Array(count);
+
+      const palette = [
+        new THREE.Color('#fffbeb'),
+        new THREE.Color('#fde047'),
+        new THREE.Color('#34d399'),
+        new THREE.Color('#2dd4bf')
+      ];
+
+      state.burstData = [];
+      for (let i = 0; i < count; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const speed = 1.4 + Math.random() * 2.6;
+
+        state.burstData.push({
+          vx: Math.sin(phi) * Math.cos(theta) * speed,
+          vy: Math.sin(phi) * Math.sin(theta) * speed * 0.85 + 0.35,
+          vz: Math.cos(phi) * speed
+        });
+
+        const c = palette[i % palette.length];
+        colors[i * 3] = c.r;
+        colors[i * 3 + 1] = c.g;
+        colors[i * 3 + 2] = c.b;
+        sizes[i] = 1.4 + Math.random() * 2.2;
+      }
+
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const mat = new THREE.PointsMaterial({
+        size: 0.11,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      burstParticles = new THREE.Points(geo, mat);
+      burstParticles.visible = false;
+      worldAnchorGroup.add(burstParticles);
+    }
+
+    function triggerBurstWave() {
+      if (!burstParticles) return;
+      state.burstActive = true;
+      state.burstStartTime = clock.getElapsedTime();
+      burstParticles.visible = true;
+      burstParticles.material.opacity = 1.0;
+
+      const posAttr = burstParticles.geometry.attributes.position;
+      for (let i = 0; i < CONFIG.burstParticleCount; i++) {
+        posAttr.setXYZ(i, 0, 0.15, 0);
+      }
+      posAttr.needsUpdate = true;
     }
 
     /* =========================================================================
-       INTERACCIÓN: 20% DE AVANCE POR PLANTA DESPEJADA
+       7. DESPLIEGUE AR ESPACIAL, GIROSCOPIO 3DoF E INTERACCIÓN
        ========================================================================= */
+    function setupSpatialGyroscope() {
+      const attachListener = () => {
+        window.addEventListener('deviceorientation', (e) => {
+          if (e.beta === null || e.gamma === null) return;
+          state.gyroAvailable = true;
+
+          if (state.gyroBaseline.beta === null) {
+            state.gyroBaseline.alpha = e.alpha || 0;
+            state.gyroBaseline.beta = e.beta;
+            state.gyroBaseline.gamma = e.gamma;
+          }
+
+          const dGamma = THREE.MathUtils.clamp((e.gamma - state.gyroBaseline.gamma) / 35, -1.2, 1.2);
+          const dBeta = THREE.MathUtils.clamp((e.beta - state.gyroBaseline.beta) / 35, -1.0, 1.0);
+
+          state.gyroOffset.set(dGamma * 1.35, -dBeta * 0.95);
+        });
+      };
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then((res) => { if (res === 'granted') attachListener(); })
+          .catch(() => {});
+      } else {
+        attachListener();
+      }
+    }
+
+    function recenterSpatialAnchor() {
+      state.gyroBaseline.alpha = null;
+      state.gyroBaseline.beta = null;
+      state.gyroBaseline.gamma = null;
+      state.gyroOffset.set(0, 0);
+      state.smoothedGyro.set(0, 0);
+      worldAnchorGroup.position.set(0, 0, 0);
+      worldAnchorGroup.rotation.set(0, 0, 0);
+      showToast('Instalación AR re-anclada frente a ti');
+    }
+
+    async function launchExperience(useARCamera) {
+      initAudio();
+      setupSpatialGyroscope();
+
+      if (useARCamera) {
+        await enableARCameraStream();
+      }
+
+      loadingScreen.classList.add('opacity-0', 'pointer-events-none');
+      uiLayer.classList.add('visible');
+      startMaterializationSequence();
+    }
+
+    async function enableARCameraStream() {
+      const btnText = document.getElementById('camera-btn-text');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false
+        });
+        videoElement.srcObject = stream;
+        await videoElement.play();
+        videoElement.classList.add('active');
+        backdropElement.style.opacity = '0';
+        godRaysElement.style.opacity = '0.35';
+        if (jungleEnvironmentGroup) jungleEnvironmentGroup.visible = false;
+        if (state.arShadowFloor) state.arShadowFloor.visible = true;
+        scene.fog = null;
+        state.cameraActive = true;
+        btnText.textContent = 'Modo Virtual';
+        recenterSpatialAnchor();
+      } catch (err) {
+        showToast('Cámara no disponible; iniciando en entorno virtual 3D');
+      }
+    }
+
+    async function toggleARCamera() {
+      const btnText = document.getElementById('camera-btn-text');
+      if (state.cameraActive) {
+        const stream = videoElement.srcObject;
+        if (stream) stream.getTracks().forEach((t) => t.stop());
+        videoElement.srcObject = null;
+        videoElement.classList.remove('active');
+        backdropElement.style.opacity = '1';
+        godRaysElement.style.opacity = '1';
+        if (jungleEnvironmentGroup) jungleEnvironmentGroup.visible = true;
+        if (state.arShadowFloor) state.arShadowFloor.visible = false;
+        scene.fog = new THREE.FogExp2(0x062118, 0.062);
+        state.cameraActive = false;
+        btnText.textContent = 'Cámara AR';
+        showToast('Entorno virtual de selva activo');
+        return;
+      }
+      await enableARCameraStream();
+      startMaterializationSequence();
+    }
+
     function setupInteractionEvents() {
       const dom = renderer.domElement;
 
-      dom.addEventListener('pointerdown', onPointerDown, { passive: false });
-      window.addEventListener('pointermove', onPointerMove, { passive: false });
-      window.addEventListener('pointerup', onPointerUp, { passive: false });
-      window.addEventListener('pointercancel', onPointerUp, { passive: false });
-
+      document.getElementById('btn-launch-ar').addEventListener('click', () => launchExperience(true));
+      document.getElementById('btn-launch-virtual').addEventListener('click', () => launchExperience(false));
+      document.getElementById('btn-reanchor').addEventListener('click', recenterSpatialAnchor);
       document.getElementById('btn-toggle-camera').addEventListener('click', toggleARCamera);
 
       document.getElementById('btn-reset').addEventListener('click', () => {
-        state.clearedLeavesCount = 0;
-        state.discoveryCompleted = false;
-        state.revealFlashActive = false;
-        restoreSculptureOriginalMaterials();
-
-        state.foliagePlanes.forEach((leaf) => {
-          const d = leaf.userData;
-          d.isCleared = false;
-          d.restPos.copy(d.homePos);
-          d.restRotZ = d.homeRotZ;
-          d.velocity.set(0, 0);
-          d.rotVelocity = 0;
-        });
         state.modelTargetRotX = 0;
         state.modelTargetRotY = 0;
-        updateDiscoveryUI();
-        onboardingHint.classList.remove('opacity-0');
-        hintText.textContent = 'Aparta las hojas una por una (20% por planta) para descubrir la escultura';
-        playFoliageRustle(0.95);
-        showToast('Vegetación restaurada');
+        recenterSpatialAnchor();
+        startMaterializationSequence();
       });
 
       document.getElementById('btn-sound').addEventListener('click', () => {
@@ -1334,6 +1603,11 @@
         document.getElementById('icon-sound-on').classList.toggle('text-stone-500', !state.soundEnabled);
         showToast(state.soundEnabled ? 'Sonido activado' : 'Sonido silenciado');
       });
+
+      dom.addEventListener('pointerdown', onPointerDown, { passive: false });
+      window.addEventListener('pointermove', onPointerMove, { passive: false });
+      window.addEventListener('pointerup', onPointerUp, { passive: false });
+      window.addEventListener('pointercancel', onPointerUp, { passive: false });
     }
 
     function updatePointerCoords(clientX, clientY) {
@@ -1355,13 +1629,11 @@
     function onPointerDown(e) {
       e.preventDefault();
       initAudio();
+      if (!state.interactionEnabled) return;
+
       state.pointerDown = true;
       updatePointerCoords(e.clientX, e.clientY);
       touchRipple.classList.add('active');
-
-      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
 
       if (!state.hasInteracted) {
         state.hasInteracted = true;
@@ -1386,7 +1658,7 @@
 
     function onPointerMove(e) {
       updatePointerCoords(e.clientX, e.clientY);
-      if (!state.pointerDown) return;
+      if (!state.pointerDown || !state.interactionEnabled) return;
 
       if (!state.discoveryCompleted && !state.rotatingModel) {
         if (state.activeDraggedLeaf) {
@@ -1455,7 +1727,7 @@
     }
 
     function updateDiscoveryUI() {
-      // 5 plantas = 100% (20% por cada una)
+      // Exactamente 20% de avance por cada planta despejada (5 plantas = 100%)
       const percent = Math.min(100, state.clearedLeavesCount * 20);
 
       discoveryCount.textContent = `${percent}%`;
@@ -1487,59 +1759,40 @@
 
       state.revealFlashActive = true;
       state.revealFlashStartTime = clock.getElapsedTime();
+      triggerBurstWave();
 
       playRevealChime();
       showToast('¡Escultura descubierta! Arrastra el centro para girarla 360°');
     }
 
-    async function toggleARCamera() {
-      const btnText = document.getElementById('camera-btn-text');
-      if (state.cameraActive) {
-        const stream = videoElement.srcObject;
-        if (stream) stream.getTracks().forEach((t) => t.stop());
-        videoElement.srcObject = null;
-        videoElement.classList.remove('active');
-        backdropElement.style.opacity = '1';
-        if (jungleEnvironmentGroup) jungleEnvironmentGroup.visible = true;
-        scene.fog = new THREE.FogExp2(0x062118, 0.062);
-        state.cameraActive = false;
-        btnText.textContent = 'Cámara AR';
-        showToast('Entorno de selva activo');
-        return;
-      }
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
-          audio: false
-        });
-        videoElement.srcObject = stream;
-        await videoElement.play();
-        videoElement.classList.add('active');
-        backdropElement.style.opacity = '0';
-        if (jungleEnvironmentGroup) jungleEnvironmentGroup.visible = false;
-        scene.fog = null;
-        state.cameraActive = true;
-        btnText.textContent = 'Fondo Selva';
-        showToast('Cámara AR activa con capas de vegetación');
-      } catch (err) {
-        showToast('Cámara no disponible en este dispositivo');
-      }
-    }
-
     /* =========================================================================
-       BUCLE DE RENDERIZADO Y DESTELLO
+       8. BUCLE PRINCIPAL DE ANIMACIÓN Y RENDERIZADO ESPACIAL
        ========================================================================= */
     function animate() {
       const elapsedTime = clock.getElapsedTime();
 
-      state.smoothedParallax.x = THREE.MathUtils.lerp(state.smoothedParallax.x, state.pointerNDC.x * 0.22, 0.05);
+      // Seguimiento espacial: combina giroscopio 3DoF + paralaje para anclar la escena al espacio físico
+      state.smoothedGyro.x = THREE.MathUtils.lerp(state.smoothedGyro.x, state.gyroOffset.x, 0.07);
+      state.smoothedGyro.y = THREE.MathUtils.lerp(state.smoothedGyro.y, state.gyroOffset.y, 0.07);
+      state.smoothedParallax.x = THREE.MathUtils.lerp(state.smoothedParallax.x, state.pointerNDC.x * 0.20, 0.05);
       state.smoothedParallax.y = THREE.MathUtils.lerp(state.smoothedParallax.y, state.pointerNDC.y * 0.12, 0.05);
-      camera.position.x = state.smoothedParallax.x;
-      camera.position.y = 0.18 + state.smoothedParallax.y;
-      camera.lookAt(0, 0.08, 0);
 
-      // Destello brillante suave con vuelta al color original
+      camera.position.x = state.smoothedParallax.x + state.smoothedGyro.x;
+      camera.position.y = 0.18 + state.smoothedParallax.y + state.smoothedGyro.y;
+      camera.lookAt(state.smoothedGyro.x * 0.25, 0.08 + state.smoothedGyro.y * 0.2, 0);
+
+      // Coreografía de materialización inicial
+      if (state.materializing) {
+        updateMaterialization(elapsedTime);
+      }
+
+      // Pulso sutil del anillo holográfico de anclaje en el suelo
+      if (state.anchorRingGroup && !state.materializing) {
+        const ringPulse = 1.0 + Math.sin(elapsedTime * 2.2) * 0.03;
+        state.anchorRingGroup.scale.setScalar(ringPulse);
+      }
+
+      // Destello brillante de la escultura y recuperación a su color normal
       if (state.revealFlashActive) {
         const flashElapsed = elapsedTime - state.revealFlashStartTime;
         const t = Math.min(1.0, Math.max(0.0, flashElapsed / state.revealFlashDuration));
@@ -1579,46 +1832,74 @@
         }
       }
 
-      state.foliagePlanes.forEach((leaf) => {
-        const d = leaf.userData;
-
-        if (d.interactive) {
-          leaf.position.x += d.velocity.x;
-          leaf.position.y += d.velocity.y;
-          leaf.rotation.z += d.rotVelocity;
-
-          d.velocity.multiplyScalar(CONFIG.damping);
-          d.rotVelocity *= CONFIG.damping;
-
-          leaf.position.x = THREE.MathUtils.lerp(leaf.position.x, d.restPos.x, CONFIG.restLerpSpeed);
-          leaf.position.y = THREE.MathUtils.lerp(leaf.position.y, d.restPos.y, CONFIG.restLerpSpeed);
-          leaf.rotation.z = THREE.MathUtils.lerp(leaf.rotation.z, d.restRotZ, CONFIG.restLerpSpeed);
+      // Animación de la onda expansiva de partículas al descubrir la escultura
+      if (state.burstActive && burstParticles) {
+        const burstElapsed = elapsedTime - state.burstStartTime;
+        const duration = 1.65;
+        if (burstElapsed < duration) {
+          const progress = burstElapsed / duration;
+          const posAttr = burstParticles.geometry.attributes.position;
+          for (let i = 0; i < CONFIG.burstParticleCount; i++) {
+            const bd = state.burstData[i];
+            const easeOut = 1 - Math.pow(1 - progress, 2.2);
+            posAttr.setXYZ(
+              i,
+              bd.vx * easeOut * 1.4,
+              0.15 + bd.vy * easeOut * 1.4,
+              bd.vz * easeOut * 1.4
+            );
+          }
+          posAttr.needsUpdate = true;
+          burstParticles.material.opacity = Math.max(0, 1 - progress);
+        } else {
+          state.burstActive = false;
+          burstParticles.visible = false;
         }
+      }
 
-        const posAttr = leaf.geometry.attributes.position;
-        const basePos = d.basePositions;
-        const halfH = d.planeHeight * 0.5;
-        const windAmp = d.windAmplitude;
+      // Física de hojas y viento cuando ya terminó la materialización
+      if (!state.materializing) {
+        state.foliagePlanes.forEach((leaf) => {
+          const d = leaf.userData;
 
-        for (let v = 0; v < posAttr.count; v++) {
-          const idx = v * 3;
-          const bx = basePos[idx];
-          const by = basePos[idx + 1];
+          if (d.interactive) {
+            leaf.position.x += d.velocity.x;
+            leaf.position.y += d.velocity.y;
+            leaf.rotation.z += d.rotVelocity;
 
-          const tipWeight = THREE.MathUtils.clamp((by + halfH) / d.planeHeight, 0.0, 1.0);
-          const wave1 = Math.sin(elapsedTime * d.swaySpeed + bx * 1.5 + by * 1.1 + d.swayPhase);
-          const wave2 = Math.cos(elapsedTime * (d.swaySpeed * 0.78) - by * 1.6 + d.swayPhase);
+            d.velocity.multiplyScalar(CONFIG.damping);
+            d.rotVelocity *= CONFIG.damping;
 
-          const offsetX = wave1 * windAmp * tipWeight - (d.velocity.x * 1.4 * tipWeight);
-          const offsetY = wave2 * (windAmp * 0.4) * tipWeight - (d.velocity.y * 1.1 * tipWeight);
-          const offsetZ = wave1 * (windAmp * 0.75) * tipWeight;
+            leaf.position.x = THREE.MathUtils.lerp(leaf.position.x, d.restPos.x, CONFIG.restLerpSpeed);
+            leaf.position.y = THREE.MathUtils.lerp(leaf.position.y, d.restPos.y, CONFIG.restLerpSpeed);
+            leaf.rotation.z = THREE.MathUtils.lerp(leaf.rotation.z, d.restRotZ, CONFIG.restLerpSpeed);
+          }
 
-          posAttr.setXYZ(v, bx + offsetX, by + offsetY, offsetZ);
-        }
-        posAttr.needsUpdate = true;
-      });
+          const posAttr = leaf.geometry.attributes.position;
+          const basePos = d.basePositions;
+          const halfH = d.planeHeight * 0.5;
+          const windAmp = d.windAmplitude;
 
-      if (sculptureGroup) {
+          for (let v = 0; v < posAttr.count; v++) {
+            const idx = v * 3;
+            const bx = basePos[idx];
+            const by = basePos[idx + 1];
+
+            const tipWeight = THREE.MathUtils.clamp((by + halfH) / d.planeHeight, 0.0, 1.0);
+            const wave1 = Math.sin(elapsedTime * d.swaySpeed + bx * 1.5 + by * 1.1 + d.swayPhase);
+            const wave2 = Math.cos(elapsedTime * (d.swaySpeed * 0.78) - by * 1.6 + d.swayPhase);
+
+            const offsetX = wave1 * windAmp * tipWeight - (d.velocity.x * 1.4 * tipWeight);
+            const offsetY = wave2 * (windAmp * 0.4) * tipWeight - (d.velocity.y * 1.1 * tipWeight);
+            const offsetZ = wave1 * (windAmp * 0.75) * tipWeight;
+
+            posAttr.setXYZ(v, bx + offsetX, by + offsetY, offsetZ);
+          }
+          posAttr.needsUpdate = true;
+        });
+      }
+
+      if (sculptureGroup && state.interactionEnabled) {
         if (!state.rotatingModel) {
           state.modelTargetRotY += 0.004;
         }
@@ -1626,7 +1907,7 @@
         sculptureGroup.rotation.x = THREE.MathUtils.lerp(sculptureGroup.rotation.x, state.modelTargetRotX, 0.08);
       }
 
-      if (bioParticles && state.particleData.length > 0) {
+      if (bioParticles && bioParticles.visible && state.particleData.length > 0) {
         bioParticles.material.uniforms.uTime.value = elapsedTime;
         const posAttr = bioParticles.geometry.attributes.position;
         for (let i = 0; i < CONFIG.particleCount; i++) {
