@@ -109,7 +109,7 @@
       cursor: grabbing;
     }
 
-    /* Viñeta orgánica suave que enmarca la escena sin oscurecer el centro */
+    /* Viñeta orgánica suave que enmarca la escena */
     .jungle-vignette {
       position: fixed;
       inset: 0;
@@ -118,7 +118,7 @@
       background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(1, 10, 6, 0.68) 100%);
     }
 
-    /* Capa HUD minimalista optimizada para móvil horizontal y vertical */
+    /* Capa HUD minimalista */
     #ui-layer {
       position: fixed;
       inset: 0;
@@ -134,7 +134,6 @@
       pointer-events: auto;
     }
 
-    /* Animación de la mano guía inicial */
     @keyframes swipeHint {
       0%, 100% { transform: translateX(-22px) rotate(-8deg); opacity: 0.5; }
       50% { transform: translateX(22px) rotate(8deg); opacity: 1; }
@@ -144,16 +143,15 @@
       animation: swipeHint 2.2s ease-in-out infinite;
     }
 
-    /* Rastro visual del dedo al apartar hojas */
     #touch-ripple {
       position: fixed;
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       border-radius: 9999px;
       pointer-events: none;
       z-index: 9;
-      background: radial-gradient(circle, rgba(253, 224, 71, 0.5) 0%, rgba(52, 211, 153, 0.24) 55%, transparent 75%);
-      box-shadow: 0 0 22px rgba(110, 231, 183, 0.6);
+      background: radial-gradient(circle, rgba(253, 224, 71, 0.45) 0%, rgba(52, 211, 153, 0.2) 55%, transparent 75%);
+      box-shadow: 0 0 20px rgba(110, 231, 183, 0.55);
       transform: translate(-50%, -50%) scale(0.4);
       opacity: 0;
       transition: opacity 0.2s ease, transform 0.15s ease;
@@ -196,13 +194,10 @@
     <span id="loading-percent" class="text-[11px] font-mono text-stone-400 mt-2">0%</span>
   </div>
 
-  <!-- 6. INTERFAZ UI/UX MINIMALISTA E INMERSIVA -->
+  <!-- 6. INTERFAZ UI/UX -->
   <div id="ui-layer" class="p-3 sm:p-4">
-    
-    <!-- Barra Superior Compacta: Progreso de Descubrimiento + Acciones Rápidas -->
-    <header class="w-full flex flex-wrap items-center justify-between gap-2">
-      
-      <!-- Píldora de Progreso de Descubrimiento -->
+    <header class="w-full flex items-center justify-between gap-2">
+      <!-- Progreso de Descubrimiento -->
       <div id="discovery-pill" class="flex items-center gap-3 bg-stone-950/65 backdrop-blur-md border border-emerald-400/25 rounded-full pl-3.5 pr-4 py-1.5 shadow-xl transition-all duration-500">
         <span id="status-dot" class="w-2 h-2 rounded-full bg-amber-300 animate-ping shrink-0"></span>
         <div class="flex flex-col">
@@ -210,16 +205,15 @@
             <span id="discovery-label" class="text-[11px] sm:text-xs font-medium text-emerald-50 tracking-wide">Despeja la selva</span>
             <span id="discovery-count" class="text-[11px] font-mono font-semibold text-amber-300">0%</span>
           </div>
-          <div class="w-24 sm:w-36 h-1 bg-stone-800/90 rounded-full overflow-hidden mt-0.5">
+          <div class="w-28 sm:w-36 h-1 bg-stone-800/90 rounded-full overflow-hidden mt-0.5">
             <div id="discovery-bar" class="h-full bg-gradient-to-r from-emerald-400 to-amber-300 w-0 transition-all duration-300"></div>
           </div>
         </div>
       </div>
 
-      <!-- Controles Flotantes Traslúcidos -->
+      <!-- Controles Superiores -->
       <div class="flex items-center gap-1.5 interactive-ui">
-        
-        <!-- Botón Pantalla Completa (Icono) -->
+        <!-- Pantalla Completa -->
         <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg id="icon-expand" class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -229,7 +223,7 @@
           </svg>
         </button>
 
-        <!-- Reiniciar experiencia -->
+        <!-- Reiniciar -->
         <button id="btn-reset" title="Cubrir escultura nuevamente" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -237,8 +231,8 @@
           <span class="hidden md:inline">Reiniciar</span>
         </button>
 
-        <!-- Sonido de Efectos Táctiles y Destello -->
-        <button id="btn-sound" title="Sonido de interacción y descubrimiento" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+        <!-- Sonido -->
+        <button id="btn-sound" title="Sonido interactivo" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
@@ -246,7 +240,7 @@
       </div>
     </header>
 
-    <!-- Guía Gestual Central (Se desvanece a los 3 segundos o al interactuar) -->
+    <!-- Guía Gestual Central -->
     <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none transition-opacity duration-700">
       <div class="w-11 h-11 rounded-full bg-stone-950/60 border border-amber-300/40 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
         <svg class="w-6 h-6 text-amber-300 animate-swipe-hand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,11 +248,11 @@
         </svg>
       </div>
       <p id="hint-text" class="px-3.5 py-1 rounded-full bg-stone-950/70 backdrop-blur-md border border-white/10 text-emerald-50 text-xs font-medium shadow-xl">
-        Desliza tu dedo para apartar las plantas y descubrir la escultura
+        Aparta las hojas una por una (20% por planta) para descubrir la escultura
       </p>
     </div>
 
-    <!-- Pie de Página Minimalista -->
+    <!-- Pie de Página -->
     <footer class="w-full flex items-end justify-between gap-2">
       <div id="toast-message" class="bg-stone-950/80 backdrop-blur-md border border-emerald-400/30 text-emerald-100 px-3.5 py-1.5 rounded-full text-xs shadow-xl transition-all duration-300 opacity-0 pointer-events-none transform translate-y-2">
         Selva lista
@@ -282,16 +276,18 @@
 
     const CONFIG = {
       cameraDistance: 5.2,
-      discoveryThreshold: 1.0,
-      plantsRequiredForReveal: 5,
+      discoveryThreshold: 0.82,
       modelRotation: { x: 0, y: 0, z: 0 }, 
+      // Rutas corregidas: incluye '3DModel.glb' con mayúscula exacta del repositorio
       modelPaths: [
+        'models/3DModel.glb',
+        `${REPO_RAW_BASE}models/3DModel.glb`,
         'models/3Dmodel.glb',
-        'assets/3Dmodel.glb',
-        '3Dmodel.glb',
         `${REPO_RAW_BASE}models/3Dmodel.glb`,
-        `${REPO_RAW_BASE}assets/3Dmodel.glb`,
-        `${REPO_RAW_BASE}3Dmodel.glb`
+        '3DModel.glb',
+        `${REPO_RAW_BASE}3DModel.glb`,
+        'assets/3DModel.glb',
+        `${REPO_RAW_BASE}assets/3DModel.glb`
       ],
       vegetationAssets: [
         {
@@ -320,10 +316,8 @@
         }
       ],
       particleCount: 240,
-      shockwaveParticleCount: 180,
       damping: 0.89,
       restLerpSpeed: 0.08,
-      // Radio ampliado proporcionalmente al mayor tamaño de las plantas
       brushRadius: 1.28
     };
 
@@ -341,7 +335,6 @@
       pointerNDC: new THREE.Vector2(0, 0),
       smoothedParallax: new THREE.Vector2(0, 0),
       lastPointerWorld: new THREE.Vector3(),
-      lastBrushMoveWorld: new THREE.Vector3(),
       lastInspectClient: { x: 0, y: 0 },
       modelTargetRotY: 0,
       modelTargetRotX: 0,
@@ -350,12 +343,10 @@
       audioCtx: null,
       lastRustleTime: 0,
       particleData: [],
-      // Estado del destello brillante y onda expansiva de la escultura
       sculptureMeshes: [],
       revealFlashActive: false,
       revealFlashStartTime: 0,
       revealFlashDuration: 1.85,
-      shockwaveData: [],
       baseExposure: 1.25,
       baseCenterSpotIntensity: 3.1
     };
@@ -384,23 +375,17 @@
 
     let scene, camera, renderer, raycaster;
     let jungleEnvironmentGroup, sculptureGroup, foliageRootGroup, bioParticles;
-    let revealShockwaveParticles, revealShockwaveRing;
     let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight;
     let cachedTexturesByKey = null;
     const clock = new THREE.Clock();
 
-    /* =========================================================================
-       LÓGICA DE PANTALLA COMPLETA
-       ========================================================================= */
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-          showToast(`Pantalla completa no disponible en este contenedor`);
+          showToast(`Pantalla completa: ${err.message}`);
         });
       } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        }
+        if (document.exitFullscreen) document.exitFullscreen();
       }
     }
 
@@ -417,10 +402,10 @@
     btnFullscreen.addEventListener('click', toggleFullscreen);
 
     /* =========================================================================
-       1. MOTOR DE AUDIO PROCEDURAL: HOJAS TÁCTILES Y DESTELLO DE ESCULTURA
+       AUDIO PROCEDURAL (ROCE GRANULAR Y DESTELLO)
        ========================================================================= */
     function initAudio() {
-      if (!state.audioCtx) {
+      if (!state.audioCtx && state.soundEnabled) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) state.audioCtx = new AudioContext();
       }
@@ -429,99 +414,82 @@
       }
     }
 
-    // Síntesis granular de hojas reales ("rustling leaves") sin barridos de tono tipo karate
     function playFoliageRustle(intensity = 0.55) {
       const now = performance.now();
-      if (!state.soundEnabled || !state.audioCtx || now - state.lastRustleTime < 65) return;
+      if (!state.soundEnabled || !state.audioCtx || now - state.lastRustleTime < 52) return;
       state.lastRustleTime = now;
 
       try {
         const ctx = state.audioCtx;
-        const clampedIntensity = THREE.MathUtils.clamp(intensity, 0.25, 1.0);
-        const duration = 0.20 + Math.random() * 0.08;
+        const duration = 0.18 + Math.random() * 0.07;
         const bufferSize = Math.floor(ctx.sampleRate * duration);
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
 
-        // Textura granular de 5 micro-pulsos asimétricos que imitan el roce entre varias hojas
-        const grainCount = 5;
-        const grainCenters = [];
-        for (let g = 0; g < grainCount; g++) {
-          grainCenters.push((g + 0.35 + Math.random() * 0.3) / grainCount);
-        }
+        let b0 = 0, b1 = 0;
+        const microGrains = 4 + Math.floor(Math.random() * 3);
 
-        let pinkState = 0.0;
         for (let i = 0; i < bufferSize; i++) {
-          const progress = i / bufferSize;
+          const t = i / bufferSize;
           const white = Math.random() * 2 - 1;
-          pinkState = 0.68 * pinkState + 0.32 * white;
-          const rawLeafNoise = white * 0.65 + pinkState * 0.35;
+          b0 = 0.96 * b0 + white * 0.04;
+          b1 = 0.92 * b1 + white * 0.08;
+          const pinkNoise = (b0 + b1) * 3.2;
 
-          let grainEnv = 0.0;
-          for (let g = 0; g < grainCount; g++) {
-            const dist = (progress - grainCenters[g]) / 0.095;
-            grainEnv += Math.exp(-(dist * dist)) * (0.65 + 0.35 * Math.sin(i * 0.08 + g));
-          }
-
-          const windowEnv = Math.sin(progress * Math.PI);
-          data[i] = rawLeafNoise * Math.min(1.0, grainEnv * 0.58) * windowEnv;
+          const grainMod = Math.pow(Math.sin(t * Math.PI), 0.85) * (0.65 + 0.35 * Math.sin(t * Math.PI * microGrains * 4.0));
+          data[i] = pinkNoise * grainMod;
         }
 
         const noise = ctx.createBufferSource();
         noise.buffer = buffer;
 
-        // Filtro highpass a 1150Hz para eliminar cualquier golpe grave
-        const highpass = ctx.createBiquadFilter();
-        highpass.type = 'highpass';
-        highpass.frequency.setValueAtTime(1150, ctx.currentTime);
-        highpass.Q.setValueAtTime(0.7, ctx.currentTime);
+        const hp = ctx.createBiquadFilter();
+        hp.type = 'highpass';
+        hp.frequency.setValueAtTime(1150, ctx.currentTime);
 
-        const bandpassLow = ctx.createBiquadFilter();
-        bandpassLow.type = 'bandpass';
-        bandpassLow.frequency.setValueAtTime(2400, ctx.currentTime);
-        bandpassLow.Q.setValueAtTime(0.85, ctx.currentTime);
+        const bp1 = ctx.createBiquadFilter();
+        bp1.type = 'bandpass';
+        bp1.frequency.setValueAtTime(2400 + Math.random() * 450, ctx.currentTime);
+        bp1.Q.setValueAtTime(0.85, ctx.currentTime);
 
-        const bandpassHigh = ctx.createBiquadFilter();
-        bandpassHigh.type = 'bandpass';
-        bandpassHigh.frequency.setValueAtTime(3400, ctx.currentTime);
-        bandpassHigh.Q.setValueAtTime(0.85, ctx.currentTime);
+        const bp2 = ctx.createBiquadFilter();
+        bp2.type = 'bandpass';
+        bp2.frequency.setValueAtTime(3400 + Math.random() * 550, ctx.currentTime);
+        bp2.Q.setValueAtTime(1.05, ctx.currentTime);
 
         const gain = ctx.createGain();
-        const targetGain = THREE.MathUtils.lerp(0.035, 0.08, clampedIntensity);
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + duration * 0.25);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+        const baseVol = THREE.MathUtils.clamp(intensity * 0.07, 0.02, 0.075);
+        gain.gain.setValueAtTime(0.001, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(baseVol, ctx.currentTime + 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
-        noise.connect(highpass);
-        highpass.connect(bandpassLow);
-        highpass.connect(bandpassHigh);
-        bandpassLow.connect(gain);
-        bandpassHigh.connect(gain);
+        noise.connect(hp);
+        hp.connect(bp1);
+        hp.connect(bp2);
+        bp1.connect(gain);
+        bp2.connect(gain);
         gain.connect(ctx.destination);
-
         noise.start();
       } catch (e) {}
     }
 
-    // Sonido de destello con volumen reducido y etéreo
     function playRevealChime() {
       if (!state.soundEnabled || !state.audioCtx) return;
       try {
         const ctx = state.audioCtx;
-        const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+        const notes = [523.25, 659.25, 783.99, 1046.5];
         notes.forEach((freq, idx) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
-          const startTime = ctx.currentTime + idx * 0.095;
-          osc.frequency.setValueAtTime(freq, startTime);
-          gain.gain.setValueAtTime(0.0001, startTime);
-          gain.gain.linearRampToValueAtTime(0.03, startTime + 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.0005, startTime + 1.55);
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+          gain.gain.setValueAtTime(0.0001, ctx.currentTime + idx * 0.08);
+          gain.gain.linearRampToValueAtTime(0.03, ctx.currentTime + idx * 0.08 + 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.08 + 1.4);
           osc.connect(gain);
           gain.connect(ctx.destination);
-          osc.start(startTime);
-          osc.stop(startTime + 1.6);
+          osc.start(ctx.currentTime + idx * 0.08);
+          osc.stop(ctx.currentTime + idx * 0.08 + 1.45);
         });
       } catch (e) {}
     }
@@ -538,7 +506,7 @@
     }
 
     /* =========================================================================
-       2. INICIALIZACIÓN DE ESCENA
+       INICIALIZACIÓN
        ========================================================================= */
     async function init() {
       updateLoading(15, 'Generando densa selva tropical...');
@@ -570,13 +538,12 @@
       updateLoading(45, 'Cargando escultura 3D en el claro de la selva...');
       await loadAndFrameCentralModel();
 
-      updateLoading(72, 'Colocando plantas grandes con distribución equilibrada...');
+      updateLoading(72, 'Colocando plantas grandes y equilibradas...');
       cachedTexturesByKey = await loadBaseVegetationTextures();
       buildLayeredJungle(cachedTexturesByKey);
 
-      updateLoading(92, 'Activando esporas bioluminiscentes y onda expansiva...');
+      updateLoading(92, 'Activando esporas bioluminiscentes...');
       createLuminescentParticles();
-      createRevealShockwaveSystem();
 
       setupInteractionEvents();
       window.addEventListener('resize', onWindowResize);
@@ -585,12 +552,9 @@
       
       setTimeout(() => {
         loadingScreen.classList.add('opacity-0', 'pointer-events-none');
-        
-        // Ocultar mensaje de "Desliza tu dedo" después de 3 segundos
         setTimeout(() => {
           onboardingHint.classList.add('opacity-0');
         }, 3000);
-
       }, 350);
 
       renderer.setAnimationLoop(animate);
@@ -779,7 +743,7 @@
     }
 
     /* =========================================================================
-       3. CARGA DEL MODELO 3D CENTRAL Y RESPALDO DE MATERIALES PARA EL DESTELLO
+       CARGA DEL MODELO 3D DESDE GITHUB
        ========================================================================= */
     async function loadAndFrameCentralModel() {
       sculptureGroup = new THREE.Group();
@@ -817,16 +781,19 @@
           loadedGLTF = await new Promise((resolve, reject) => {
             loader.load(path, resolve, undefined, reject);
           });
-          break;
+          if (loadedGLTF) {
+            console.log(`Modelo cargado exitosamente desde: ${path}`);
+            break;
+          }
         } catch (err) {
-          console.warn(`No se pudo cargar ${path}, intentando siguiente...`);
+          console.warn(`No se pudo cargar desde ${path}, intentando siguiente...`);
         }
       }
 
       if (loadedGLTF) {
         mountAndComputeBoundingBox(loadedGLTF.scene);
       } else {
-        console.warn("Usando modelo de respaldo procedural.");
+        console.warn("No se pudo cargar 3DModel.glb, usando respaldo procedural.");
         const fallbackModel = createSurrealSculptureFallback();
         mountAndComputeBoundingBox(fallbackModel);
       }
@@ -866,7 +833,6 @@
           child.castShadow = true;
           child.receiveShadow = true;
 
-          // Clonamos y respaldamos el estado original del material para restaurarlo tras el destello
           if (child.material) {
             if (Array.isArray(child.material)) {
               child.material = child.material.map((m) => m.clone());
@@ -906,7 +872,6 @@
       });
       if (centerSpotLight) centerSpotLight.intensity = state.baseCenterSpotIntensity;
       if (renderer) renderer.toneMappingExposure = state.baseExposure;
-      if (revealShockwaveRing) revealShockwaveRing.visible = false;
     }
 
     function createSurrealSculptureFallback() {
@@ -935,7 +900,7 @@
     }
 
     /* =========================================================================
-       4. ARQUITECTURA DE 8 CAPAS (PLANTAS MÁS GRANDES Y DESAGLOMERADAS)
+       8 CAPAS DE VEGETACIÓN
        ========================================================================= */
     function buildLayeredJungle(baseTextures) {
       if (foliageRootGroup) scene.remove(foliageRootGroup);
@@ -948,7 +913,6 @@
       state.clearedLeavesCount = 0;
       state.discoveryCompleted = false;
 
-      // Escalas incrementadas (+35% a +55%) y posiciones separadas para evitar aglomeración visual
       const layerBlueprints = [
         {
           layerIndex: 1, zDepth: -2.75, isStatic: false, windAmp: 0.015, interactive: false, coversSculpture: false,
@@ -1102,9 +1066,6 @@
       updateDiscoveryUI();
     }
 
-    /* =========================================================================
-       5. CARGA DE TEXTURAS PNG REALES Y RESPALDO BOTÁNICO
-       ========================================================================= */
     async function loadBaseVegetationTextures() {
       const texLoader = new THREE.TextureLoader();
       texLoader.setCrossOrigin('anonymous');
@@ -1178,11 +1139,6 @@
           ctx.beginPath();
           ctx.ellipse(r.rx, r.ry, r.rw, r.rh, 0, 0, Math.PI * 2);
           ctx.fill();
-
-          ctx.fillStyle = 'rgba(52, 211, 153, 0.35)';
-          ctx.beginPath();
-          ctx.ellipse(r.rx, r.ry - r.rh * 0.35, r.rw * 0.78, r.rh * 0.42, 0, Math.PI, Math.PI * 2);
-          ctx.fill();
         });
       } else if (assetKey === 'arbusto') {
         const count = 15;
@@ -1237,7 +1193,7 @@
     }
 
     /* =========================================================================
-       6. PARTÍCULAS BIOLUMINISCENTES Y ONDA EXPANSIVA DEL DESTELLO
+       PARTÍCULAS BIOLUMINISCENTES
        ========================================================================= */
     function createLuminescentParticles() {
       if (bioParticles) scene.remove(bioParticles);
@@ -1335,132 +1291,8 @@
       scene.add(bioParticles);
     }
 
-    // Sistema de onda expansiva bioluminiscente al revelar la escultura
-    function createRevealShockwaveSystem() {
-      if (revealShockwaveParticles) scene.remove(revealShockwaveParticles);
-      if (revealShockwaveRing) scene.remove(revealShockwaveRing);
-
-      const count = CONFIG.shockwaveParticleCount;
-      const geo = new THREE.BufferGeometry();
-      const positions = new Float32Array(count * 3);
-      const colors = new Float32Array(count * 3);
-      const sizes = new Float32Array(count);
-
-      const palette = [
-        new THREE.Color('#fffbeb'),
-        new THREE.Color('#fde047'),
-        new THREE.Color('#34d399'),
-        new THREE.Color('#2dd4bf')
-      ];
-
-      state.shockwaveData = [];
-
-      for (let i = 0; i < count; i++) {
-        positions[i * 3] = 0;
-        positions[i * 3 + 1] = 0.25;
-        positions[i * 3 + 2] = 0;
-
-        const c = palette[i % palette.length];
-        colors[i * 3] = c.r;
-        colors[i * 3 + 1] = c.g;
-        colors[i * 3 + 2] = c.b;
-
-        sizes[i] = 1.4 + Math.random() * 2.2;
-
-        // Dirección radial esférica con énfasis en el plano horizontal alrededor de la escultura
-        const theta = Math.random() * Math.PI * 2;
-        const phi = (Math.random() - 0.5) * Math.PI * 0.75;
-        const speed = 1.8 + Math.random() * 2.8;
-
-        state.shockwaveData.push({
-          vx: Math.cos(theta) * Math.cos(phi) * speed,
-          vy: Math.sin(phi) * speed * 0.85 + 0.35,
-          vz: Math.sin(theta) * Math.cos(phi) * speed
-        });
-      }
-
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
-
-      const mat = new THREE.ShaderMaterial({
-        uniforms: {
-          uOpacity: { value: 0.0 },
-          uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
-        },
-        vertexShader: `
-          attribute float aSize;
-          varying vec3 vColor;
-          uniform float uPixelRatio;
-          void main() {
-            vColor = color;
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = aSize * 54.0 * uPixelRatio * (1.0 / max(1.0, -mvPosition.z));
-            gl_Position = projectionMatrix * mvPosition;
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vColor;
-          uniform float uOpacity;
-          void main() {
-            float dist = length(gl_PointCoord - vec2(0.5));
-            if (dist > 0.5) discard;
-            float glow = pow(smoothstep(0.5, 0.0, dist), 1.5);
-            vec3 col = mix(vColor * 1.6, vec3(1.0, 1.0, 0.95), pow(glow, 2.2));
-            gl_FragColor = vec4(col, glow * uOpacity);
-          }
-        `,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        vertexColors: true
-      });
-
-      revealShockwaveParticles = new THREE.Points(geo, mat);
-      revealShockwaveParticles.visible = false;
-      scene.add(revealShockwaveParticles);
-
-      // Anillo luminoso expansivo alrededor de la escultura
-      const ringGeo = new THREE.RingGeometry(0.32, 0.48, 64);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0xfde047,
-        transparent: true,
-        opacity: 0.0,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-      revealShockwaveRing = new THREE.Mesh(ringGeo, ringMat);
-      revealShockwaveRing.rotation.x = -Math.PI / 2;
-      revealShockwaveRing.position.set(0, -0.62, 0);
-      revealShockwaveRing.visible = false;
-      scene.add(revealShockwaveRing);
-    }
-
-    function resetAndLaunchShockwave() {
-      if (!revealShockwaveParticles || !revealShockwaveRing) return;
-      const posAttr = revealShockwaveParticles.geometry.attributes.position;
-      for (let i = 0; i < CONFIG.shockwaveParticleCount; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const r = 0.08 + Math.random() * 0.14;
-        posAttr.setXYZ(
-          i,
-          Math.cos(angle) * r,
-          0.18 + (Math.random() - 0.5) * 0.35,
-          Math.sin(angle) * r
-        );
-      }
-      posAttr.needsUpdate = true;
-      revealShockwaveParticles.visible = true;
-      revealShockwaveParticles.material.uniforms.uOpacity.value = 1.0;
-
-      revealShockwaveRing.visible = true;
-      revealShockwaveRing.scale.setScalar(0.6);
-      revealShockwaveRing.material.opacity = 0.85;
-    }
-
     /* =========================================================================
-       7. MECÁNICA TÁCTIL, CONTROLES Y DISPARO DE SONIDO CONTINUO
+       INTERACCIÓN: 20% DE AVANCE POR PLANTA DESPEJADA
        ========================================================================= */
     function setupInteractionEvents() {
       const dom = renderer.domElement;
@@ -1473,11 +1305,9 @@
       document.getElementById('btn-toggle-camera').addEventListener('click', toggleARCamera);
 
       document.getElementById('btn-reset').addEventListener('click', () => {
-        initAudio();
         state.clearedLeavesCount = 0;
         state.discoveryCompleted = false;
         state.revealFlashActive = false;
-        if (revealShockwaveParticles) revealShockwaveParticles.visible = false;
         restoreSculptureOriginalMaterials();
 
         state.foliagePlanes.forEach((leaf) => {
@@ -1492,17 +1322,17 @@
         state.modelTargetRotY = 0;
         updateDiscoveryUI();
         onboardingHint.classList.remove('opacity-0');
-        hintText.textContent = 'Desliza tu dedo para apartar las plantas y descubrir la escultura';
+        hintText.textContent = 'Aparta las hojas una por una (20% por planta) para descubrir la escultura';
         playFoliageRustle(0.95);
-        showToast('Vegetación restaurada: vuelve a descubrir la escultura');
+        showToast('Vegetación restaurada');
       });
 
       document.getElementById('btn-sound').addEventListener('click', () => {
-        initAudio();
         state.soundEnabled = !state.soundEnabled;
+        if (state.soundEnabled) initAudio();
         document.getElementById('icon-sound-on').classList.toggle('text-emerald-400', state.soundEnabled);
         document.getElementById('icon-sound-on').classList.toggle('text-stone-500', !state.soundEnabled);
-        showToast(state.soundEnabled ? 'Efectos de sonido activados' : 'Sonido silenciado');
+        showToast(state.soundEnabled ? 'Sonido activado' : 'Sonido silenciado');
       });
     }
 
@@ -1529,15 +1359,16 @@
       updatePointerCoords(e.clientX, e.clientY);
       touchRipple.classList.add('active');
 
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+
       if (!state.hasInteracted) {
         state.hasInteracted = true;
         onboardingHint.classList.add('opacity-0');
       }
 
-      // Solo seleccionamos una planta no despejada directamente bajo el toque/cursor
-      const interactiveLeaves = state.foliagePlanes.filter(
-        (p) => p.userData.interactive && !p.userData.isCleared
-      );
+      const interactiveLeaves = state.foliagePlanes.filter((p) => p.userData.interactive);
       raycaster.setFromCamera(state.pointerNDC, camera);
       const hits = raycaster.intersectObjects(interactiveLeaves, false);
 
@@ -1545,7 +1376,7 @@
         state.activeDraggedLeaf = hits[0].object;
         const worldPt = getPointerWorldAtZ(state.activeDraggedLeaf.position.z);
         if (worldPt) state.lastPointerWorld.copy(worldPt);
-        playFoliageRustle(0.55);
+        playFoliageRustle(0.75);
       } else {
         state.rotatingModel = true;
         state.lastInspectClient.x = e.clientX;
@@ -1558,8 +1389,7 @@
       if (!state.pointerDown) return;
 
       if (!state.discoveryCompleted && !state.rotatingModel) {
-        // Únicamente la planta arrastrada activamente se desplaza y puede despejarse (20% por planta)
-        if (state.activeDraggedLeaf && !state.activeDraggedLeaf.userData.isCleared) {
+        if (state.activeDraggedLeaf) {
           const leaf = state.activeDraggedLeaf;
           const d = leaf.userData;
           const currentWorld = getPointerWorldAtZ(leaf.position.z);
@@ -1574,8 +1404,8 @@
             d.rotVelocity = -dx * 0.35;
             d.restRotZ += -dx * 0.22;
 
-            if (dragDelta > 0.004) {
-              playFoliageRustle(THREE.MathUtils.clamp(dragDelta * 12.0, 0.35, 0.95));
+            if (dragDelta > 0.003) {
+              playFoliageRustle(THREE.MathUtils.clamp(dragDelta * 14.5, 0.35, 1.25));
             }
 
             state.lastPointerWorld.copy(currentWorld);
@@ -1611,32 +1441,27 @@
       if (!d.coversSculpture || d.isCleared) return;
 
       const distFromCenter = Math.hypot(d.restPos.x * 1.15, d.restPos.y * 0.85);
-      if (distFromCenter > 1.05) {
+      if (distFromCenter > 1.15) {
         d.isCleared = true;
         const side = d.restPos.x >= 0 ? 1 : -1;
         d.restPos.x = side * Math.max(Math.abs(d.partedPos.x), Math.abs(d.restPos.x) + 0.55);
         d.restPos.y = THREE.MathUtils.clamp(d.restPos.y, -1.45, 1.45);
         d.restRotZ = d.partedRotZ;
 
-        // Liberamos la planta actual para que cada movimiento del usuario corresponda a 1 planta (20%)
-        if (state.activeDraggedLeaf === leaf) {
-          state.activeDraggedLeaf = null;
-        }
-
-        playFoliageRustle(0.8);
-        state.clearedLeavesCount = Math.min(CONFIG.plantsRequiredForReveal, state.clearedLeavesCount + 1);
+        playFoliageRustle(0.95);
+        state.clearedLeavesCount++;
         updateDiscoveryUI();
       }
     }
 
     function updateDiscoveryUI() {
-      // Cada planta movida y despejada representa exactamente el 20% de avance (5 plantas = 100%)
+      // 5 plantas = 100% (20% por cada una)
       const percent = Math.min(100, state.clearedLeavesCount * 20);
 
       discoveryCount.textContent = `${percent}%`;
       discoveryBar.style.width = `${percent}%`;
 
-      if (state.clearedLeavesCount >= CONFIG.plantsRequiredForReveal && !state.discoveryCompleted) {
+      if (percent >= 100 && !state.discoveryCompleted) {
         triggerFullSculptureReveal();
       } else if (!state.discoveryCompleted) {
         discoveryLabel.textContent = 'Despeja la selva';
@@ -1646,7 +1471,6 @@
 
     function triggerFullSculptureReveal() {
       state.discoveryCompleted = true;
-      state.clearedLeavesCount = CONFIG.plantsRequiredForReveal;
       discoveryCount.textContent = '100%';
       discoveryBar.style.width = '100%';
       discoveryLabel.textContent = '¡Escultura descubierta!';
@@ -1661,13 +1485,11 @@
         }
       });
 
-      // Activación del destello brillante de la escultura y onda expansiva de partículas
       state.revealFlashActive = true;
       state.revealFlashStartTime = clock.getElapsedTime();
-      resetAndLaunchShockwave();
 
       playRevealChime();
-      showToast('¡Escultura descubierta! Destello activo · Arrastra para girarla 360°');
+      showToast('¡Escultura descubierta! Arrastra el centro para girarla 360°');
     }
 
     async function toggleARCamera() {
@@ -1701,12 +1523,12 @@
         btnText.textContent = 'Fondo Selva';
         showToast('Cámara AR activa con capas de vegetación');
       } catch (err) {
-        showToast('Cámara no disponible en este navegador/dispositivo');
+        showToast('Cámara no disponible en este dispositivo');
       }
     }
 
     /* =========================================================================
-       8. BUCLE DE ANIMACIÓN (DESTELLO DE ESCULTURA + ONDA EXPANSIVA + VIENTO)
+       BUCLE DE RENDERIZADO Y DESTELLO
        ========================================================================= */
     function animate() {
       const elapsedTime = clock.getElapsedTime();
@@ -1717,12 +1539,11 @@
       camera.position.y = 0.18 + state.smoothedParallax.y;
       camera.lookAt(0, 0.08, 0);
 
-      // Animación de destello brillante en la escultura, onda expansiva y retorno a su color normal
+      // Destello brillante suave con vuelta al color original
       if (state.revealFlashActive) {
         const flashElapsed = elapsedTime - state.revealFlashStartTime;
         const t = Math.min(1.0, Math.max(0.0, flashElapsed / state.revealFlashDuration));
 
-        // Pico rápido en el primer 18%, seguido de caída suave exponencial hasta su color original
         let flashFactor = 0.0;
         if (t < 0.18) {
           const attackProgress = t / 0.18;
@@ -1737,46 +1558,23 @@
           if (!orig || !mesh.material) return;
 
           if (mesh.material.color) {
-            mesh.material.color.copy(orig.color).lerp(FLASH_COLOR_TARGET, flashFactor * 0.88);
+            mesh.material.color.copy(orig.color).lerp(FLASH_COLOR_TARGET, flashFactor * 0.85);
           }
           if (mesh.material.emissive) {
             mesh.material.emissive.copy(orig.emissive).lerp(FLASH_EMISSIVE_TARGET, flashFactor);
-            mesh.material.emissiveIntensity = THREE.MathUtils.lerp(orig.emissiveIntensity, 4.2, flashFactor);
+            mesh.material.emissiveIntensity = THREE.MathUtils.lerp(orig.emissiveIntensity, 3.8, flashFactor);
           }
         });
 
         if (centerSpotLight) {
-          centerSpotLight.intensity = state.baseCenterSpotIntensity + flashFactor * 8.5;
+          centerSpotLight.intensity = state.baseCenterSpotIntensity + flashFactor * 7.5;
         }
         if (renderer) {
-          renderer.toneMappingExposure = state.baseExposure + flashFactor * 0.65;
-        }
-
-        // Propagación física de la onda expansiva de partículas bioluminiscentes
-        if (revealShockwaveParticles && revealShockwaveParticles.visible) {
-          const swPos = revealShockwaveParticles.geometry.attributes.position;
-          const drag = Math.pow(1.0 - t, 0.55) * 0.032;
-          for (let i = 0; i < CONFIG.shockwaveParticleCount; i++) {
-            const d = state.shockwaveData[i];
-            const px = swPos.getX(i) + d.vx * drag;
-            const py = swPos.getY(i) + d.vy * drag;
-            const pz = swPos.getZ(i) + d.vz * drag;
-            swPos.setXYZ(i, px, py, pz);
-          }
-          swPos.needsUpdate = true;
-          revealShockwaveParticles.material.uniforms.uOpacity.value = Math.pow(1.0 - t, 1.5);
-        }
-
-        if (revealShockwaveRing && revealShockwaveRing.visible) {
-          const ringScale = 0.6 + t * 6.4;
-          revealShockwaveRing.scale.setScalar(ringScale);
-          revealShockwaveRing.material.opacity = Math.pow(1.0 - t, 2.1) * 0.85;
+          renderer.toneMappingExposure = state.baseExposure + flashFactor * 0.55;
         }
 
         if (t >= 1.0) {
           state.revealFlashActive = false;
-          if (revealShockwaveParticles) revealShockwaveParticles.visible = false;
-          if (revealShockwaveRing) revealShockwaveRing.visible = false;
           restoreSculptureOriginalMaterials();
         }
       }
