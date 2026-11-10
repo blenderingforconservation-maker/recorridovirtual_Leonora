@@ -219,14 +219,6 @@
       <!-- Controles Flotantes Traslúcidos -->
       <div class="flex items-center gap-1.5 interactive-ui">
         
-        <!-- Botón de Prueba Rápida: Revelar y Probar Destello + Onda Expansiva -->
-        <button id="btn-test-flash" title="Previsualizar Destello y Onda Expansiva" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/25 hover:bg-amber-500/40 active:scale-95 text-amber-200 border border-amber-300/40 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          <span>Probar Destello</span>
-        </button>
-
         <!-- Botón Pantalla Completa (Icono) -->
         <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg id="icon-expand" class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,15 +229,6 @@
           </svg>
         </button>
 
-        <!-- Cargar modelo .GLB propio -->
-        <label for="glb-upload" title="Cargar escultura .GLB" class="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          <span class="hidden sm:inline">Cargar .GLB</span>
-        </label>
-        <input id="glb-upload" type="file" accept=".glb,.gltf" class="hidden" />
-
         <!-- Reiniciar experiencia -->
         <button id="btn-reset" title="Cubrir escultura nuevamente" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,8 +237,8 @@
           <span class="hidden md:inline">Reiniciar</span>
         </button>
 
-        <!-- Sonido Ambiental y Efectos -->
-        <button id="btn-sound" title="Sonido ambiental de selva y plantas" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+        <!-- Sonido de Efectos Táctiles y Destello -->
+        <button id="btn-sound" title="Sonido de interacción y descubrimiento" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
@@ -299,14 +282,16 @@
 
     const CONFIG = {
       cameraDistance: 5.2,
-      discoveryThreshold: 0.82,
+      discoveryThreshold: 1.0,
+      plantsRequiredForReveal: 5,
       modelRotation: { x: 0, y: 0, z: 0 }, 
       modelPaths: [
-        'models/escultura1.glb',
-        'assets/escultura1.glb',
-        'escultura1.glb',
-        `${REPO_RAW_BASE}models/escultura1.glb`,
-        `${REPO_RAW_BASE}assets/escultura1.glb`
+        'models/3Dmodel.glb',
+        'assets/3Dmodel.glb',
+        '3Dmodel.glb',
+        `${REPO_RAW_BASE}models/3Dmodel.glb`,
+        `${REPO_RAW_BASE}assets/3Dmodel.glb`,
+        `${REPO_RAW_BASE}3Dmodel.glb`
       ],
       vegetationAssets: [
         {
@@ -363,9 +348,6 @@
       cameraActive: false,
       soundEnabled: true,
       audioCtx: null,
-      ambienceGain: null,
-      ambienceStarted: false,
-      ambienceCallTimer: null,
       lastRustleTime: 0,
       particleData: [],
       // Estado del destello brillante y onda expansiva de la escultura
@@ -435,7 +417,7 @@
     btnFullscreen.addEventListener('click', toggleFullscreen);
 
     /* =========================================================================
-       1. MOTOR DE AUDIO PROCEDURAL: PLANTAS + AMBIENTE DE SELVA EN BUCLE
+       1. MOTOR DE AUDIO PROCEDURAL: HOJAS TÁCTILES Y DESTELLO DE ESCULTURA
        ========================================================================= */
     function initAudio() {
       if (!state.audioCtx) {
@@ -445,189 +427,83 @@
       if (state.audioCtx && state.audioCtx.state === 'suspended') {
         state.audioCtx.resume();
       }
-      if (state.audioCtx && !state.ambienceStarted) {
-        startJungleAmbience();
-      }
     }
 
-    // Generador procedural de ambiente de selva en segundo plano (brisa en el dosel + cantos suaves)
-    function startJungleAmbience() {
-      if (!state.audioCtx || state.ambienceStarted) return;
-      state.ambienceStarted = true;
-
-      try {
-        const ctx = state.audioCtx;
-        const bufferSeconds = 5.0;
-        const bufferSize = Math.floor(ctx.sampleRate * bufferSeconds);
-        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-
-        // Ruido rosa/marrón suave en bucle para el murmullo del viento entre los árboles
-        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-        for (let i = 0; i < bufferSize; i++) {
-          const white = Math.random() * 2 - 1;
-          b0 = 0.99886 * b0 + white * 0.0555179;
-          b1 = 0.99332 * b1 + white * 0.0750759;
-          b2 = 0.96900 * b2 + white * 0.1538520;
-          b3 = 0.86650 * b3 + white * 0.3104856;
-          b4 = 0.55000 * b4 + white * 0.5329522;
-          b5 = -0.7616 * b5 - white * 0.0168980;
-          output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.025;
-          b6 = white * 0.115926;
-        }
-
-        const canopySource = ctx.createBufferSource();
-        canopySource.buffer = noiseBuffer;
-        canopySource.loop = true;
-
-        const lowpass = ctx.createBiquadFilter();
-        lowpass.type = 'lowpass';
-        lowpass.frequency.setValueAtTime(420, ctx.currentTime);
-
-        // LFO lento para modular la brisa de la selva
-        const breezeLFO = ctx.createOscillator();
-        const breezeLFOGain = ctx.createGain();
-        breezeLFO.type = 'sine';
-        breezeLFO.frequency.setValueAtTime(0.14, ctx.currentTime);
-        breezeLFOGain.gain.setValueAtTime(160, ctx.currentTime);
-        breezeLFO.connect(breezeLFOGain);
-        breezeLFOGain.connect(lowpass.frequency);
-
-        state.ambienceGain = ctx.createGain();
-        state.ambienceGain.gain.setValueAtTime(state.soundEnabled ? 0.18 : 0.0001, ctx.currentTime);
-
-        canopySource.connect(lowpass);
-        lowpass.connect(state.ambienceGain);
-        state.ambienceGain.connect(ctx.destination);
-
-        canopySource.start();
-        breezeLFO.start();
-
-        scheduleJungleBioCalls();
-      } catch (e) {}
-    }
-
-    function scheduleJungleBioCalls() {
-      clearTimeout(state.ambienceCallTimer);
-      const nextDelay = 2800 + Math.random() * 4200;
-      state.ambienceCallTimer = setTimeout(() => {
-        if (state.soundEnabled && state.audioCtx && state.audioCtx.state === 'running') {
-          playTropicalBirdOrInsectCall();
-        }
-        scheduleJungleBioCalls();
-      }, nextDelay);
-    }
-
-    function playTropicalBirdOrInsectCall() {
-      if (!state.audioCtx || !state.ambienceGain || !state.soundEnabled) return;
-      try {
-        const ctx = state.audioCtx;
-        const now = ctx.currentTime;
-        const isBird = Math.random() > 0.42;
-
-        if (isBird) {
-          // Canto suave de ave tropical lejana (dos notas moduladas)
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          const baseFreq = 1650 + Math.random() * 950;
-          osc.frequency.setValueAtTime(baseFreq, now);
-          osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.28, now + 0.09);
-          osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.92, now + 0.24);
-
-          gain.gain.setValueAtTime(0.0001, now);
-          gain.gain.linearRampToValueAtTime(0.028, now + 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.28);
-
-          osc.connect(gain);
-          gain.connect(state.ambienceGain);
-          osc.start(now);
-          osc.stop(now + 0.3);
-        } else {
-          // Pulso cristalino de grillo/insecto nocturno de selva
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'triangle';
-          const insectFreq = 3600 + Math.random() * 800;
-          osc.frequency.setValueAtTime(insectFreq, now);
-
-          gain.gain.setValueAtTime(0.0001, now);
-          gain.gain.linearRampToValueAtTime(0.015, now + 0.03);
-          gain.gain.exponentialRampToValueAtTime(0.0004, now + 0.18);
-
-          osc.connect(gain);
-          gain.connect(state.ambienceGain);
-          osc.start(now);
-          osc.stop(now + 0.2);
-        }
-      } catch (e) {}
-    }
-
-    function setAmbienceActive(enabled) {
-      if (!state.audioCtx || !state.ambienceGain) return;
-      const now = state.audioCtx.currentTime;
-      state.ambienceGain.gain.cancelScheduledValues(now);
-      state.ambienceGain.gain.setTargetAtTime(enabled ? 0.18 : 0.0001, now, 0.15);
-    }
-
-    // Sonido orgánico de hojas y tallos cuando el usuario mueve la vegetación
+    // Síntesis granular de hojas reales ("rustling leaves") sin barridos de tono tipo karate
     function playFoliageRustle(intensity = 0.55) {
       const now = performance.now();
-      // Cooldown de 48ms para permitir sonido continuo mientras el usuario arrastra hojas
-      if (!state.soundEnabled || !state.audioCtx || now - state.lastRustleTime < 48) return;
+      if (!state.soundEnabled || !state.audioCtx || now - state.lastRustleTime < 65) return;
       state.lastRustleTime = now;
 
       try {
         const ctx = state.audioCtx;
-        const clampedIntensity = THREE.MathUtils.clamp(intensity, 0.2, 1.4);
-        const duration = 0.16 + Math.random() * 0.08;
+        const clampedIntensity = THREE.MathUtils.clamp(intensity, 0.25, 1.0);
+        const duration = 0.20 + Math.random() * 0.08;
         const bufferSize = Math.floor(ctx.sampleRate * duration);
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
 
-        // Síntesis de ruido rosa/marrón suavizado con micro-textura de hojas frotándose (leafFlutter)
-        let lastOut = 0.0;
-        const flutterFreq = 26 + Math.random() * 18;
+        // Textura granular de 5 micro-pulsos asimétricos que imitan el roce entre varias hojas
+        const grainCount = 5;
+        const grainCenters = [];
+        for (let g = 0; g < grainCount; g++) {
+          grainCenters.push((g + 0.35 + Math.random() * 0.3) / grainCount);
+        }
+
+        let pinkState = 0.0;
         for (let i = 0; i < bufferSize; i++) {
           const progress = i / bufferSize;
           const white = Math.random() * 2 - 1;
-          lastOut = (lastOut + (0.14 * white)) / 1.14;
-          const envelope = Math.pow(Math.sin(progress * Math.PI), 0.72);
-          const leafFlutter = 0.78 + 0.22 * Math.sin(progress * Math.PI * flutterFreq);
-          data[i] = lastOut * 2.8 * envelope * leafFlutter;
+          pinkState = 0.68 * pinkState + 0.32 * white;
+          const rawLeafNoise = white * 0.65 + pinkState * 0.35;
+
+          let grainEnv = 0.0;
+          for (let g = 0; g < grainCount; g++) {
+            const dist = (progress - grainCenters[g]) / 0.095;
+            grainEnv += Math.exp(-(dist * dist)) * (0.65 + 0.35 * Math.sin(i * 0.08 + g));
+          }
+
+          const windowEnv = Math.sin(progress * Math.PI);
+          data[i] = rawLeafNoise * Math.min(1.0, grainEnv * 0.58) * windowEnv;
         }
 
         const noise = ctx.createBufferSource();
         noise.buffer = buffer;
 
-        // Filtro paso-alto para limpiar frecuencias graves irreales
+        // Filtro highpass a 1150Hz para eliminar cualquier golpe grave
         const highpass = ctx.createBiquadFilter();
         highpass.type = 'highpass';
-        highpass.frequency.setValueAtTime(320 + clampedIntensity * 180, ctx.currentTime);
+        highpass.frequency.setValueAtTime(1150, ctx.currentTime);
+        highpass.Q.setValueAtTime(0.7, ctx.currentTime);
 
-        // Filtro paso-banda con barrido orgánico según la velocidad de movimiento
-        const bandpass = ctx.createBiquadFilter();
-        bandpass.type = 'bandpass';
-        const startFreq = 580 + clampedIntensity * 640 + Math.random() * 320;
-        const endFreq = Math.max(360, startFreq * 0.62);
-        bandpass.frequency.setValueAtTime(startFreq, ctx.currentTime);
-        bandpass.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + duration);
-        bandpass.Q.setValueAtTime(1.35, ctx.currentTime);
+        const bandpassLow = ctx.createBiquadFilter();
+        bandpassLow.type = 'bandpass';
+        bandpassLow.frequency.setValueAtTime(2400, ctx.currentTime);
+        bandpassLow.Q.setValueAtTime(0.85, ctx.currentTime);
+
+        const bandpassHigh = ctx.createBiquadFilter();
+        bandpassHigh.type = 'bandpass';
+        bandpassHigh.frequency.setValueAtTime(3400, ctx.currentTime);
+        bandpassHigh.Q.setValueAtTime(0.85, ctx.currentTime);
 
         const gain = ctx.createGain();
-        const peakVolume = Math.min(0.34, Math.max(0.06, clampedIntensity * 0.23));
-        gain.gain.setValueAtTime(0.001, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(peakVolume, ctx.currentTime + duration * 0.22);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        const targetGain = THREE.MathUtils.lerp(0.035, 0.08, clampedIntensity);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + duration * 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
 
         noise.connect(highpass);
-        highpass.connect(bandpass);
-        bandpass.connect(gain);
+        highpass.connect(bandpassLow);
+        highpass.connect(bandpassHigh);
+        bandpassLow.connect(gain);
+        bandpassHigh.connect(gain);
         gain.connect(ctx.destination);
+
         noise.start();
       } catch (e) {}
     }
 
+    // Sonido de destello con volumen reducido y etéreo
     function playRevealChime() {
       if (!state.soundEnabled || !state.audioCtx) return;
       try {
@@ -636,15 +512,16 @@
         notes.forEach((freq, idx) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          osc.type = idx === notes.length - 1 ? 'triangle' : 'sine';
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.09);
-          gain.gain.setValueAtTime(0.001, ctx.currentTime + idx * 0.09);
-          gain.gain.linearRampToValueAtTime(0.11, ctx.currentTime + idx * 0.09 + 0.04);
-          gain.gain.exponentialRampToValueAtTime(0.0008, ctx.currentTime + idx * 0.09 + 1.55);
+          osc.type = 'sine';
+          const startTime = ctx.currentTime + idx * 0.095;
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.0001, startTime);
+          gain.gain.linearRampToValueAtTime(0.03, startTime + 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.0005, startTime + 1.55);
           osc.connect(gain);
           gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + idx * 0.09);
-          osc.stop(ctx.currentTime + idx * 0.09 + 1.6);
+          osc.start(startTime);
+          osc.stop(startTime + 1.6);
         });
       } catch (e) {}
     }
@@ -1595,13 +1472,6 @@
 
       document.getElementById('btn-toggle-camera').addEventListener('click', toggleARCamera);
 
-      // Botón interactivo "Probar Destello" para previsualizar el destello y la onda expansiva al instante
-      document.getElementById('btn-test-flash').addEventListener('click', () => {
-        initAudio();
-        onboardingHint.classList.add('opacity-0');
-        triggerFullSculptureReveal();
-      });
-
       document.getElementById('btn-reset').addEventListener('click', () => {
         initAudio();
         state.clearedLeavesCount = 0;
@@ -1630,24 +1500,9 @@
       document.getElementById('btn-sound').addEventListener('click', () => {
         initAudio();
         state.soundEnabled = !state.soundEnabled;
-        setAmbienceActive(state.soundEnabled);
         document.getElementById('icon-sound-on').classList.toggle('text-emerald-400', state.soundEnabled);
         document.getElementById('icon-sound-on').classList.toggle('text-stone-500', !state.soundEnabled);
-        showToast(state.soundEnabled ? 'Ambiente de selva y sonido de plantas activados' : 'Sonido silenciado');
-      });
-
-      document.getElementById('glb-upload').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const url = URL.createObjectURL(file);
-        const loader = new GLTFLoader();
-        showToast(`Cargando escultura ${file.name}...`);
-
-        loader.load(url, (gltf) => {
-          mountAndComputeBoundingBox(gltf.scene);
-          showToast(`¡${file.name} lista! Prueba el destello o despeja las plantas`);
-          URL.revokeObjectURL(url);
-        });
+        showToast(state.soundEnabled ? 'Efectos de sonido activados' : 'Sonido silenciado');
       });
     }
 
@@ -1679,18 +1534,18 @@
         onboardingHint.classList.add('opacity-0');
       }
 
-      const interactiveLeaves = state.foliagePlanes.filter((p) => p.userData.interactive);
+      // Solo seleccionamos una planta no despejada directamente bajo el toque/cursor
+      const interactiveLeaves = state.foliagePlanes.filter(
+        (p) => p.userData.interactive && !p.userData.isCleared
+      );
       raycaster.setFromCamera(state.pointerNDC, camera);
       const hits = raycaster.intersectObjects(interactiveLeaves, false);
-
-      const refMidWorld = getPointerWorldAtZ(1.5);
-      if (refMidWorld) state.lastBrushMoveWorld.copy(refMidWorld);
 
       if (hits.length > 0 && !state.discoveryCompleted) {
         state.activeDraggedLeaf = hits[0].object;
         const worldPt = getPointerWorldAtZ(state.activeDraggedLeaf.position.z);
         if (worldPt) state.lastPointerWorld.copy(worldPt);
-        playFoliageRustle(0.75);
+        playFoliageRustle(0.55);
       } else {
         state.rotatingModel = true;
         state.lastInspectClient.x = e.clientX;
@@ -1703,7 +1558,8 @@
       if (!state.pointerDown) return;
 
       if (!state.discoveryCompleted && !state.rotatingModel) {
-        if (state.activeDraggedLeaf) {
+        // Únicamente la planta arrastrada activamente se desplaza y puede despejarse (20% por planta)
+        if (state.activeDraggedLeaf && !state.activeDraggedLeaf.userData.isCleared) {
           const leaf = state.activeDraggedLeaf;
           const d = leaf.userData;
           const currentWorld = getPointerWorldAtZ(leaf.position.z);
@@ -1718,53 +1574,14 @@
             d.rotVelocity = -dx * 0.35;
             d.restRotZ += -dx * 0.22;
 
-            // Sonido continuo proporcional a la velocidad con que se mueve la planta
             if (dragDelta > 0.004) {
-              playFoliageRustle(THREE.MathUtils.clamp(dragDelta * 14.5, 0.38, 1.35));
+              playFoliageRustle(THREE.MathUtils.clamp(dragDelta * 12.0, 0.35, 0.95));
             }
 
             state.lastPointerWorld.copy(currentWorld);
             checkIfLeafCleared(leaf);
           }
         }
-
-        const currentMidWorld = getPointerWorldAtZ(1.5);
-        let brushSpeed = 0.45;
-        if (currentMidWorld) {
-          brushSpeed = Math.hypot(
-            currentMidWorld.x - state.lastBrushMoveWorld.x,
-            currentMidWorld.y - state.lastBrushMoveWorld.y
-          );
-          state.lastBrushMoveWorld.copy(currentMidWorld);
-        }
-
-        state.foliagePlanes.forEach((leaf) => {
-          const d = leaf.userData;
-          if (!d.interactive || d === state.activeDraggedLeaf?.userData) return;
-
-          const fingerAtLeafZ = getPointerWorldAtZ(leaf.position.z);
-          if (!fingerAtLeafZ) return;
-
-          const dx = leaf.position.x - fingerAtLeafZ.x;
-          const dy = leaf.position.y - fingerAtLeafZ.y;
-          const dist = Math.hypot(dx, dy);
-
-          if (dist < CONFIG.brushRadius) {
-            const pushDirX = dx === 0 ? (d.partedPos.x >= 0 ? 1 : -1) : dx / dist;
-            const pushDirY = dy / (dist || 1);
-            const force = (1.0 - dist / CONFIG.brushRadius) * 0.26;
-
-            d.restPos.x += pushDirX * force;
-            d.restPos.y += pushDirY * force * 0.65;
-            d.velocity.x += pushDirX * force * 0.5;
-            d.restRotZ += -pushDirX * force * 0.18;
-
-            if (brushSpeed > 0.003) {
-              playFoliageRustle(THREE.MathUtils.clamp(force * 3.2 + brushSpeed * 8.0, 0.35, 1.25));
-            }
-            checkIfLeafCleared(leaf);
-          }
-        });
         return;
       }
 
@@ -1794,28 +1611,32 @@
       if (!d.coversSculpture || d.isCleared) return;
 
       const distFromCenter = Math.hypot(d.restPos.x * 1.15, d.restPos.y * 0.85);
-      if (distFromCenter > 1.15) {
+      if (distFromCenter > 1.05) {
         d.isCleared = true;
         const side = d.restPos.x >= 0 ? 1 : -1;
         d.restPos.x = side * Math.max(Math.abs(d.partedPos.x), Math.abs(d.restPos.x) + 0.55);
         d.restPos.y = THREE.MathUtils.clamp(d.restPos.y, -1.45, 1.45);
         d.restRotZ = d.partedRotZ;
 
-        playFoliageRustle(0.95);
-        state.clearedLeavesCount++;
+        // Liberamos la planta actual para que cada movimiento del usuario corresponda a 1 planta (20%)
+        if (state.activeDraggedLeaf === leaf) {
+          state.activeDraggedLeaf = null;
+        }
+
+        playFoliageRustle(0.8);
+        state.clearedLeavesCount = Math.min(CONFIG.plantsRequiredForReveal, state.clearedLeavesCount + 1);
         updateDiscoveryUI();
       }
     }
 
     function updateDiscoveryUI() {
-      const total = Math.max(1, state.coveringLeavesCount);
-      const ratio = Math.min(1, state.clearedLeavesCount / total);
-      const percent = Math.round(ratio * 100);
+      // Cada planta movida y despejada representa exactamente el 20% de avance (5 plantas = 100%)
+      const percent = Math.min(100, state.clearedLeavesCount * 20);
 
       discoveryCount.textContent = `${percent}%`;
       discoveryBar.style.width = `${percent}%`;
 
-      if (ratio >= CONFIG.discoveryThreshold && !state.discoveryCompleted) {
+      if (state.clearedLeavesCount >= CONFIG.plantsRequiredForReveal && !state.discoveryCompleted) {
         triggerFullSculptureReveal();
       } else if (!state.discoveryCompleted) {
         discoveryLabel.textContent = 'Despeja la selva';
@@ -1825,7 +1646,7 @@
 
     function triggerFullSculptureReveal() {
       state.discoveryCompleted = true;
-      state.clearedLeavesCount = state.coveringLeavesCount;
+      state.clearedLeavesCount = CONFIG.plantsRequiredForReveal;
       discoveryCount.textContent = '100%';
       discoveryBar.style.width = '100%';
       discoveryLabel.textContent = '¡Escultura descubierta!';
