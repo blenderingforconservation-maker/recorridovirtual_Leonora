@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Colección Leonora · Instalación WebAR en Pasillo de Xilitla</title>
-  
-  <!-- Tailwind CSS para la interfaz de usuario (UI/UX) -->
+  <title>Sala de Museo al Aire Libre · WebAR Pasillo Xilitla</title>
+
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Google Fonts: Cinzel (Curaduría de Museo) e Inter (Lectura UI) -->
+
+  <!-- Tipografías de Museo: Cormorant Garamond (Títulos Curatoriales) e Inter (UI Técnica) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Importmap para Three.js r160, GLTFLoader y DRACOLoader -->
+  <!-- Importmap para Three.js r160, GLTFLoader, DRACOLoader y OrbitControls -->
   <script type="importmap">
     {
       "imports": {
@@ -37,90 +37,56 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #030f0a;
+      background-color: #0c1210;
       font-family: 'Inter', sans-serif;
       touch-action: none;
     }
 
-    .font-serif-art {
-      font-family: 'Cinzel', serif;
+    .font-museum {
+      font-family: 'Cormorant Garamond', Georgia, serif;
     }
 
-    /* Fondo atmosférico de selva tropical (Modo Virtual) */
-    #illustration-backdrop {
+    /* Fondo diurno de Sala de Museo al Aire Libre (cuando la cámara AR está apagada) */
+    #outdoor-sky-backdrop {
       position: fixed;
       inset: 0;
       z-index: 0;
       background:
-        radial-gradient(circle at 50% 36%, rgba(167, 243, 208, 0.22) 0%, rgba(20, 184, 166, 0.14) 32%, rgba(5, 38, 28, 0.96) 68%, #020a07 100%),
-        linear-gradient(180deg, #0b2e24 0%, #061c15 54%, #020906 100%);
+        radial-gradient(circle at 50% 18%, rgba(254, 249, 195, 0.35) 0%, rgba(167, 243, 208, 0.18) 38%, rgba(15, 35, 29, 0.92) 78%, #091410 100%),
+        linear-gradient(180deg, #1b3b32 0%, #122922 58%, #0a1713 100%);
       pointer-events: none;
-      transition: opacity 0.6s ease;
+      transition: opacity 0.4s ease;
     }
 
-    /* Rayos de sol volumétricos sutiles */
-    #god-rays {
+    /* Stream de cámara trasera para modo Cámara AR Fallback */
+    #ar-camera-video {
       position: fixed;
       inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      background: conic-gradient(
-        from 160deg at 50% -15%,
-        transparent 0deg,
-        rgba(167, 243, 208, 0.09) 14deg,
-        transparent 28deg,
-        rgba(253, 230, 138, 0.12) 40deg,
-        transparent 56deg
-      );
-      mix-blend-mode: screen;
-      transition: opacity 0.6s ease;
-    }
-
-    /* Video de cámara trasera para modo WebAR */
-    #ar-video {
-      position: fixed;
-      top: 0;
-      left: 0;
       width: 100vw;
       height: 100vh;
       object-fit: cover;
       z-index: 1;
       opacity: 0;
-      transition: opacity 0.6s ease;
       pointer-events: none;
+      transition: opacity 0.4s ease;
     }
 
-    #ar-video.active {
+    #ar-camera-video.active {
       opacity: 1;
     }
 
-    /* Lienzo WebGL de Three.js */
-    #webgl-container {
+    /* Contenedor WebGL */
+    #webgl-viewport {
       position: fixed;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100vw;
       height: 100vh;
       z-index: 2;
       touch-action: none;
-      cursor: grab;
     }
 
-    #webgl-container:active {
-      cursor: grabbing;
-    }
-
-    /* Viñeta orgánica suave */
-    .jungle-vignette {
-      position: fixed;
-      inset: 0;
-      z-index: 3;
-      pointer-events: none;
-      background: radial-gradient(circle at 50% 50%, transparent 56%, rgba(1, 10, 6, 0.62) 100%);
-    }
-
-    /* Capa HUD minimalista */
-    #ui-layer {
+    /* Overlay DOM para WebXR y controles en pantalla */
+    #ar-dom-overlay {
       position: fixed;
       inset: 0;
       z-index: 10;
@@ -128,327 +94,220 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: env(safe-area-inset-top, 12px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 12px) env(safe-area-inset-left, 16px);
-      opacity: 0;
-      transition: opacity 0.6s ease;
+      padding: env(safe-area-inset-top, 14px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 14px) env(safe-area-inset-left, 16px);
     }
 
-    #ui-layer.visible {
-      opacity: 1;
-    }
-
-    .interactive-ui {
+    .interactive {
       pointer-events: auto;
     }
 
-    @keyframes swipeHint {
-      0%, 100% { transform: translateX(-22px) rotate(-8deg); opacity: 0.5; }
-      50% { transform: translateX(22px) rotate(8deg); opacity: 1; }
-    }
-
-    .animate-swipe-hand {
-      animation: swipeHint 2.2s ease-in-out infinite;
-    }
-
-    #touch-ripple {
-      position: fixed;
-      width: 44px;
-      height: 44px;
-      border-radius: 9999px;
-      pointer-events: none;
-      z-index: 9;
-      background: radial-gradient(circle, rgba(253, 224, 71, 0.48) 0%, rgba(52, 211, 153, 0.22) 55%, transparent 75%);
-      box-shadow: 0 0 20px rgba(110, 231, 183, 0.55);
-      transform: translate(-50%, -50%) scale(0.4);
-      opacity: 0;
-      transition: opacity 0.2s ease, transform 0.15s ease;
-    }
-
-    #touch-ripple.active {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-    }
-
-    /* Scrollbar estilizada para el modal de Prompt */
     .custom-scroll::-webkit-scrollbar {
       width: 6px;
     }
     .custom-scroll::-webkit-scrollbar-track {
-      background: rgba(12, 25, 20, 0.6);
+      background: rgba(15, 23, 20, 0.6);
     }
     .custom-scroll::-webkit-scrollbar-thumb {
-      background: rgba(52, 211, 153, 0.4);
+      background: rgba(16, 185, 129, 0.45);
       border-radius: 9999px;
     }
   </style>
 </head>
 <body>
 
-  <!-- 1. FONDO ATMOSFÉRICO Y RAYOS DE SOL -->
-  <div id="illustration-backdrop"></div>
-  <div id="god-rays"></div>
+  <!-- 1. CIELO DE MUSEO AL AIRE LIBRE (MODO ESTUDIO 3D) -->
+  <div id="outdoor-sky-backdrop"></div>
 
-  <!-- 2. VIDEO DE CÁMARA TRASERA PARA WEBAR ESPACIAL -->
-  <video id="ar-video" autoplay playsinline muted></video>
+  <!-- 2. VIDEO DE CÁMARA TRASERA (FALLBACK UNIVERSAL WEBAR) -->
+  <video id="ar-camera-video" autoplay playsinline muted></video>
 
-  <!-- 3. CONTENEDOR WEBGL (THREE.JS CON STENCIL BUFFER) -->
-  <div id="webgl-container"></div>
+  <!-- 3. LIENZO THREE.JS -->
+  <div id="webgl-viewport"></div>
 
-  <!-- 4. VIÑETA Y FEEDBACK TÁCTIL -->
-  <div class="jungle-vignette"></div>
-  <div id="touch-ripple"></div>
-
-  <!-- 5. PANTALLA DE PRECARGA MUSEOGRÁFICA Y PORTAL DE INICIO AR -->
-  <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-2xl transition-opacity duration-700 px-6 text-center">
-    <div class="w-16 h-16 mb-4 rounded-2xl bg-emerald-500/10 border border-amber-300/35 flex items-center justify-center shadow-2xl shadow-emerald-950/90 relative">
-      <div class="absolute inset-1 rounded-xl border border-emerald-400/30 animate-ping opacity-30"></div>
-      <svg class="w-8 h-8 text-amber-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3m8-18h3a2 2 0 012 2v14a2 2 0 01-2 2h-3M12 3v18m0-18l-3 3m3-3l3 3" />
+  <!-- 4. PANTALLA DE CARGA Y AUDITORÍA DE MODELOS GLB -->
+  <div id="loading-modal" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-xl px-6 text-center transition-opacity duration-500">
+    <div class="w-14 h-14 mb-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center shadow-xl">
+      <svg class="w-7 h-7 text-amber-200 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 21h18M4 18h16M6 18V9m4 9V9m4 9V9m4 9V9M3 9l9-5 9 5" />
       </svg>
     </div>
 
-    <span class="text-[10px] uppercase tracking-[0.28em] text-amber-300/90 font-semibold mb-1">Curaduría Digital · Instalación Espacial WebAR</span>
-    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-1.5">PORTAL XILITLA · ALTAR A MEDIO PASILLO</h1>
-    <p id="loading-status" class="text-xs sm:text-sm text-emerald-200/75 mb-5 max-w-md leading-relaxed">
-      Sincronizando <code class="text-amber-200">pasillo_optimizado.glb</code>, altar <code class="text-amber-200">rock.glb</code> a medio corredor y escultura <code class="text-amber-200">3DModel.glb</code>...
+    <span class="text-[10px] uppercase tracking-[0.28em] text-amber-300/90 font-semibold mb-1">Instalación Museográfica WebAR</span>
+    <h1 class="font-museum text-2xl sm:text-3xl text-stone-100 tracking-wide mb-2">Sala de Museo al Aire Libre · Xilitla</h1>
+    <p id="loading-message" class="text-xs sm:text-sm text-stone-300/85 max-w-md mb-5 leading-relaxed">
+      Cargando y ensamblando <code class="text-amber-200">pasillo_optimizado.glb</code>, <code class="text-amber-200">rock.glb</code> a medio pasillo y <code class="text-amber-200">3DModel.glb</code> sobre la roca...
     </p>
 
-    <!-- Checklist de auditoría de assets cargados desde GitHub -->
-    <div id="asset-audit-list" class="grid grid-cols-3 gap-2 max-w-md w-full mb-5 text-[10px] font-mono">
-      <div id="badge-pasillo" class="px-2.5 py-1.5 rounded-lg bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
-        <span>pasillo.glb</span>
+    <!-- Estado individual de los 3 modelos del repositorio -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-lg mb-5 text-xs font-mono">
+      <div id="status-pasillo" class="px-3 py-2 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span>pasillo_optimizado.glb</span>
       </div>
-      <div id="badge-rock" class="px-2.5 py-1.5 rounded-lg bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+      <div id="status-rock" class="px-3 py-2 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
         <span>rock.glb</span>
       </div>
-      <div id="badge-sculpture" class="px-2.5 py-1.5 rounded-lg bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+      <div id="status-sculpture" class="px-3 py-2 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
         <span>3DModel.glb</span>
       </div>
     </div>
 
-    <!-- Barra de progreso de carga -->
-    <div id="loading-progress-wrap" class="flex flex-col items-center">
-      <div class="w-64 sm:w-80 h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
-        <div id="loading-bar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 w-0 transition-all duration-300"></div>
+    <!-- Barra de progreso -->
+    <div id="progress-container" class="w-64 sm:w-80 flex flex-col items-center">
+      <div class="w-full h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-amber-300 w-0 transition-all duration-300"></div>
       </div>
-      <span id="loading-percent" class="text-[11px] font-mono text-stone-400 mt-2">0%</span>
+      <span id="progress-text" class="text-[11px] font-mono text-stone-400 mt-2">0%</span>
     </div>
 
-    <!-- Portal de Despliegue AR (Aparece al llegar al 100% de carga) -->
-    <div id="ar-start-portal" class="hidden flex-col items-center gap-2.5 mt-1 max-w-xs w-full animate-fade-in">
-      <button id="btn-launch-ar" class="w-full py-3 px-6 rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 hover:from-emerald-400 hover:to-amber-200 active:scale-95 text-stone-950 font-bold text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-950/80 border border-emerald-100/60 flex items-center justify-center gap-2 transition-all">
+    <!-- Botones de inicio una vez ensamblada la escena -->
+    <div id="start-actions" class="hidden flex-col items-center gap-2.5 w-full max-w-xs mt-2">
+      <button id="btn-start-ar" class="w-full py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 active:scale-95 text-stone-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-950/60 flex items-center justify-center gap-2 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        <span>Desplegar Portal en Cámara AR</span>
+        <span>Iniciar Cámara AR y Detectar Piso</span>
       </button>
 
-      <button id="btn-launch-virtual" class="w-full py-2.5 px-4 rounded-full bg-stone-900/85 hover:bg-stone-800 active:scale-95 text-emerald-200/95 font-medium text-xs border border-emerald-400/25 transition-all">
-        Explorar en Sala Virtual 3D
+      <button id="btn-start-outdoor" class="w-full py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 active:scale-95 text-stone-200 font-medium text-xs border border-stone-700 transition-all">
+        Abrir en Modo Sala Exterior 3D (Sin Cámara)
       </button>
 
-      <div class="flex items-center justify-center gap-2 w-full mt-1">
-        <button id="btn-open-prompt-start" class="w-full py-1.5 px-3 rounded-full bg-stone-900/70 hover:bg-stone-800 text-amber-200/90 text-[11px] border border-amber-400/25 transition-all flex items-center justify-center gap-1.5">
-          <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <span>Ver Prompt Profesional de Ingeniería y Curaduría</span>
-        </button>
-      </div>
-
-      <p id="corridor-source-badge" class="text-[10px] text-emerald-300/80 font-mono mt-1">
-        Escena lista: Portal + Pasillo + Roca y Escultura a medio corredor
-      </p>
+      <button id="btn-open-prompt-init" class="w-full py-2 px-3 rounded-xl bg-stone-900/60 hover:bg-stone-800 text-amber-200/90 text-[11px] border border-amber-400/25 transition-all flex items-center justify-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>Ver Prompt Profesional</span>
+      </button>
     </div>
   </div>
 
-  <!-- 6. INTERFAZ HUD MUSEOGRÁFICA DURANTE LA EXPERIENCIA -->
-  <div id="ui-layer" class="p-3 sm:p-4">
-    <header class="w-full flex flex-wrap items-start justify-between gap-2">
-      <!-- Píldora de Progreso de las 4 Capas de Vegetación (25% cada una = 100%) -->
-      <div id="discovery-pill" class="flex items-center gap-3 bg-stone-950/80 backdrop-blur-xl border border-emerald-400/35 rounded-2xl px-3.5 py-2 shadow-2xl transition-all duration-500">
-        <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-300 animate-ping shrink-0"></span>
+  <!-- 5. HUD MINIMALISTA DE SALA DE MUSEO (SOPORTA DOM-OVERLAY EN WEBXR) -->
+  <div id="ar-dom-overlay">
+    <!-- Barra Superior -->
+    <header class="w-full flex flex-wrap items-center justify-between gap-2">
+      <!-- Indicador de Fase (Fase 1: Detectando Piso -> Fase 2: Sala Fija e Inmóvil) -->
+      <div class="flex items-center gap-2.5 bg-stone-950/85 backdrop-blur-md border border-stone-700/80 rounded-2xl px-3.5 py-2 shadow-xl">
+        <span id="phase-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0"></span>
         <div class="flex flex-col">
-          <div class="flex items-center justify-between gap-3">
-            <span id="discovery-label" class="text-[11px] sm:text-xs font-semibold text-emerald-50 tracking-wide">Abriendo Portal...</span>
-            <span id="discovery-count" class="text-xs font-mono font-bold text-amber-300">0%</span>
-          </div>
-          <!-- Barra continua + 4 segmentos indicadores (25% por capa) -->
-          <div class="w-40 sm:w-48 h-1.5 bg-stone-800/90 rounded-full overflow-hidden mt-1">
-            <div id="discovery-bar" class="h-full bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 w-0 transition-all duration-300"></div>
-          </div>
-          <div class="flex items-center justify-between gap-1 mt-1">
-            <span id="layer-badge-1" class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-stone-800/90 text-stone-400 border border-white/10">C1·25%</span>
-            <span id="layer-badge-2" class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-stone-800/90 text-stone-400 border border-white/10">C2·50%</span>
-            <span id="layer-badge-3" class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-stone-800/90 text-stone-400 border border-white/10">C3·75%</span>
-            <span id="layer-badge-4" class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-stone-800/90 text-stone-400 border border-white/10">C4·100%</span>
-          </div>
+          <span id="phase-title" class="text-[11px] sm:text-xs font-semibold text-stone-100 tracking-wide">
+            FASE 1 · ESCANEANDO PLANO DEL PISO
+          </span>
+          <span id="phase-subtitle" class="text-[10px] font-mono text-emerald-300/90">
+            Apunta hacia el suelo y pulsa "Fijar Sala en el Piso"
+          </span>
         </div>
       </div>
 
-      <!-- Controles Curatoriales y Espaciales Superiores -->
-      <div class="flex items-center gap-1.5 interactive-ui flex-wrap">
-        <!-- Selector de Iluminación de Galería -->
-        <button id="btn-lighting-mode" title="Cambiar Iluminación Museográfica" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-amber-200 border border-amber-400/30 backdrop-blur-md shadow-lg transition-all">
+      <!-- Herramientas Superiores -->
+      <div class="flex items-center gap-1.5 interactive flex-wrap">
+        <!-- Cargar GLB Local Opcional -->
+        <label for="local-glb-input" title="Cargar un archivo .GLB local para pruebas" class="cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-stone-950/85 hover:bg-stone-900 text-stone-200 border border-stone-700/80 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span class="hidden md:inline">Cargar .GLB</span>
+        </label>
+        <input id="local-glb-input" type="file" accept=".glb,.gltf" class="hidden" />
+
+        <!-- Cédula de la Obra -->
+        <button id="btn-toggle-plaque" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-stone-950/85 hover:bg-stone-900 text-amber-200 border border-amber-400/30 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-          <span id="lighting-mode-text" class="hidden sm:inline">Luz: Museo</span>
-        </button>
-
-        <!-- Alternar Recorte de Portal (Stencil) vs Inmersión Completa -->
-        <button id="btn-portal-mask" title="Alternar ventana de Portal o Pasillo 360°" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-teal-200 border border-teal-400/30 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-3.5 h-3.5 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3m8-18h3a2 2 0 012 2v14a2 2 0 01-2 2h-3" />
-          </svg>
-          <span id="portal-mask-text" class="hidden sm:inline">Portal: Auto</span>
-        </button>
-
-        <!-- Cédula Museográfica -->
-        <button id="btn-curatorial-card" title="Abrir Cédula Museográfica de la Obra" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-emerald-200 border border-emerald-400/30 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span class="hidden md:inline">Cédula</span>
+          <span>Ficha Museo</span>
         </button>
 
-        <!-- Re-anclar en el espacio frente al usuario -->
-        <button id="btn-reanchor" title="Anclar portal frente a mí" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-stone-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.657-5.657l-2.828 2.828m-5.03 5.03l-2.828 2.828m0-10.686l2.828 2.828m5.03 5.03l2.828 2.828" />
-          </svg>
-          <span class="hidden lg:inline">Re-anclar</span>
-        </button>
-
-        <!-- Reiniciar y Re-abrir Portal -->
-        <button id="btn-reset" title="Reiniciar experiencia y volver a abrir el portal" class="p-2 rounded-full bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-
-        <!-- Botón Ver Prompt Profesional -->
-        <button id="btn-open-prompt" title="Ver Prompt Profesional de Ingeniería" class="p-2 rounded-full bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-amber-300 border border-amber-400/25 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Ver Prompt Profesional -->
+        <button id="btn-open-prompt-hud" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-stone-950/85 hover:bg-stone-900 text-emerald-200 border border-emerald-400/30 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
+          <span class="hidden sm:inline">Prompt Profesional</span>
         </button>
 
-        <!-- Pantalla Completa -->
-        <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
-          <svg id="icon-expand" class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-          </svg>
-          <svg id="icon-compress" class="w-4 h-4 text-emerald-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-          </svg>
-        </button>
-
-        <!-- Sonido -->
-        <button id="btn-sound" title="Sonido espacial" class="p-2 rounded-full bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
-          <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-          </svg>
+        <!-- Alternar Cámara AR -->
+        <button id="btn-toggle-camera" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-emerald-600/90 hover:bg-emerald-500 text-white border border-emerald-300/40 shadow-lg transition-all">
+          <span id="camera-status-label">Cámara AR</span>
         </button>
       </div>
     </header>
 
-    <!-- Cédula Museográfica Flotante (Se abre al descubrir el 100% o al pulsar "Cédula") -->
-    <aside id="curatorial-card" class="self-end max-w-xs sm:max-w-sm bg-stone-950/88 backdrop-blur-xl border border-amber-300/35 rounded-2xl p-4 shadow-2xl text-left transition-all duration-500 hidden interactive-ui">
-      <div class="flex items-start justify-between gap-2 mb-1.5">
+    <!-- Cédula Museográfica (Esquina derecha) -->
+    <aside id="museum-plaque" class="hidden self-end max-w-xs bg-stone-950/90 backdrop-blur-xl border border-amber-300/35 rounded-2xl p-4 shadow-2xl text-left interactive">
+      <div class="flex items-start justify-between gap-2 mb-1">
         <div>
-          <span class="text-[9px] uppercase tracking-[0.22em] text-amber-300 font-semibold block">Cédula Curatorial · Sala WebAR</span>
-          <h3 class="font-serif-art text-sm sm:text-base text-emerald-50">Guardián en el Pasillo de Xilitla</h3>
+          <span class="text-[9px] uppercase tracking-[0.2em] text-amber-300 font-semibold block">Cédula Curatorial · Sala Exterior</span>
+          <h3 class="font-museum text-lg text-stone-100 leading-tight">Pabellón Xilitla y Escultura Central</h3>
         </div>
-        <button id="btn-close-curatorial" class="p-1 rounded-lg bg-stone-800/80 hover:bg-stone-700 text-stone-300">
+        <button id="btn-close-plaque" class="p-1 rounded-lg bg-stone-800 text-stone-300 hover:bg-stone-700">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
       <p class="text-[11px] text-stone-300 leading-relaxed mb-2.5">
-        Dispuesta exactamente a medio pasillo (<code class="text-emerald-300">pasillo_optimizado.glb</code>) y elevada sobre un monolito pétreo (<code class="text-emerald-300">rock.glb</code>), la escultura (<code class="text-emerald-300">3DModel.glb</code>) emerge tras despejar 4 velos botánicos de la selva huasteca.
+        El corredor arquitectónico (<code class="text-emerald-300">pasillo_optimizado.glb</code>) se ancla de forma 100% estática sobre el plano del suelo. En su centro exacto (<code class="text-emerald-300">x=0, z=0</code>) descansa la roca monolítica (<code class="text-emerald-300">rock.glb</code>) sosteniendo en su cumbre la escultura (<code class="text-emerald-300">3DModel.glb</code>).
       </p>
-      <div class="grid grid-cols-2 gap-1.5 text-[10px] font-mono text-emerald-200/90 border-t border-white/10 pt-2">
-        <div>Ubicación: Medio Pasillo</div>
-        <div>Interacción: Giro 360°</div>
+      <div id="dimensions-readout" class="text-[10px] font-mono text-stone-400 border-t border-stone-800 pt-2 space-y-0.5">
+        <div>Pasillo: 8.00 m largo (Fijo en piso y = 0.00 m)</div>
+        <div>Roca y Escultura: Centro exacto (z = 0.00 m)</div>
       </div>
     </aside>
 
-    <!-- Guía Gestual Central -->
-    <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none opacity-0 transition-opacity duration-700">
-      <div class="w-11 h-11 rounded-full bg-stone-950/75 border border-amber-300/45 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
-        <svg class="w-6 h-6 text-amber-300 animate-swipe-hand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
-        </svg>
-      </div>
-      <p id="hint-text" class="px-4 py-1.5 rounded-full bg-stone-950/85 backdrop-blur-md border border-emerald-400/30 text-emerald-50 text-xs font-medium shadow-xl max-w-xs sm:max-w-md">
-        Desliza las 4 capas de vegetación (25% c/u) para despejar el pasillo y revelar la roca y la escultura a medio corredor
-      </p>
-    </div>
-
-    <!-- Pie de Página: Controles de Caminata WebAR hacia Medio Pasillo + Cámara -->
-    <footer class="w-full flex flex-col gap-2">
-      <div class="w-full flex items-center justify-between pointer-events-none">
-        <div id="toast-message" class="bg-stone-950/85 backdrop-blur-md border border-emerald-400/35 text-emerald-100 px-3.5 py-1.5 rounded-full text-xs shadow-xl transition-all duration-300 opacity-0 transform translate-y-2">
-          Portal dimensional desplegado
-        </div>
-        <div id="pedometer-badge" class="hidden sm:flex items-center gap-1.5 bg-stone-950/80 backdrop-blur-md border border-teal-400/25 text-teal-200 px-3 py-1 rounded-full text-[11px] font-mono">
-          <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-          <span id="walk-zone-text">Posición: Exterior del Portal</span>
-        </div>
+    <!-- Controles Inferiores: Botón de Anclaje en Piso + Vistas de Recorrido Museográfico -->
+    <footer class="w-full flex flex-col items-center gap-2">
+      <!-- Mensaje Toast -->
+      <div id="toast-banner" class="px-4 py-1.5 rounded-full bg-stone-950/90 border border-emerald-400/35 text-stone-100 text-xs shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none">
+        Plano del piso detectado
       </div>
 
-      <!-- Barra de Recorrido Museográfico WebAR -->
-      <div class="w-full flex flex-wrap items-center justify-between gap-2 bg-stone-950/85 backdrop-blur-xl border border-white/15 rounded-2xl px-3 py-2 shadow-2xl interactive-ui">
-        <div class="flex items-center gap-2 flex-1 min-w-[210px]">
-          <button id="btn-walk-back" title="Retroceder hacia el exterior del portal" class="w-8 h-8 rounded-xl bg-stone-900 hover:bg-stone-800 active:scale-95 text-emerald-200 border border-white/10 flex items-center justify-center font-bold text-sm">
-            -
-          </button>
-          <div class="flex flex-col flex-1">
-            <div class="flex items-center justify-between text-[10px] text-emerald-200/90 font-medium mb-0.5 px-1">
-              <span>Umbral Portal</span>
-              <span id="walk-depth-label" class="font-mono text-amber-300">Recorrido Pasillo (0%)</span>
-              <span>Medio Pasillo (Roca + Escultura)</span>
-            </div>
-            <input id="walk-slider" type="range" min="0" max="100" value="0" class="w-full accent-emerald-400 h-1.5 bg-stone-800 rounded-lg cursor-pointer" />
-          </div>
-          <button id="btn-walk-forward" title="Avanzar hacia medio pasillo" class="w-8 h-8 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 active:scale-95 text-amber-200 border border-emerald-400/35 flex items-center justify-center font-bold text-sm">
-            +
-          </button>
-        </div>
-
-        <div class="flex items-center gap-1.5">
-          <button id="btn-step-inside" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-amber-400/20 hover:bg-amber-400/30 active:scale-95 text-amber-200 border border-amber-300/40 transition-all">
-            <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            <span id="step-inside-text">Ir a Medio Pasillo</span>
-          </button>
-
-          <button id="btn-toggle-camera" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600/85 hover:bg-emerald-500 active:scale-95 text-white border border-emerald-300/40 shadow-lg transition-all">
+      <!-- Barra Principal de Acción en el Piso y Recorrido -->
+      <div class="w-full max-w-2xl bg-stone-950/90 backdrop-blur-xl border border-stone-700/80 rounded-2xl p-2.5 shadow-2xl flex flex-wrap items-center justify-between gap-2 interactive">
+        <!-- Botón Primario: Fijar Sala en el Piso / Desbloquear -->
+        <div class="flex items-center gap-2">
+          <button id="btn-place-pavilion" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-300 via-amber-400 to-emerald-400 hover:from-amber-200 hover:to-emerald-300 active:scale-95 text-stone-950 font-bold text-xs tracking-wide shadow-lg flex items-center gap-2 transition-all">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
             </svg>
-            <span id="camera-btn-text">Cámara AR</span>
+            <span id="place-btn-label">Fijar Sala en el Piso Aquí</span>
+          </button>
+
+          <button id="btn-unlock-pavilion" class="hidden px-3 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-amber-200 border border-amber-400/30 text-xs font-medium flex items-center gap-1.5 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Reposicionar en Piso</span>
+          </button>
+        </div>
+
+        <!-- Vistas de Recorrido Museográfico (Mueven solo al visitante/cámara; el modelo jamás se mueve) -->
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-stone-400 mr-1 hidden sm:inline">Caminar a:</span>
+          <button id="btn-view-entrance" class="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-[11px] font-medium transition-all">
+            Entrada Pasillo
+          </button>
+          <button id="btn-view-mid" class="px-2.5 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 border border-emerald-500/40 text-[11px] font-semibold transition-all">
+            Medio Pasillo (Roca + Escultura)
+          </button>
+          <button id="btn-view-overview" class="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-[11px] font-medium transition-all">
+            Vista Exterior
           </button>
         </div>
       </div>
     </footer>
   </div>
 
-  <!-- 7. MODAL DEL PROMPT PROFESIONAL PARA EL USUARIO -->
+  <!-- 6. MODAL DEL PROMPT PROFESIONAL -->
   <div id="prompt-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
     <div class="bg-stone-950 border border-emerald-500/35 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-stone-800 bg-stone-900/60">
         <div>
-          <span class="text-[10px] uppercase tracking-widest text-amber-300 font-semibold">Arquitectura WebAR · Curaduría Digital · Three.js r160</span>
-          <h2 class="font-serif-art text-sm sm:text-base text-emerald-50">Prompt Maestro de Ingeniería y Museografía</h2>
+          <span class="text-[10px] uppercase tracking-widest text-amber-300 font-semibold">Especificación Técnica WebAR · Sala de Museo al Aire Libre</span>
+          <h2 class="font-museum text-lg text-stone-100">Prompt Profesional de Ingeniería WebAR</h2>
         </div>
         <button id="btn-close-prompt" class="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -457,42 +316,31 @@
         </button>
       </div>
 
-      <div class="p-5 overflow-y-auto custom-scroll text-xs text-stone-200 space-y-3 leading-relaxed font-mono select-text" id="prompt-content-text">
-Actúa como un Principal Creative Technologist, Arquitecto Senior de WebAR (Three.js r160 / GLSL / Stencil Buffer) y Curador Digital de Colecciones de Museo.
+      <div id="prompt-raw-text" class="p-5 overflow-y-auto custom-scroll text-xs text-stone-200 space-y-3 leading-relaxed font-mono select-text">
+Actúa como un Ingeniero Senior de WebAR (Three.js r160 + WebXR Hit-Test API) y Museógrafo Digital.
 
-OBJETIVO DEL PROYECTO:
-Construir en un único archivo HTML5 una instalación inmersiva WebAR para el repositorio `blenderingforconservation-maker/recorridovirtual_Leonora` (rama `main`). La experiencia inicia abriendo un Portal Dimensional con partículas de brillo en el espacio físico del visitante, desplegando en su interior el modelo arquitectónico `models/pasillo_optimizado.glb`. Exactamente a medio pasillo se alza el modelo de roca `models/rock.glb` y, posada sobre su cumbre, la escultura `models/3DModel.glb`, resguardada por 4 capas de vegetación interactiva (25% de avance por capa).
+OBJETIVO:
+Desarrollar desde cero en un único archivo HTML5 una experiencia WebAR de "Sala de Museo al Aire Libre" conectada al repositorio `blenderingforconservation-maker/recorridovirtual_Leonora` (rama `main`). Cuando la cámara del teléfono detecte un plano horizontal (el piso), el usuario despliega el modelo `models/pasillo_optimizado.glb`. Exactamente a medio pasillo (`x = 0, z = 0`) se ubica `models/rock.glb` y, apoyada sobre la cumbre de la roca, la escultura `models/3DModel.glb`. Una vez colocado en el suelo, el conjunto arquitectónico y escultórico debe quedar 100% FIJO E INMÓVIL en el mundo real (`matrixAutoUpdate = false`).
 
-ESTRUCTURA AUDITADA DEL REPOSITORIO (CERO ERRORES 404):
-- Modelos 3D (`models/`):
-  1. `models/pasillo_optimizado.glb` (Escenario principal del corredor).
-  2. `models/rock.glb` (Monolito pétreo situado a medio pasillo).
-  3. `models/3DModel.glb` (Escultura surrealista ensamblada sobre `rock.glb`).
-- Texturas (`assets/`):
-  1. `assets/arbustotropical.png`
-  2. `assets/plantas.png`
-  3. `assets/pasillo_xilitla.jpg`
-  (Omitir cualquier llamado a `image_c64162.jpg` y `tree-tropical.png` ya eliminados del repositorio).
+REGLAS DE INGENIERÍA ESPACIAL Y ENSAMBLAJE (`THREE.Box3`):
+1. Nodo Ancla Estático (`museumPavilionGroup`):
+   - Agrupa el pasillo, la roca, la escultura y el plano receptor de sombras bajo `museumPavilionGroup`.
+2. Normalización y Nivelación de `models/pasillo_optimizado.glb`:
+   - Calcula su `THREE.Box3`. Si el eje mayor horizontal está en X (`size.x > size.z`), rota el modelo `90°` en Y para alinear el túnel con el eje Z.
+   - Escala uniformemente el pasillo a `8.0 metros` de longitud. Centra `x = 0` y `z = 0`, y nivela su base exactamente con el suelo (`min.y = 0`).
+3. Posicionamiento de `models/rock.glb` a Medio Pasillo (`x = 0, z = 0`):
+   - Calcula su `THREE.Box3`, escálala a `1.05 metros` de ancho y colócala en el centro geométrico exacto del pasillo (`x = 0, z = 0`), apoyando su base sobre el suelo del corredor (`min.y = corridorFloorY`). Obtén la cota superior exacta `rockTopY = mountedRockBox.max.y`.
+4. Montaje de `models/3DModel.glb` sobre la Roca:
+   - Calcula su `THREE.Box3`, escálala a `1.45 metros` de altura, céntrala en `x = 0, z = 0` y apoya su base directamente sobre la cumbre de `rock.glb` (`min.y = rockTopY - 0.02`).
 
-ARQUITECTURA ESPACIAL Y FLUJO DE EXPERIENCIA (UX/UI):
-1. Portal Dimensional y Máscara Stencil (`z = 1.20`):
-   - Configurar `WebGLRenderer({ antialias: true, alpha: true, stencil: true })`.
-   - Animar la apertura del portal con 350 partículas de brillo (`portalSparkles`) y escribir `stencilRef = 1` en la abertura del arco. Mientras `camera.position.z > 1.20`, el pasillo, la roca, la escultura y las plantas solo son visibles a través de la ventana del portal (`THREE.EqualStencilFunc`). Al cruzar el umbral (`camera.position.z <= 1.20`), liberar el Stencil para inmersión 360° dentro del pasillo.
-
-2. Despliegue de `models/pasillo_optimizado.glb`:
-   - Cargar con `GLTFLoader` + `DRACOLoader`, calcular su `THREE.Box3`, alinear su eje longitudinal con `-Z` para que se extienda desde `z = 1.20` (umbral del portal) hasta `z = -7.60` (fondo del corredor), nivelando su suelo en `y = -1.25`.
-
-3. Ensamblaje Curatorial a Medio Pasillo (`z = -2.80`):
-   - Posicionar `models/rock.glb` sobre el suelo en `z = -2.80` (punto medio del corredor). Calcular dinámicamente la cota superior real (`rockTopY`) de su `Box3`.
-   - Montar `models/3DModel.glb` directamente sobre la superficie superior de `rock.glb` (`y = rockTopY - 0.04`), iluminada con un SpotLight cenital de museo, luces cálidas de acento y modo de inspección 360°.
-
-4. 4 Capas de Vegetación Interactiva (25% por Capa = 100%):
-   - Distribuir 4 cortinas botánicas entre la entrada del portal y el altar a medio pasillo (`z = 0.25, -0.55, -1.35, -2.05`) usando `assets/arbustotropical.png` y `assets/plantas.png`.
-   - Al deslizar cada capa, abrir sus hojas hacia los muros laterales del pasillo con sonido binaural de follaje, sumar +25% al progreso y avanzar suavemente por el corredor hasta revelar la obra y desplegar su Cédula Museográfica.</div>
+DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
+- En fase de escaneo (`isPlaced = false`), proyecta una retícula sobre el plano horizontal del piso (mediante WebXR `hit-test` con espacio de referencia `local-floor` o `Raycaster` contra el plano `y = 0`).
+- Al confirmar la colocación, transfiere la posición `(x, y, z)` y orientación horizontal `(yaw)` de la retícula al `museumPavilionGroup`, oculta la retícula y ejecuta `museumPavilionGroup.updateMatrix()` seguido de `museumPavilionGroup.matrixAutoUpdate = false`.
+- Elimina cualquier rotación automática, oscilación o deriva de sensores sobre los modelos: el pasillo, la roca y la escultura permanecen completamente fijos como una instalación arquitectónica real.</div>
 
       <div class="px-5 py-3 border-t border-stone-800 bg-stone-900/60 flex items-center justify-between">
-        <span id="copy-feedback" class="text-[11px] text-emerald-400 opacity-0 transition-opacity">¡Prompt copiado al portapapeles!</span>
-        <button id="btn-copy-prompt" class="px-4 py-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs transition-all">
+        <span id="copy-toast" class="text-[11px] text-emerald-400 opacity-0 transition-opacity">¡Prompt copiado al portapapeles!</span>
+        <button id="btn-copy-prompt" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs transition-all">
           Copiar Prompt Profesional
         </button>
       </div>
@@ -503,412 +351,112 @@ ARQUITECTURA ESPACIAL Y FLUJO DE EXPERIENCIA (UX/UI):
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     const REPO_RAW_BASE = 'https://raw.githubusercontent.com/blenderingforconservation-maker/recorridovirtual_Leonora/main/';
 
     const CONFIG = {
-      // Posición inicial de la cámara (en el exterior mirando hacia el portal)
-      cameraStartZ: 4.25,
-      // Posición de caminata frente al conjunto de roca + escultura a medio pasillo
-      cameraMinWalkZ: -1.10,
-      // Ubicación del umbral del Portal Dimensional
-      portalZ: 1.20,
-      portalWidth: 2.85,
-      portalHeight: 3.55,
-      // Longitud total del pasillo dentro del portal (desde z = 1.20 hasta z = -7.60)
-      corridorFrontZ: 1.20,
-      corridorBackZ: -7.60,
-      // Ubicación EXACTA A MEDIO PASILLO para rock.glb + 3DModel.glb
-      midCorridorAltarZ: -2.80,
-      floorY: -1.25,
-      modelRotation: { x: 0, y: 0, z: 0 },
-      // 1. Modelo del Pasillo Optimizado
-      corridorModelPaths: [
-        `${REPO_RAW_BASE}models/pasillo_optimizado.glb`,
-        'models/pasillo_optimizado.glb'
-      ],
-      // 2. Modelo de la Roca (situada a medio pasillo)
-      rockModelPaths: [
-        `${REPO_RAW_BASE}models/rock.glb`,
-        'models/rock.glb'
-      ],
-      // 3. Modelo de la Escultura (situada sobre la roca)
-      sculptureModelPaths: [
-        `${REPO_RAW_BASE}models/3DModel.glb`,
-        'models/3DModel.glb'
-      ],
-      // Textura de atmósfera al fondo del pasillo (único JPG vigente en assets/)
-      backdropTexturePaths: [
-        `${REPO_RAW_BASE}assets/pasillo_xilitla.jpg`,
-        'assets/pasillo_xilitla.jpg'
-      ],
-      // Únicamente los 2 PNG botánicos existentes en assets/ (Cero llamadas a archivos eliminados)
-      vegetationAssets: [
-        {
-          key: 'arbusto',
-          name: 'arbustotropical.png',
-          urls: [
-            `${REPO_RAW_BASE}assets/arbustotropical.png`,
-            'assets/arbustotropical.png'
-          ],
-          aspectWidth: 2.15,
-          aspectHeight: 1.85
-        },
-        {
-          key: 'plantas',
-          name: 'plantas.png',
-          urls: [
-            `${REPO_RAW_BASE}assets/plantas.png`,
-            'assets/plantas.png'
-          ],
-          aspectWidth: 1.95,
-          aspectHeight: 2.12
-        }
-      ],
-      portalSparkleCount: 350,
-      particleCount: 220,
-      burstParticleCount: 180,
-      damping: 0.88,
-      restLerpSpeed: 0.085
+      corridorTargetLength: 8.0, // 8.0 metros de longitud arquitectónica real
+      rockTargetWidth: 1.05,     // 1.05 metros de diámetro para el altar pétreo a medio pasillo
+      sculptureTargetHeight: 1.45, // 1.45 metros de altura para la escultura sobre la roca
+      paths: {
+        corridor: [
+          `${REPO_RAW_BASE}models/pasillo_optimizado.glb`,
+          'models/pasillo_optimizado.glb'
+        ],
+        rock: [
+          `${REPO_RAW_BASE}models/rock.glb`,
+          'models/rock.glb'
+        ],
+        sculpture: [
+          `${REPO_RAW_BASE}models/3DModel.glb`,
+          'models/3DModel.glb'
+        ]
+      }
     };
 
     const state = {
-      foliagePlanes: [],
-      // Exactamente 4 capas interactivas (cada una aporta 25% = 100%)
-      totalInteractiveLayers: 4,
-      clearedLayersMap: { 1: false, 2: false, 3: false, 4: false },
-      clearedLayersCount: 0,
-      discoveryCompleted: false,
-      interactionEnabled: false,
-      // Control del Portal Dimensional (Stencil automático al cruzar el umbral o manual)
-      portalStencilMode: 'auto', // 'auto' | 'forced_off'
-      portalStencilActive: true,
-      portalRimShaderUniforms: null,
-      portalVortexUniforms: null,
-      portalVortexMesh: null,
-      portalSparkleData: [],
-      // Iluminación museográfica (0: Museo Cálido, 1: Bioluminiscencia Xilitla, 2: Sol Dorado)
-      lightingPresetIndex: 0,
-      // Caminata WebAR hacia medio pasillo (0 = exterior en z=4.25, 1 = frente al altar a medio pasillo en z=-1.10)
-      walkProgress: 0,
-      targetWalkProgress: 0,
-      lastStepTime: 0,
-      pinchStartDist: null,
-      pinchStartWalk: 0,
-      // Coreografía de apertura del portal y despliegue del pasillo (2.5s)
-      materializing: false,
-      materializeStartTime: 0,
-      materializeDuration: 2.5,
-      lastMaterializeRustleStage: 0,
-      // Nodos 3D y cota superior de rock.glb
-      rockTopY: -0.52,
-      corridorNode: null,
-      rockNode: null,
-      sculptureNode: null,
-      sculptureMeshes: [],
-      anchorRingGroup: null,
-      arShadowFloor: null,
-      // Interacción táctil
-      activeDraggedLeaf: null,
-      pointerDown: false,
-      rotatingModel: false,
-      hasInteracted: false,
-      pointerNDC: new THREE.Vector2(0, 0),
-      smoothedParallax: new THREE.Vector2(0, 0),
-      lastPointerWorld: new THREE.Vector3(),
-      lastInspectClient: { x: 0, y: 0 },
-      modelTargetRotY: 0,
-      modelTargetRotX: 0,
-      // Sensores espaciales 3DoF + Acelerómetro de pasos
-      cameraActive: false,
-      gyroAvailable: false,
-      gyroBaseline: { alpha: null, beta: null, gamma: null },
-      gyroOffset: new THREE.Vector2(0, 0),
-      smoothedGyro: new THREE.Vector2(0, 0),
-      // Audio
-      soundEnabled: true,
-      audioCtx: null,
-      lastRustleTime: 0,
-      // Partículas y Destello de revelación
-      particleData: [],
-      burstData: [],
-      burstActive: false,
-      burstStartTime: 0,
-      revealFlashActive: false,
-      revealFlashStartTime: 0,
-      revealFlashDuration: 1.9,
-      baseExposure: 1.28,
-      baseCenterSpotIntensity: 4.2
+      isPlaced: false,           // Cuando es true, museumPavilionGroup queda 100% bloqueado e inmóvil
+      cameraStreamActive: false,
+      xrSession: null,
+      xrHitTestSource: null,
+      xrRefSpace: null,
+      corridorFloorY: 0.0,       // Cota Y del piso interior del pasillo
+      rockTopY: 0.65,            // Cota Y exacta de la cumbre de rock.glb
+      cameraLerpActive: false,
+      cameraTargetPos: new THREE.Vector3(),
+      cameraTargetLookAt: new THREE.Vector3()
     };
 
-    const FLASH_COLOR_TARGET = new THREE.Color(0xfffef5);
-    const FLASH_EMISSIVE_TARGET = new THREE.Color(0xfde047);
+    // Referencias DOM
+    const viewport = document.getElementById('webgl-viewport');
+    const videoEl = document.getElementById('ar-camera-video');
+    const skyBackdrop = document.getElementById('outdoor-sky-backdrop');
+    const loadingModal = document.getElementById('loading-modal');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const loadingMessage = document.getElementById('loading-message');
+    const progressContainer = document.getElementById('progress-container');
+    const startActions = document.getElementById('start-actions');
+    const phaseDot = document.getElementById('phase-dot');
+    const phaseTitle = document.getElementById('phase-title');
+    const phaseSubtitle = document.getElementById('phase-subtitle');
+    const btnPlacePavilion = document.getElementById('btn-place-pavilion');
+    const placeBtnLabel = document.getElementById('place-btn-label');
+    const btnUnlockPavilion = document.getElementById('btn-unlock-pavilion');
+    const toastBanner = document.getElementById('toast-banner');
+    const dimensionsReadout = document.getElementById('dimensions-readout');
 
-    const container = document.getElementById('webgl-container');
-    const videoElement = document.getElementById('ar-video');
-    const backdropElement = document.getElementById('illustration-backdrop');
-    const godRaysElement = document.getElementById('god-rays');
-    const loadingScreen = document.getElementById('loading-screen');
-    const loadingProgressWrap = document.getElementById('loading-progress-wrap');
-    const arStartPortal = document.getElementById('ar-start-portal');
-    const loadingBar = document.getElementById('loading-bar');
-    const loadingPercent = document.getElementById('loading-percent');
-    const loadingStatus = document.getElementById('loading-status');
-    const corridorSourceBadge = document.getElementById('corridor-source-badge');
-    const uiLayer = document.getElementById('ui-layer');
-    const discoveryLabel = document.getElementById('discovery-label');
-    const discoveryCount = document.getElementById('discovery-count');
-    const discoveryBar = document.getElementById('discovery-bar');
-    const statusDot = document.getElementById('status-dot');
-    const onboardingHint = document.getElementById('onboarding-hint');
-    const toastMessage = document.getElementById('toast-message');
-    const touchRipple = document.getElementById('touch-ripple');
-    const btnFullscreen = document.getElementById('btn-fullscreen');
-    const iconExpand = document.getElementById('icon-expand');
-    const iconCompress = document.getElementById('icon-compress');
-    const walkSlider = document.getElementById('walk-slider');
-    const walkDepthLabel = document.getElementById('walk-depth-label');
-    const walkZoneText = document.getElementById('walk-zone-text');
-    const curatorialCard = document.getElementById('curatorial-card');
+    // Escena Three.js
+    let scene, camera, renderer, controls, gltfLoader;
+    let museumPavilionGroup, corridorHolder, rockHolder, sculptureHolder, shadowFloorMesh;
+    let floorReticleGroup, floorDetectionGrid, virtualFloorPlane;
+    const screenCenterRaycaster = new THREE.Raycaster();
+    const screenCenterNDC = new THREE.Vector2(0, -0.15); // Apunta ligeramente hacia el piso frente al usuario
 
-    let scene, camera, renderer, raycaster, gltfLoader;
-    let worldAnchorGroup, portalGroup, portalFrameGroup, portalStencilMask, portalInteriorGroup;
-    let portalSparkles, corridorGroup, midCorridorAltarGroup, rockHolderGroup, sculptureHolderGroup;
-    let jungleEnvironmentGroup, foliageRootGroup, bioParticles, burstParticles;
-    let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight, corridorEntryLight, corridorDeepLight;
-    let cachedTexturesByKey = null;
-    const clock = new THREE.Clock();
-
-    function markAssetBadgeLoaded(badgeId, labelText) {
-      const el = document.getElementById(badgeId);
+    function setAssetStatus(elementId, label, success) {
+      const el = document.getElementById(elementId);
       if (!el) return;
-      el.className = 'px-2.5 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-400/50 text-emerald-200 flex items-center justify-center gap-1.5 shadow-sm';
-      el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>${labelText} ✓</span>`;
-    }
-
-    /* =========================================================================
-       PANTALLA COMPLETA, CÉDULA MUSEOGRÁFICA Y MODAL DE PROMPT
-       ========================================================================= */
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      } else if (document.exitFullscreen) {
-        document.exitFullscreen();
+      if (success) {
+        el.className = 'px-3 py-2 rounded-xl bg-emerald-950/85 border border-emerald-400/50 text-emerald-200 flex items-center justify-center gap-2';
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>${label} ✓</span>`;
+      } else {
+        el.className = 'px-3 py-2 rounded-xl bg-amber-950/80 border border-amber-400/40 text-amber-200 flex items-center justify-center gap-2';
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>${label} (Respaldo)</span>`;
       }
     }
 
-    document.addEventListener('fullscreenchange', () => {
-      const isFull = !!document.fullscreenElement;
-      iconExpand.classList.toggle('hidden', isFull);
-      iconCompress.classList.toggle('hidden', !isFull);
-    });
-
-    btnFullscreen.addEventListener('click', toggleFullscreen);
-
-    document.getElementById('btn-curatorial-card').addEventListener('click', () => {
-      curatorialCard.classList.toggle('hidden');
-    });
-    document.getElementById('btn-close-curatorial').addEventListener('click', () => {
-      curatorialCard.classList.add('hidden');
-    });
-
-    const promptModal = document.getElementById('prompt-modal');
-    document.getElementById('btn-open-prompt').addEventListener('click', () => {
-      promptModal.classList.remove('hidden');
-      promptModal.classList.add('flex');
-    });
-    document.getElementById('btn-open-prompt-start').addEventListener('click', () => {
-      promptModal.classList.remove('hidden');
-      promptModal.classList.add('flex');
-    });
-    document.getElementById('btn-close-prompt').addEventListener('click', () => {
-      promptModal.classList.add('hidden');
-      promptModal.classList.remove('flex');
-    });
-    document.getElementById('btn-copy-prompt').addEventListener('click', () => {
-      const text = document.getElementById('prompt-content-text').innerText;
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        const feedback = document.getElementById('copy-feedback');
-        feedback.classList.remove('opacity-0');
-        setTimeout(() => feedback.classList.add('opacity-0'), 2500);
-      } catch (err) {}
-      document.body.removeChild(textarea);
-    });
-
-    /* =========================================================================
-       1. AUDIO PROCEDURAL (APERTURA DE PORTAL CON BRILLO, ROCE DE CAPAS Y REVELACIÓN)
-       ========================================================================= */
-    function initAudio() {
-      if (!state.audioCtx && state.soundEnabled) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (AudioContext) state.audioCtx = new AudioContext();
-      }
-      if (state.audioCtx && state.audioCtx.state === 'suspended') {
-        state.audioCtx.resume();
-      }
-    }
-
-    function playPortalOpeningSound() {
-      if (!state.soundEnabled || !state.audioCtx) return;
-      try {
-        const ctx = state.audioCtx;
-        const now = ctx.currentTime;
-        // Pad armónico más destellos cristalinos de alta frecuencia para las partículas de brillo
-        const freqs = [110, 164.81, 220, 329.63, 659.25, 987.77, 1318.5];
-        freqs.forEach((f, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = idx < 3 ? 'triangle' : 'sine';
-          const delay = idx * 0.11;
-          osc.frequency.setValueAtTime(f * 0.85, now + delay);
-          osc.frequency.exponentialRampToValueAtTime(f, now + delay + 1.4);
-
-          const peakGain = idx < 3 ? 0.032 : 0.016;
-          gain.gain.setValueAtTime(0.0001, now + delay);
-          gain.gain.linearRampToValueAtTime(peakGain, now + delay + 0.35);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 2.1);
-
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now + delay);
-          osc.stop(now + delay + 2.15);
-        });
-      } catch (e) {}
-    }
-
-    function playFoliageRustle(intensity = 0.55) {
-      const now = performance.now();
-      if (!state.soundEnabled || !state.audioCtx || now - state.lastRustleTime < 52) return;
-      state.lastRustleTime = now;
-
-      try {
-        const ctx = state.audioCtx;
-        const duration = 0.18 + Math.random() * 0.07;
-        const bufferSize = Math.floor(ctx.sampleRate * duration);
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-
-        let b0 = 0, b1 = 0;
-        const microGrains = 4 + Math.floor(Math.random() * 3);
-
-        for (let i = 0; i < bufferSize; i++) {
-          const t = i / bufferSize;
-          const white = Math.random() * 2 - 1;
-          b0 = 0.96 * b0 + white * 0.04;
-          b1 = 0.92 * b1 + white * 0.08;
-          const pinkNoise = (b0 + b1) * 3.2;
-
-          const grainMod = Math.pow(Math.sin(t * Math.PI), 0.85) * (0.65 + 0.35 * Math.sin(t * Math.PI * microGrains * 4.0));
-          data[i] = pinkNoise * grainMod;
-        }
-
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-
-        const hp = ctx.createBiquadFilter();
-        hp.type = 'highpass';
-        hp.frequency.setValueAtTime(1150, ctx.currentTime);
-
-        const bp1 = ctx.createBiquadFilter();
-        bp1.type = 'bandpass';
-        bp1.frequency.setValueAtTime(2400 + Math.random() * 450, ctx.currentTime);
-        bp1.Q.setValueAtTime(0.85, ctx.currentTime);
-
-        const bp2 = ctx.createBiquadFilter();
-        bp2.type = 'bandpass';
-        bp2.frequency.setValueAtTime(3400 + Math.random() * 550, ctx.currentTime);
-        bp2.Q.setValueAtTime(1.05, ctx.currentTime);
-
-        const gain = ctx.createGain();
-        const baseVol = THREE.MathUtils.clamp(intensity * 0.075, 0.02, 0.08);
-        gain.gain.setValueAtTime(0.001, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(baseVol, ctx.currentTime + 0.035);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-
-        noise.connect(hp);
-        hp.connect(bp1);
-        hp.connect(bp2);
-        bp1.connect(gain);
-        bp2.connect(gain);
-        gain.connect(ctx.destination);
-        noise.start();
-      } catch (e) {}
-    }
-
-    function playLayerClearedChime(layerNumber) {
-      if (!state.soundEnabled || !state.audioCtx) return;
-      try {
-        const ctx = state.audioCtx;
-        const baseFreqs = [392.00, 440.00, 523.25, 659.25];
-        const f = baseFreqs[(layerNumber - 1) % baseFreqs.length];
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(f, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(f * 1.25, ctx.currentTime + 0.35);
-        gain.gain.setValueAtTime(0.001, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.035, ctx.currentTime + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.55);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.6);
-      } catch (e) {}
-    }
-
-    function playRevealChime() {
-      if (!state.soundEnabled || !state.audioCtx) return;
-      try {
-        const ctx = state.audioCtx;
-        const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5];
-        notes.forEach((freq, idx) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
-          gain.gain.setValueAtTime(0.0001, ctx.currentTime + idx * 0.08);
-          gain.gain.linearRampToValueAtTime(0.035, ctx.currentTime + idx * 0.08 + 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.08 + 1.6);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + idx * 0.08);
-          osc.stop(ctx.currentTime + idx * 0.08 + 1.65);
-        });
-      } catch (e) {}
+    function updateProgress(pct, msg) {
+      progressBar.style.width = `${pct}%`;
+      progressText.textContent = `${pct}%`;
+      if (msg) loadingMessage.textContent = msg;
     }
 
     function showToast(text) {
-      toastMessage.textContent = text;
-      toastMessage.classList.remove('opacity-0', 'translate-y-2');
-      toastMessage.classList.add('opacity-100', 'translate-y-0');
+      toastBanner.textContent = text;
+      toastBanner.classList.remove('opacity-0');
+      toastBanner.classList.add('opacity-100');
       clearTimeout(showToast.timer);
       showToast.timer = setTimeout(() => {
-        toastMessage.classList.remove('opacity-100', 'translate-y-0');
-        toastMessage.classList.add('opacity-0', 'translate-y-2');
+        toastBanner.classList.remove('opacity-100');
+        toastBanner.classList.add('opacity-0');
       }, 3400);
     }
 
     /* =========================================================================
-       2. INICIALIZACIÓN DE THREE.JS (CON STENCIL BUFFER Y GRUPOS DEL PORTAL)
+       1. INICIALIZACIÓN DE THREE.JS E ILUMINACIÓN DE MUSEO AL AIRE LIBRE
        ========================================================================= */
     async function init() {
-      updateLoading(8, 'Inicializando motor espacial Three.js r160 con Stencil Buffer...');
+      updateProgress(10, 'Inicializando motor gráfico Three.js r160...');
 
       scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x041811, 0.032);
 
-      camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.08, 80);
-      updateCameraFramingForAspect();
+      camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.05, 120);
+      camera.position.set(0, 1.65, 6.2); // Altura de ojos humanos (1.65m) mirando hacia el plano del suelo
 
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
-        stencil: true,
         powerPreference: 'high-performance'
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -916,595 +464,204 @@ ARQUITECTURA ESPACIAL Y FLUJO DE EXPERIENCIA (UX/UI):
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = state.baseExposure;
-      container.appendChild(renderer.domElement);
+      renderer.toneMappingExposure = 1.22;
+      renderer.xr.enabled = true;
+      viewport.appendChild(renderer.domElement);
 
-      raycaster = new THREE.Raycaster();
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.maxPolarAngle = Math.PI * 0.495; // Evita que la cámara atraviese debajo del piso
+      controls.minDistance = 0.4;
+      controls.maxDistance = 22.0;
+      controls.target.set(0, 1.0, 0);
 
+      // Cargador GLTF + DRACO
       gltfLoader = new GLTFLoader();
       gltfLoader.setCrossOrigin('anonymous');
       const dracoLoader = new DRACOLoader();
       dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
       gltfLoader.setDRACOLoader(dracoLoader);
 
-      // Nodo raíz de anclaje espacial en el mundo real
-      worldAnchorGroup = new THREE.Group();
-      worldAnchorGroup.name = 'WorldSpatialAnchor';
-      scene.add(worldAnchorGroup);
+      setupOutdoorMuseumLighting();
+      createFloorDetectionReticleAndPlane();
 
-      // Grupo maestro del Portal Dimensional
-      portalGroup = new THREE.Group();
-      portalGroup.name = 'DimensionalPortalRoot';
-      worldAnchorGroup.add(portalGroup);
+      // Nodo raíz estático de la Sala de Museo
+      museumPavilionGroup = new THREE.Group();
+      museumPavilionGroup.name = 'StaticMuseumPavilionGroup';
+      scene.add(museumPavilionGroup);
 
-      // Grupo exclusivo del interior del portal (Pasillo + Altar a Medio Pasillo [Roca + Escultura] + 4 Capas Botánicas)
-      portalInteriorGroup = new THREE.Group();
-      portalInteriorGroup.name = 'PortalInteriorWorld';
-      portalGroup.add(portalInteriorGroup);
+      corridorHolder = new THREE.Group();
+      corridorHolder.name = 'CorridorGLBHolder';
+      museumPavilionGroup.add(corridorHolder);
 
-      setupMuseumLighting();
-      createSpatialARFloorAndReticle();
+      rockHolder = new THREE.Group();
+      rockHolder.name = 'MidCorridorRockHolder';
+      museumPavilionGroup.add(rockHolder);
 
-      updateLoading(22, 'Construyendo Portal Dimensional y 350 partículas de brillo...');
-      createPortalArchAndStencilMask();
-      createPortalSparkleParticles();
+      sculptureHolder = new THREE.Group();
+      sculptureHolder.name = 'TopOfRockSculptureHolder';
+      museumPavilionGroup.add(sculptureHolder);
 
-      updateLoading(42, 'Cargando models/pasillo_optimizado.glb dentro del portal...');
-      await createJungleSurrealBackground();
-      await loadAndDeployCorridorGLB();
-      markAssetBadgeLoaded('badge-pasillo', 'pasillo.glb');
+      // Receptor de sombras sobre el piso real
+      const shadowGeo = new THREE.PlaneGeometry(24, 24);
+      const shadowMat = new THREE.ShadowMaterial({ opacity: 0.42 });
+      shadowFloorMesh = new THREE.Mesh(shadowGeo, shadowMat);
+      shadowFloorMesh.rotation.x = -Math.PI / 2;
+      shadowFloorMesh.position.y = 0.002;
+      shadowFloorMesh.receiveShadow = true;
+      museumPavilionGroup.add(shadowFloorMesh);
 
-      updateLoading(66, 'Colocando models/rock.glb a medio pasillo y models/3DModel.glb sobre la roca...');
-      await loadMidCorridorRockAndSculpture();
+      // Carga rigurosa y secuencial de los 3 modelos GLB para ensamblaje exacto
+      updateProgress(30, 'Cargando models/pasillo_optimizado.glb...');
+      await loadAndAssembleCorridor();
 
-      updateLoading(86, 'Instalando las 4 capas de vegetación (arbustotropical.png + plantas.png)...');
-      cachedTexturesByKey = await loadBaseVegetationTextures();
-      buildLayeredJungle(cachedTexturesByKey);
+      updateProgress(62, 'Colocando models/rock.glb exactamente a medio pasillo (z = 0)...');
+      await loadAndAssembleMidCorridorRock();
 
-      updateLoading(96, 'Activando Stencil Buffer y recorrido museográfico WebAR...');
-      createLuminescentParticles();
-      createRevealBurstParticles();
-      applyPortalStencilState(true);
+      updateProgress(88, 'Posando models/3DModel.glb sobre la cumbre de la roca...');
+      await loadAndAssembleSculptureOnRock();
 
-      prepareForMaterialization();
-      setupInteractionEvents();
+      // Iniciar en Fase 1 (Escaneo de piso con vista previa semitransparente sobre la retícula)
+      setPreviewScanningState();
+
+      setupUIEvents();
       window.addEventListener('resize', onWindowResize);
 
-      updateLoading(100, '¡Instalación museográfica lista para desplegarse!');
-      loadingProgressWrap.classList.add('hidden');
-      arStartPortal.classList.remove('hidden');
-      arStartPortal.classList.add('flex');
+      updateProgress(100, '¡Sala de Museo ensamblada y lista para colocarse en el piso!');
+      progressContainer.classList.add('hidden');
+      startActions.classList.remove('hidden');
+      startActions.classList.add('flex');
 
-      renderer.setAnimationLoop(animate);
+      renderer.setAnimationLoop(renderLoop);
     }
 
-    function updateLoading(percent, message) {
-      loadingBar.style.width = `${percent}%`;
-      loadingPercent.textContent = `${percent}%`;
-      if (message) loadingStatus.textContent = message;
-    }
-
-    function getCameraBaseZ() {
-      const aspect = window.innerWidth / window.innerHeight;
-      const startZ = aspect >= 1.0 ? 3.95 : 4.35;
-      return THREE.MathUtils.lerp(startZ, CONFIG.cameraMinWalkZ, state.walkProgress);
-    }
-
-    function updateCameraFramingForAspect() {
-      const aspect = window.innerWidth / window.innerHeight;
-      if (camera) {
-        camera.aspect = aspect;
-        camera.position.z = getCameraBaseZ();
-        camera.updateProjectionMatrix();
-      }
-    }
-
-    /* Iluminación de Galería de Museo a lo largo del Pasillo y sobre el Altar a Medio Pasillo */
-    function setupMuseumLighting() {
-      hemiLight = new THREE.HemisphereLight(0xd1fae5, 0x062016, 1.55);
+    function setupOutdoorMuseumLighting() {
+      // Luz hemisférica diurna (cielo claro / rebote de piedra y vegetación en el suelo)
+      const hemiLight = new THREE.HemisphereLight(0xfef9c3, 0x1f3a2e, 1.65);
+      hemiLight.position.set(0, 12, 0);
       scene.add(hemiLight);
 
-      sunClearLight = new THREE.DirectionalLight(0xfffbeb, 2.65);
-      sunClearLight.position.set(1.8, 5.8, 2.6);
-      sunClearLight.castShadow = true;
-      sunClearLight.shadow.mapSize.width = 1024;
-      sunClearLight.shadow.mapSize.height = 1024;
-      sunClearLight.shadow.bias = -0.001;
-      scene.add(sunClearLight);
+      // Sol direccional de museo al aire libre proyectando sombras nítidas en el suelo y sobre la roca
+      const sunLight = new THREE.DirectionalLight(0xfffbeb, 2.8);
+      sunLight.position.set(4.5, 9.5, 5.0);
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.width = 2048;
+      sunLight.shadow.mapSize.height = 2048;
+      sunLight.shadow.camera.near = 0.5;
+      sunLight.shadow.camera.far = 25;
+      const d = 6.5;
+      sunLight.shadow.camera.left = -d;
+      sunLight.shadow.camera.right = d;
+      sunLight.shadow.camera.top = d;
+      sunLight.shadow.camera.bottom = -d;
+      sunLight.shadow.bias = -0.0005;
+      scene.add(sunLight);
 
-      // Luz de bienvenida en el primer tramo del pasillo (z = -0.5)
-      corridorEntryLight = new THREE.PointLight(0xa7f3d0, 2.8, 9);
-      corridorEntryLight.position.set(0, 1.75, -0.50);
-      portalInteriorGroup.add(corridorEntryLight);
+      // Luz museográfica cenital dedicada al centro del pasillo (x = 0, z = 0) iluminando la escultura y la roca
+      const midCorridorSpot = new THREE.SpotLight(0xfffef0, 3.6);
+      midCorridorSpot.position.set(0, 3.6, 1.2);
+      midCorridorSpot.target.position.set(0, 1.1, 0);
+      midCorridorSpot.angle = Math.PI / 3.2;
+      midCorridorSpot.penumbra = 0.85;
+      scene.add(midCorridorSpot);
+      scene.add(midCorridorSpot.target);
 
-      // Luces laterales de recorte sobre el altar a medio pasillo (z = -2.80)
-      rimTealLight = new THREE.PointLight(0x2dd4bf, 4.0, 12);
-      rimTealLight.position.set(-1.55, 1.35, CONFIG.midCorridorAltarZ + 0.35);
-      portalInteriorGroup.add(rimTealLight);
-
-      rimGoldLight = new THREE.PointLight(0xfbbf24, 3.8, 12);
-      rimGoldLight.position.set(1.55, 1.25, CONFIG.midCorridorAltarZ + 0.55);
-      portalInteriorGroup.add(rimGoldLight);
-
-      // Luz de profundidad en la segunda mitad del pasillo (detrás de la roca y la escultura, z = -5.2)
-      corridorDeepLight = new THREE.PointLight(0x34d399, 3.2, 12);
-      corridorDeepLight.position.set(0, 1.65, -5.20);
-      portalInteriorGroup.add(corridorDeepLight);
-
-      // SpotLight cenital museográfico apuntando directamente a la escultura sobre la roca a medio pasillo
-      centerSpotLight = new THREE.SpotLight(0xfffef0, state.baseCenterSpotIntensity);
-      centerSpotLight.position.set(0, 3.45, CONFIG.midCorridorAltarZ + 1.45);
-      centerSpotLight.target.position.set(0, 0.15, CONFIG.midCorridorAltarZ);
-      centerSpotLight.angle = Math.PI / 3.8;
-      centerSpotLight.penumbra = 0.85;
-      centerSpotLight.castShadow = true;
-      portalInteriorGroup.add(centerSpotLight);
-      portalInteriorGroup.add(centerSpotLight.target);
-    }
-
-    function cycleLightingPreset() {
-      state.lightingPresetIndex = (state.lightingPresetIndex + 1) % 3;
-      const labelEl = document.getElementById('lighting-mode-text');
-
-      if (state.lightingPresetIndex === 0) {
-        // 1. Luz de Museo (Cenital Cálida y Conservación)
-        hemiLight.color.setHex(0xd1fae5);
-        hemiLight.intensity = 1.55;
-        centerSpotLight.color.setHex(0xfffef0);
-        state.baseCenterSpotIntensity = 4.2;
-        centerSpotLight.intensity = 4.2;
-        rimTealLight.color.setHex(0x2dd4bf);
-        rimGoldLight.color.setHex(0xfbbf24);
-        if (labelEl) labelEl.textContent = 'Luz: Museo';
-        showToast('Iluminación: Luz Cenital de Museo');
-      } else if (state.lightingPresetIndex === 1) {
-        // 2. Bioluminiscencia Nocturna de Xilitla
-        hemiLight.color.setHex(0x34d399);
-        hemiLight.intensity = 1.15;
-        centerSpotLight.color.setHex(0x5eead4);
-        state.baseCenterSpotIntensity = 5.0;
-        centerSpotLight.intensity = 5.0;
-        rimTealLight.color.setHex(0x10b981);
-        rimGoldLight.color.setHex(0xa7f3d0);
-        if (labelEl) labelEl.textContent = 'Luz: Bioluminiscencia';
-        showToast('Iluminación: Bioluminiscencia Nocturna de Xilitla');
-      } else {
-        // 3. Sol Dorado de la Huasteca
-        hemiLight.color.setHex(0xfef08a);
-        hemiLight.intensity = 1.75;
-        centerSpotLight.color.setHex(0xfde047);
-        state.baseCenterSpotIntensity = 4.8;
-        centerSpotLight.intensity = 4.8;
-        rimTealLight.color.setHex(0xf59e0b);
-        rimGoldLight.color.setHex(0xfef08a);
-        if (labelEl) labelEl.textContent = 'Luz: Sol Huasteco';
-        showToast('Iluminación: Sol Dorado de la Huasteca');
-      }
-    }
-
-    function setupLighting() {
-      hemiLight = new THREE.HemisphereLight(0xa7f3d0, 0x041a12, 1.4);
-      scene.add(hemiLight);
-
-      sunClearLight = new THREE.DirectionalLight(0xfef08a, 2.5);
-      sunClearLight.position.set(1.6, 5.4, 2.8);
-      sunClearLight.castShadow = true;
-      sunClearLight.shadow.mapSize.width = 1024;
-      sunClearLight.shadow.mapSize.height = 1024;
-      sunClearLight.shadow.bias = -0.001;
-      scene.add(sunClearLight);
-
-      rimTealLight = new THREE.PointLight(0x2dd4bf, 3.8, 14);
-      rimTealLight.position.set(-1.8, 1.6, -0.8);
-      portalInteriorGroup.add(rimTealLight);
-
-      rimGoldLight = new THREE.PointLight(0xfbbf24, 3.4, 14);
-      rimGoldLight.position.set(1.8, 1.4, 0.4);
-      portalInteriorGroup.add(rimGoldLight);
-
-      // Luz cálida profunda dentro del pasillo iluminando la roca y la escultura
-      corridorTorchLight = new THREE.PointLight(0xfde047, 4.2, 14);
-      corridorTorchLight.position.set(0, 2.1, CONFIG.sculptureZ + 0.65);
-      portalInteriorGroup.add(corridorTorchLight);
-
-      centerSpotLight = new THREE.SpotLight(0xfffbeb, state.baseCenterSpotIntensity);
-      centerSpotLight.position.set(0, 3.5, CONFIG.sculptureZ + 2.4);
-      centerSpotLight.angle = Math.PI / 4.2;
-      centerSpotLight.penumbra = 0.85;
-      portalInteriorGroup.add(centerSpotLight);
+      // Luz suave de relleno interior a medio pasillo
+      const fillPoint = new THREE.PointLight(0xa7f3d0, 1.6, 8.0);
+      fillPoint.position.set(0, 2.1, -1.2);
+      scene.add(fillPoint);
     }
 
     /* =========================================================================
-       3. PORTAL ARQUEADO + MÁSCARA STENCIL + PARTÍCULAS DE BRILLO EN EL BORDE
+       2. RETÍCULA DE DETECCIÓN DE PLANO HORIZONTAL (PISO y = 0)
        ========================================================================= */
-    function createArchShape(width, height, radiusTop) {
-      const halfW = width * 0.5;
-      const bottomY = -1.25;
-      const archCenterY = bottomY + (height - radiusTop);
-      const shape = new THREE.Shape();
-      shape.moveTo(-halfW, bottomY);
-      shape.lineTo(halfW, bottomY);
-      shape.lineTo(halfW, archCenterY);
-      shape.absarc(0, archCenterY, halfW, 0, Math.PI, false);
-      shape.lineTo(-halfW, bottomY);
-      return shape;
-    }
+    function createFloorDetectionReticleAndPlane() {
+      // Plano matemático horizontal en y = 0 para detección de piso con Raycaster
+      virtualFloorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
-    function createPortalArchAndStencilMask() {
-      const pW = CONFIG.portalWidth;
-      const pH = CONFIG.portalHeight;
-      const pZ = CONFIG.portalZ;
+      // Grilla sutil que visualiza el plano del suelo durante el escaneo
+      floorDetectionGrid = new THREE.GridHelper(14, 28, 0x34d399, 0x1e3a2f);
+      floorDetectionGrid.position.y = 0.001;
+      floorDetectionGrid.material.transparent = true;
+      floorDetectionGrid.material.opacity = 0.45;
+      scene.add(floorDetectionGrid);
 
-      // 1. MÁSCARA STENCIL (Define la ventana dimensional en z = 1.45 hacia el pasillo interior)
-      const innerArchShape = createArchShape(pW, pH, pW * 0.5);
-      const maskGeo = new THREE.ShapeGeometry(innerArchShape, 56);
+      // Retícula de anclaje en el piso
+      floorReticleGroup = new THREE.Group();
+      floorReticleGroup.position.set(0, 0.004, 0);
 
-      const stencilMat = new THREE.MeshBasicMaterial({
-        color: 0x000000,
-        colorWrite: false,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-        stencilWrite: true,
-        stencilRef: 1,
-        stencilFunc: THREE.AlwaysStencilFunc,
-        stencilFail: THREE.KeepStencilOp,
-        stencilZFail: THREE.KeepStencilOp,
-        stencilZPass: THREE.ReplaceStencilOp
-      });
-
-      portalStencilMask = new THREE.Mesh(maskGeo, stencilMat);
-      portalStencilMask.position.set(0, 0, pZ);
-      portalStencilMask.renderOrder = 1;
-      portalGroup.add(portalStencilMask);
-
-      // 2. VELO DE APERTURA CON BRILLO DIMENSIONAL
-      state.portalVortexUniforms = {
-        uTime: { value: 0 },
-        uOpenProgress: { value: 0 }
-      };
-
-      const vortexMat = new THREE.ShaderMaterial({
-        uniforms: state.portalVortexUniforms,
-        vertexShader: `
-          varying vec3 vPos;
-          void main() {
-            vPos = position;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vPos;
-          uniform float uTime;
-          uniform float uOpenProgress;
-          void main() {
-            vec2 normP = vec2(vPos.x / 1.38, (vPos.y - 0.45) / 1.72);
-            float distEdge = length(normP);
-            float swirl = sin(distEdge * 16.0 - uTime * 4.5 + atan(normP.y, normP.x) * 3.0) * 0.5 + 0.5;
-            float edgeGlow = smoothstep(0.68, 1.02, distEdge);
-            vec3 emerald = vec3(0.20, 0.95, 0.70);
-            vec3 gold = vec3(1.0, 0.90, 0.40);
-            vec3 col = mix(emerald, gold, swirl);
-            float openingFlash = pow(max(0.0, 1.0 - uOpenProgress), 1.6) * 0.78;
-            float alpha = edgeGlow * 0.30 + openingFlash;
-            gl_FragColor = vec4(col * 1.35, clamp(alpha, 0.0, 0.85));
-          }
-        `,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide
-      });
-
-      const vortexMesh = new THREE.Mesh(maskGeo.clone(), vortexMat);
-      vortexMesh.position.set(0, 0, pZ + 0.005);
-      vortexMesh.renderOrder = 2;
-      portalGroup.add(vortexMesh);
-      state.portalVortexMesh = vortexMesh;
-
-      // 3. MARCO ARQUITECTÓNICO DEL PORTAL (Piedra surrealista de Xilitla + Borde de Energía)
-      portalFrameGroup = new THREE.Group();
-      portalFrameGroup.position.set(0, 0, pZ);
-
-      const outerW = pW + 0.38;
-      const outerH = pH + 0.22;
-      const frameShape = createArchShape(outerW, outerH, outerW * 0.5);
-      const holePath = createArchShape(pW, pH, pW * 0.5);
-      frameShape.holes.push(holePath);
-
-      const extrudeSettings = {
-        depth: 0.26,
-        bevelEnabled: true,
-        bevelSegments: 4,
-        steps: 1,
-        bevelSize: 0.04,
-        bevelThickness: 0.04
-      };
-
-      const archFrameGeo = new THREE.ExtrudeGeometry(frameShape, extrudeSettings);
-      archFrameGeo.translate(0, 0, -0.13);
-
-      const archStoneMat = new THREE.MeshStandardMaterial({
-        color: 0x1e4032,
-        roughness: 0.76,
-        metalness: 0.15,
-        emissive: 0x06291d,
-        emissiveIntensity: 0.38
-      });
-
-      const archStoneMesh = new THREE.Mesh(archFrameGeo, archStoneMat);
-      archStoneMesh.castShadow = true;
-      archStoneMesh.receiveShadow = true;
-      archStoneMesh.renderOrder = 2;
-      portalFrameGroup.add(archStoneMesh);
-
-      // Halo energético dorado/esmeralda en el borde del arco
-      const rimShape = createArchShape(pW + 0.09, pH + 0.05, (pW + 0.09) * 0.5);
-      rimShape.holes.push(createArchShape(pW - 0.02, pH - 0.01, (pW - 0.02) * 0.5));
-      const rimGeo = new THREE.ShapeGeometry(rimShape, 64);
-
-      state.portalRimShaderUniforms = {
-        uTime: { value: 0 }
-      };
-
-      const rimShaderMat = new THREE.ShaderMaterial({
-        uniforms: state.portalRimShaderUniforms,
-        vertexShader: `
-          varying vec3 vPosition;
-          void main() {
-            vPosition = position;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vPosition;
-          uniform float uTime;
-          void main() {
-            float angle = atan(vPosition.y - 0.3, vPosition.x);
-            float pulse = 0.5 + 0.5 * sin(angle * 8.0 - uTime * 4.8);
-            float pulse2 = 0.5 + 0.5 * cos(vPosition.y * 5.0 + uTime * 3.2);
-            vec3 c1 = vec3(0.25, 0.96, 0.72);
-            vec3 c2 = vec3(1.0, 0.90, 0.38);
-            vec3 finalCol = mix(c1, c2, pulse * 0.65 + pulse2 * 0.35);
-            gl_FragColor = vec4(finalCol * 1.6, 0.95);
-          }
-        `,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        side: THREE.DoubleSide
-      });
-
-      const rimGlowMesh = new THREE.Mesh(rimGeo, rimShaderMat);
-      rimGlowMesh.position.z = 0.14;
-      rimGlowMesh.renderOrder = 2;
-      portalFrameGroup.add(rimGlowMesh);
-
-      // Umbral escalonado de piedra en el suelo
-      const thresholdStep = new THREE.Mesh(
-        new THREE.BoxGeometry(outerW + 0.34, 0.12, 0.52),
-        archStoneMat
+      const outerRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.55, 0.62, 64),
+        new THREE.MeshBasicMaterial({ color: 0x34d399, side: THREE.DoubleSide, transparent: true, opacity: 0.95 })
       );
-      thresholdStep.position.set(0, -1.22, 0);
-      thresholdStep.renderOrder = 2;
-      portalFrameGroup.add(thresholdStep);
+      outerRing.rotation.x = -Math.PI / 2;
+      floorReticleGroup.add(outerRing);
 
-      portalGroup.add(portalFrameGroup);
-    }
+      const innerDisc = new THREE.Mesh(
+        new THREE.RingGeometry(0.12, 0.16, 32),
+        new THREE.MeshBasicMaterial({ color: 0xfde047, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
+      );
+      innerDisc.rotation.x = -Math.PI / 2;
+      floorReticleGroup.add(innerDisc);
 
-    /* Sistema de 320 Partículas de Brillo (Sparkles) que materializan y rodean el Portal */
-    function createPortalSparkleParticles() {
-      if (portalSparkles) portalGroup.remove(portalSparkles);
+      // Indicador del contorno del pasillo (8.0m x 2.6m) sobre el suelo para saber exactamente dónde quedará fijo
+      const footprintGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(2.6, CONFIG.corridorTargetLength));
+      const footprintLine = new THREE.LineSegments(
+        footprintGeo,
+        new THREE.LineBasicMaterial({ color: 0x6ee7b7, transparent: true, opacity: 0.55 })
+      );
+      footprintLine.rotation.x = -Math.PI / 2;
+      floorReticleGroup.add(footprintLine);
 
-      const count = CONFIG.portalSparkleCount;
-      const geo = new THREE.BufferGeometry();
-      const positions = new Float32Array(count * 3);
-      const colors = new Float32Array(count * 3);
-      const sizes = new Float32Array(count);
-      const phases = new Float32Array(count);
-
-      const sparklePalette = [
-        new THREE.Color('#fffef0'),
-        new THREE.Color('#fde047'),
-        new THREE.Color('#34d399'),
-        new THREE.Color('#5eead4')
-      ];
-
-      state.portalSparkleData = [];
-      const halfW = CONFIG.portalWidth * 0.52;
-      const bottomY = -1.22;
-      const archCenterY = bottomY + (CONFIG.portalHeight - halfW);
-
-      for (let i = 0; i < count; i++) {
-        // Distribuir a lo largo del perímetro del arco del portal
-        const t = i / count;
-        let baseX = 0;
-        let baseY = 0;
-        if (t < 0.28) {
-          // Columna izquierda
-          const p = t / 0.28;
-          baseX = -halfW;
-          baseY = THREE.MathUtils.lerp(bottomY, archCenterY, p);
-        } else if (t < 0.56) {
-          // Columna derecha
-          const p = (t - 0.28) / 0.28;
-          baseX = halfW;
-          baseY = THREE.MathUtils.lerp(bottomY, archCenterY, p);
-        } else {
-          // Arco superior semicircular
-          const p = (t - 0.56) / 0.44;
-          const angle = p * Math.PI;
-          baseX = Math.cos(angle) * halfW;
-          baseY = archCenterY + Math.sin(angle) * halfW;
-        }
-
-        const jitterR = (Math.random() - 0.5) * 0.24;
-        const zJitter = CONFIG.portalZ + (Math.random() - 0.5) * 0.28;
-
-        positions[i * 3] = baseX + jitterR;
-        positions[i * 3 + 1] = baseY + jitterR;
-        positions[i * 3 + 2] = zJitter;
-
-        const c = sparklePalette[i % sparklePalette.length];
-        colors[i * 3] = c.r;
-        colors[i * 3 + 1] = c.g;
-        colors[i * 3 + 2] = c.b;
-
-        sizes[i] = 1.2 + Math.random() * 2.4;
-        phases[i] = Math.random() * Math.PI * 2;
-
-        state.portalSparkleData.push({
-          targetX: baseX,
-          targetY: baseY,
-          targetZ: zJitter,
-          orbitAmp: 0.04 + Math.random() * 0.11,
-          orbitSpeed: 1.8 + Math.random() * 2.6,
-          phase: phases[i]
-        });
-      }
-
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
-      geo.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
-
-      const sparkleMat = new THREE.ShaderMaterial({
-        uniforms: {
-          uTime: { value: 0 },
-          uSparkleBoost: { value: 1.5 },
-          uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
-        },
-        vertexShader: `
-          attribute float aSize;
-          attribute float aPhase;
-          varying vec3 vColor;
-          varying float vTwinkle;
-          uniform float uTime;
-          uniform float uSparkleBoost;
-          uniform float uPixelRatio;
-          void main() {
-            vColor = color;
-            float twinkle = 0.35 + 0.65 * pow(0.5 + 0.5 * sin(uTime * 6.0 + aPhase), 2.0);
-            vTwinkle = twinkle;
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = aSize * uSparkleBoost * (48.0 * twinkle) * uPixelRatio * (1.0 / max(1.0, -mvPosition.z));
-            gl_Position = projectionMatrix * mvPosition;
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vColor;
-          varying float vTwinkle;
-          void main() {
-            vec2 uv = gl_PointCoord - vec2(0.5);
-            float dist = length(uv);
-            if (dist > 0.5) discard;
-            // Forma de estrella/destello de 4 puntas + núcleo brillante
-            float crossStar = max(
-              smoothstep(0.14, 0.0, abs(uv.x)) * smoothstep(0.5, 0.0, abs(uv.y)),
-              smoothstep(0.14, 0.0, abs(uv.y)) * smoothstep(0.5, 0.0, abs(uv.x))
-            );
-            float core = smoothstep(0.45, 0.0, dist);
-            float intensity = clamp(core * 0.85 + crossStar * 0.95, 0.0, 1.0);
-            vec3 finalCol = mix(vColor * 1.4, vec3(1.0, 1.0, 0.98), pow(core, 2.0));
-            gl_FragColor = vec4(finalCol, intensity * vTwinkle);
-          }
-        `,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        vertexColors: true
-      });
-
-      portalSparkles = new THREE.Points(geo, sparkleMat);
-      portalSparkles.renderOrder = 5;
-      portalGroup.add(portalSparkles);
-    }
-
-    // Configura recursivamente el Stencil Buffer para todos los objetos dentro del portal
-    function applyPortalStencilState(enabled) {
-      state.portalStencilActive = enabled;
-      if (portalStencilMask) {
-        portalStencilMask.visible = enabled;
-      }
-
-      portalInteriorGroup.traverse((child) => {
-        if (child.isMesh && child.material) {
-          child.renderOrder = 3;
-          const materials = Array.isArray(child.material) ? child.material : [child.material];
-          materials.forEach((mat) => {
-            mat.stencilWrite = enabled;
-            mat.stencilRef = 1;
-            mat.stencilFunc = enabled ? THREE.EqualStencilFunc : THREE.AlwaysStencilFunc;
-            mat.stencilFail = THREE.KeepStencilOp;
-            mat.stencilZFail = THREE.KeepStencilOp;
-            mat.stencilZPass = THREE.KeepStencilOp;
-            mat.needsUpdate = true;
-          });
-        }
-      });
+      scene.add(floorReticleGroup);
     }
 
     /* =========================================================================
-       4. DESPLIEGUE DEL PASILLO OPTIMIZADO (models/pasillo_optimizado.glb)
+       3. CARGA Y ENSAMBLAJE EXACTO CON BOUNDING BOX (PASILLO + ROCA + ESCULTURA)
        ========================================================================= */
-    async function loadTextureWithFallback(urls, fallbackGenerator) {
-      const texLoader = new THREE.TextureLoader();
-      texLoader.setCrossOrigin('anonymous');
-      for (const url of urls) {
+    async function loadGLBFromPaths(urlList) {
+      for (const url of urlList) {
         try {
-          const tex = await new Promise((resolve, reject) => {
-            texLoader.load(url, resolve, undefined, reject);
+          const gltf = await new Promise((resolve, reject) => {
+            gltfLoader.load(url, resolve, undefined, reject);
           });
-          if (tex) {
-            tex.colorSpace = THREE.SRGBColorSpace;
-            return tex;
-          }
-        } catch (e) {}
-      }
-      return fallbackGenerator();
-    }
-
-    async function loadAndDeployCorridorGLB() {
-      if (!corridorGroup) {
-        corridorGroup = new THREE.Group();
-        corridorGroup.name = 'OptimizedCorridorContainer';
-        portalInteriorGroup.add(corridorGroup);
-      }
-
-      while (corridorGroup.children.length > 0) {
-        corridorGroup.remove(corridorGroup.children[0]);
-      }
-
-      let loadedGLTF = null;
-      for (const path of CONFIG.corridorModelPaths) {
-        try {
-          loadedGLTF = await new Promise((resolve, reject) => {
-            gltfLoader.load(path, resolve, undefined, reject);
-          });
-          if (loadedGLTF && loadedGLTF.scene) {
-            console.log(`Pasillo optimizado cargado desde: ${path}`);
-            break;
-          }
+          if (gltf && gltf.scene) return gltf.scene;
         } catch (err) {
-          console.warn(`Intento de ruta de pasillo no disponible: ${path}`);
+          console.warn(`No se pudo cargar desde ${url}`);
         }
       }
-
-      if (loadedGLTF && loadedGLTF.scene) {
-        mountOptimizedCorridorGLB(loadedGLTF.scene);
-      } else {
-        await buildXilitlaCorridorFallback();
-      }
-
-      applyPortalStencilState(state.portalStencilActive);
+      return null;
     }
 
-    function mountOptimizedCorridorGLB(corridorScene) {
-      corridorScene.updateMatrixWorld(true);
-      const rawBox = new THREE.Box3().setFromObject(corridorScene);
-      const rawSize = rawBox.getSize(new THREE.Vector3());
+    // PASO A: Cargar `pasillo_optimizado.glb`, centrarlo en (0, 0) y apoyar su base en el piso (y = 0)
+    async function loadAndAssembleCorridor() {
+      const loadedCorridor = await loadGLBFromPaths(CONFIG.paths.corridor);
+      if (loadedCorridor) {
+        mountCorridorModel(loadedCorridor);
+        setAssetStatus('status-pasillo', 'pasillo_optimizado.glb', true);
+      } else {
+        const fallbackCorridor = createArchitecturalCorridorFallback();
+        mountCorridorModel(fallbackCorridor);
+        setAssetStatus('status-pasillo', 'pasillo_optimizado.glb', false);
+      }
+    }
 
-      // Si el eje largo del pasillo viene en X, lo rotamos 90° para que el túnel corra a lo largo del eje -Z (hacia dentro del portal)
-      if (rawSize.x > rawSize.z * 1.25) {
+    function mountCorridorModel(corridorScene) {
+      while (corridorHolder.children.length > 0) {
+        corridorHolder.remove(corridorHolder.children[0]);
+      }
+
+      corridorScene.rotation.set(0, 0, 0);
+      corridorScene.scale.set(1, 1, 1);
+      corridorScene.position.set(0, 0, 0);
+      corridorScene.updateMatrixWorld(true);
+
+      const initialBox = new THREE.Box3().setFromObject(corridorScene);
+      const initialSize = initialBox.getSize(new THREE.Vector3());
+
+      // Si el eje más largo del pasillo viene sobre el eje X, lo rotamos 90° en Y para que el corredor se alinee con el eje Z
+      if (initialSize.x > initialSize.z) {
         corridorScene.rotation.y = Math.PI * 0.5;
         corridorScene.updateMatrixWorld(true);
       }
@@ -1513,1660 +670,530 @@ ARQUITECTURA ESPACIAL Y FLUJO DE EXPERIENCIA (UX/UI):
       const orientedSize = orientedBox.getSize(new THREE.Vector3());
       const orientedCenter = orientedBox.getCenter(new THREE.Vector3());
 
-      // Escalar el pasillo para que su altura encaje con el portal (~3.55m) y su profundidad abarque desde z = 1.20 hasta z = -7.60 (~8.8m)
-      const targetHeight = 3.55;
-      const targetDepth = CONFIG.corridorFrontZ - CONFIG.corridorBackZ; // 8.80m
-      const scaleY = orientedSize.y > 0.01 ? targetHeight / orientedSize.y : 1;
-      const scaleZ = orientedSize.z > 0.01 ? targetDepth / orientedSize.z : scaleY;
-      // Usamos un escalado uniforme armónico que garantice amplitud interior para la roca y la escultura a medio pasillo
-      const uniformScale = Math.max(scaleY, scaleZ * 0.85);
+      // Escalar uniformemente para que la longitud del pasillo en Z sea exactamente CONFIG.corridorTargetLength (8.0 metros)
+      const horizLength = Math.max(orientedSize.z, orientedSize.x) || 1;
+      const scale = CONFIG.corridorTargetLength / horizLength;
 
-      corridorScene.scale.setScalar(uniformScale);
-      corridorScene.position.x = -orientedCenter.x * uniformScale;
-      corridorScene.position.y = CONFIG.floorY - (orientedBox.min.y * uniformScale);
-      // Alinear el inicio del pasillo exactamente con el umbral del portal (z = 1.20) proyectándose hacia -Z
-      corridorScene.position.z = CONFIG.portalZ - (orientedBox.max.z * uniformScale);
+      corridorScene.scale.setScalar(scale);
+
+      // Centrar en X = 0 y Z = 0 (Así z = 0 es matemáticamente LA MITAD EXACTA DEL PASILLO)
+      // Apoyar la base inferior del pasillo exactamente en el piso (y = 0)
+      corridorScene.position.set(
+        -orientedCenter.x * scale,
+        -orientedBox.min.y * scale,
+        -orientedCenter.z * scale
+      );
 
       corridorScene.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
-            const cloneMat = (m) => {
-              const cm = m.clone();
-              cm.side = THREE.DoubleSide;
-              if (cm.roughness !== undefined) cm.roughness = Math.min(cm.roughness, 0.85);
-              return cm;
-            };
-            child.material = Array.isArray(child.material)
-              ? child.material.map(cloneMat)
-              : cloneMat(child.material);
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach((m) => {
+              m.side = THREE.DoubleSide;
+            });
           }
         }
       });
 
-      // Alfombra/sendero sutil de luz museográfica en el suelo hacia medio pasillo
-      const guideRunner = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.15, targetDepth),
-        new THREE.MeshStandardMaterial({
-          color: 0x0f3828,
-          roughness: 0.35,
-          metalness: 0.25,
-          transparent: true,
-          opacity: 0.45
-        })
-      );
-      guideRunner.rotation.x = -Math.PI / 2;
-      guideRunner.position.set(0, CONFIG.floorY + 0.01, (CONFIG.corridorFrontZ + CONFIG.corridorBackZ) * 0.5);
-      guideRunner.receiveShadow = true;
-      corridorGroup.add(guideRunner);
+      corridorHolder.add(corridorScene);
+      corridorHolder.updateMatrixWorld(true);
 
-      corridorGroup.add(corridorScene);
-      state.corridorNode = corridorScene;
+      // Detectar mediante Raycast vertical hacia abajo la altura exacta de la losa/piso interior en el centro (0, z=0)
+      const downRay = new THREE.Raycaster(new THREE.Vector3(0, 1.5, 0), new THREE.Vector3(0, -1, 0));
+      const floorHits = downRay.intersectObjects(corridorHolder.children, true);
+      if (floorHits.length > 0 && floorHits[0].point.y >= 0 && floorHits[0].point.y < 0.65) {
+        state.corridorFloorY = floorHits[0].point.y;
+      } else {
+        state.corridorFloorY = 0.02;
+      }
     }
 
-    async function buildXilitlaCorridorFallback() {
-      const xilitlaPhotoTex = await loadTextureWithFallback(
-        CONFIG.backdropTexturePaths,
-        createJunglePanoramaTexture
-      );
-      const stoneDetailTex = createStoneProceduralTexture();
-      stoneDetailTex.wrapS = THREE.RepeatWrapping;
-      stoneDetailTex.wrapT = THREE.RepeatWrapping;
-      stoneDetailTex.repeat.set(4, 4);
+    // PASO B: Cargar `rock.glb` y colocarla EXACTAMENTE A MEDIO PASILLO (`x = 0, z = 0`)
+    async function loadAndAssembleMidCorridorRock() {
+      const loadedRock = await loadGLBFromPaths(CONFIG.paths.rock);
+      if (loadedRock) {
+        mountMidCorridorRock(loadedRock);
+        setAssetStatus('status-rock', 'rock.glb', true);
+      } else {
+        const fallbackRock = createRockFallback();
+        mountMidCorridorRock(fallbackRock);
+        setAssetStatus('status-rock', 'rock.glb', false);
+      }
+    }
 
-      const proceduralCorridor = new THREE.Group();
-      const concreteMat = new THREE.MeshStandardMaterial({
-        map: stoneDetailTex,
-        color: 0x3b6e57,
-        roughness: 0.78,
-        metalness: 0.14,
-        side: THREE.DoubleSide
-      });
-
-      const corridorLength = CONFIG.corridorFrontZ - CONFIG.corridorBackZ;
-      const corridorCenterZ = (CONFIG.corridorFrontZ + CONFIG.corridorBackZ) * 0.5;
-
-      const corridorFloor = new THREE.Mesh(
-        new THREE.BoxGeometry(3.2, 0.12, corridorLength),
-        concreteMat
-      );
-      corridorFloor.position.set(0, CONFIG.floorY - 0.06, corridorCenterZ);
-      corridorFloor.receiveShadow = true;
-      proceduralCorridor.add(corridorFloor);
-
-      const archOuterShape = createArchShape(3.10, 3.55, 1.55);
-      archOuterShape.holes.push(createArchShape(2.55, 3.25, 1.275));
-      const archRibGeo = new THREE.ExtrudeGeometry(archOuterShape, {
-        depth: 0.24,
-        bevelEnabled: true,
-        bevelSegments: 2,
-        steps: 1,
-        bevelSize: 0.03,
-        bevelThickness: 0.03
-      });
-
-      for (let i = 0; i < 6; i++) {
-        const zPos = 0.65 - i * 1.45;
-        const ribMesh = new THREE.Mesh(archRibGeo, concreteMat);
-        ribMesh.position.set(0, 0, zPos);
-        ribMesh.castShadow = true;
-        ribMesh.receiveShadow = true;
-        proceduralCorridor.add(ribMesh);
+    function mountMidCorridorRock(rockScene) {
+      while (rockHolder.children.length > 0) {
+        rockHolder.remove(rockHolder.children[0]);
       }
 
-      const wallMat = new THREE.MeshStandardMaterial({
-        map: xilitlaPhotoTex,
-        color: 0x99f6e4,
-        roughness: 0.72,
-        side: THREE.DoubleSide
-      });
-
-      const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(corridorLength, 3.55), wallMat);
-      leftWall.rotation.y = Math.PI * 0.5;
-      leftWall.position.set(-1.55, 0.48, corridorCenterZ);
-      proceduralCorridor.add(leftWall);
-
-      const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(corridorLength, 3.55), wallMat);
-      rightWall.rotation.y = -Math.PI * 0.5;
-      rightWall.position.set(1.55, 0.48, corridorCenterZ);
-      proceduralCorridor.add(rightWall);
-
-      corridorGroup.add(proceduralCorridor);
-      state.corridorNode = proceduralCorridor;
-    }
-
-    function createStoneProceduralTexture() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#244737';
-      ctx.fillRect(0, 0, 512, 512);
-      for (let i = 0; i < 900; i++) {
-        ctx.fillStyle = i % 2 === 0 ? 'rgba(12, 38, 27, 0.35)' : 'rgba(110, 231, 183, 0.08)';
-        ctx.beginPath();
-        ctx.arc(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 14, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      return tex;
-    }
-
-    /* Receptor de sombras y anillo holográfico de anclaje en el suelo real */
-    function createSpatialARFloorAndReticle() {
-      const shadowFloorGeo = new THREE.PlaneGeometry(16, 16);
-      const shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0.44 });
-      const shadowFloor = new THREE.Mesh(shadowFloorGeo, shadowFloorMat);
-      shadowFloor.rotation.x = -Math.PI / 2;
-      shadowFloor.position.y = CONFIG.floorY;
-      shadowFloor.receiveShadow = true;
-      shadowFloor.visible = false;
-      worldAnchorGroup.add(shadowFloor);
-      state.arShadowFloor = shadowFloor;
-
-      const reticleGroup = new THREE.Group();
-      // Situado exactamente bajo el altar a medio pasillo (z = -2.80)
-      reticleGroup.position.set(0, CONFIG.floorY + 0.02, CONFIG.midCorridorAltarZ);
-
-      const outerRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.92, 0.99, 64),
-        new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.72, side: THREE.DoubleSide })
-      );
-      outerRing.rotation.x = -Math.PI / 2;
-      reticleGroup.add(outerRing);
-
-      const innerGlowRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.55, 0.88, 64),
-        new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
-      );
-      innerGlowRing.rotation.x = -Math.PI / 2;
-      reticleGroup.add(innerGlowRing);
-
-      reticleGroup.scale.setScalar(0.001);
-      portalInteriorGroup.add(reticleGroup);
-      state.anchorRingGroup = reticleGroup;
-    }
-
-    async function createJungleSurrealBackground() {
-      if (jungleEnvironmentGroup) portalInteriorGroup.remove(jungleEnvironmentGroup);
-      jungleEnvironmentGroup = new THREE.Group();
-      jungleEnvironmentGroup.name = 'JungleEnvironment';
-      portalInteriorGroup.add(jungleEnvironmentGroup);
-
-      const muralTex = await loadTextureWithFallback(
-        CONFIG.backdropTexturePaths,
-        createJunglePanoramaTexture
-      );
-
-      const muralGeo = new THREE.PlaneGeometry(11.5, 7.2, 24, 1);
-      const pos = muralGeo.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        const vx = pos.getX(i);
-        pos.setZ(i, Math.pow(vx * 0.14, 2) * 0.55);
-      }
-      muralGeo.computeVertexNormals();
-
-      const muralMat = new THREE.MeshBasicMaterial({
-        map: muralTex,
-        color: 0xa7f3d0,
-        side: THREE.DoubleSide,
-        fog: false
-      });
-      const muralMesh = new THREE.Mesh(muralGeo, muralMat);
-      muralMesh.position.set(0, 0.65, CONFIG.corridorBackZ - 0.35);
-      jungleEnvironmentGroup.add(muralMesh);
-    }
-
-    function createJunglePanoramaTexture() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1600;
-      canvas.height = 900;
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width;
-      const h = canvas.height;
-
-      const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
-      skyGrad.addColorStop(0.0, '#041a12');
-      skyGrad.addColorStop(0.38, '#0d3b2b');
-      skyGrad.addColorStop(0.72, '#08261c');
-      skyGrad.addColorStop(1.0, '#03120c');
-      ctx.fillStyle = skyGrad;
-      ctx.fillRect(0, 0, w, h);
-
-      const sunGlow = ctx.createRadialGradient(w * 0.5, h * 0.26, 20, w * 0.5, h * 0.35, 580);
-      sunGlow.addColorStop(0, 'rgba(254, 240, 138, 0.28)');
-      sunGlow.addColorStop(0.45, 'rgba(52, 211, 153, 0.14)');
-      sunGlow.addColorStop(1, 'rgba(4, 24, 17, 0)');
-      ctx.fillStyle = sunGlow;
-      ctx.fillRect(0, 0, w, h);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      return texture;
-    }
-
-    /* =========================================================================
-       5. ENSAMBLAJE A MEDIO PASILLO (z = -2.80): models/rock.glb + models/3DModel.glb
-       ========================================================================= */
-    async function loadMidCorridorRockAndSculpture() {
-      if (midCorridorAltarGroup) portalInteriorGroup.remove(midCorridorAltarGroup);
-
-      // Grupo maestro del Altar situado exactamente A MEDIO PASILLO (z = -2.80)
-      midCorridorAltarGroup = new THREE.Group();
-      midCorridorAltarGroup.name = 'MidCorridorAltar_RockAndSculpture';
-      midCorridorAltarGroup.position.set(0, 0, CONFIG.midCorridorAltarZ);
-      portalInteriorGroup.add(midCorridorAltarGroup);
-
-      rockHolderGroup = new THREE.Group();
-      rockHolderGroup.name = 'RockModelHolder';
-      midCorridorAltarGroup.add(rockHolderGroup);
-
-      sculptureHolderGroup = new THREE.Group();
-      sculptureHolderGroup.name = 'SculptureModelHolder';
-      midCorridorAltarGroup.add(sculptureHolderGroup);
-
-      // PASO A: Cargar `models/rock.glb` desde el repositorio GitHub
-      let loadedRockGLTF = null;
-      for (const path of CONFIG.rockModelPaths) {
-        try {
-          loadedRockGLTF = await new Promise((resolve, reject) => {
-            gltfLoader.load(path, resolve, undefined, reject);
-          });
-          if (loadedRockGLTF && loadedRockGLTF.scene) {
-            console.log(`Roca 3D (rock.glb) cargada desde: ${path}`);
-            break;
-          }
-        } catch (err) {
-          console.warn(`Ruta de rock.glb no disponible: ${path}`);
-        }
-      }
-
-      const rockNode = (loadedRockGLTF && loadedRockGLTF.scene)
-        ? loadedRockGLTF.scene
-        : createSculptedRockFallback();
-
-      mountRockAtMidCorridor(rockNode);
-      markAssetBadgeLoaded('badge-rock', 'rock.glb');
-
-      // PASO B: Cargar `models/3DModel.glb` y posarla exactamente SOBRE `rock.glb`
-      let loadedSculptureGLTF = null;
-      for (const path of CONFIG.sculptureModelPaths) {
-        try {
-          loadedSculptureGLTF = await new Promise((resolve, reject) => {
-            gltfLoader.load(path, resolve, undefined, reject);
-          });
-          if (loadedSculptureGLTF && loadedSculptureGLTF.scene) {
-            console.log(`Escultura 3D (3DModel.glb) cargada desde: ${path}`);
-            break;
-          }
-        } catch (err) {
-          console.warn(`Ruta de 3DModel.glb no disponible: ${path}`);
-        }
-      }
-
-      const sculptureNode = (loadedSculptureGLTF && loadedSculptureGLTF.scene)
-        ? loadedSculptureGLTF.scene
-        : createSurrealSculptureFallback();
-
-      mountSculptureOnTopOfRock(sculptureNode);
-      markAssetBadgeLoaded('badge-sculpture', '3DModel.glb');
-    }
-
-    function mountRockAtMidCorridor(rockScene) {
+      rockScene.rotation.set(0, 0, 0);
+      rockScene.scale.set(1, 1, 1);
+      rockScene.position.set(0, 0, 0);
       rockScene.updateMatrixWorld(true);
+
       const rawBox = new THREE.Box3().setFromObject(rockScene);
       const rawSize = rawBox.getSize(new THREE.Vector3());
       const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
-      // Escalar rock.glb para que forme un pedestal de roca monumental a medio pasillo (~1.25m de ancho, ~0.76m de alto)
-      const maxHorizontal = Math.max(rawSize.x, rawSize.z) || 1;
-      const targetRockWidth = 1.26;
-      const scale = targetRockWidth / maxHorizontal;
+      const maxHoriz = Math.max(rawSize.x, rawSize.z) || 1;
+      const scale = CONFIG.rockTargetWidth / maxHoriz;
 
       rockScene.scale.setScalar(scale);
-      rockScene.position.x = -rawCenter.x * scale;
-      rockScene.position.z = -rawCenter.z * scale;
-      // Apoyar la base de rock.glb exactamente sobre el piso del pasillo (y = -1.25)
-      rockScene.position.y = CONFIG.floorY - (rawBox.min.y * scale);
+
+      // Posicionar en X = 0, Z = 0 (MEDIO PASILLO EXACTO) y apoyar sobre el piso del pasillo (state.corridorFloorY)
+      rockScene.position.set(
+        -rawCenter.x * scale,
+        state.corridorFloorY - (rawBox.min.y * scale),
+        -rawCenter.z * scale
+      );
 
       rockScene.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-          if (child.material) {
-            child.material = Array.isArray(child.material)
-              ? child.material.map((m) => m.clone())
-              : child.material.clone();
-          }
         }
       });
 
-      rockHolderGroup.add(rockScene);
-      rockHolderGroup.updateMatrixWorld(true);
+      rockHolder.add(rockScene);
+      rockHolder.updateMatrixWorld(true);
 
-      // Calcular la cota superior real (`rockTopY`) de `rock.glb` ya montada para apoyar la escultura encima
-      const mountedRockBox = new THREE.Box3().setFromObject(rockHolderGroup);
+      // Medir la cota superior exacta (`max.y`) de `rock.glb` ya colocada a medio pasillo
+      const mountedRockBox = new THREE.Box3().setFromObject(rockHolder);
       state.rockTopY = mountedRockBox.max.y;
-      state.rockNode = rockScene;
     }
 
-    function mountSculptureOnTopOfRock(modelNode) {
-      state.sculptureMeshes = [];
-      state.revealFlashActive = false;
+    // PASO C: Cargar `3DModel.glb` y posarla directamente SOBRE la roca a medio pasillo (`x = 0, z = 0`)
+    async function loadAndAssembleSculptureOnRock() {
+      const loadedSculpture = await loadGLBFromPaths(CONFIG.paths.sculpture);
+      if (loadedSculpture) {
+        mountSculptureOnRock(loadedSculpture);
+        setAssetStatus('status-sculpture', '3DModel.glb', true);
+      } else {
+        const fallbackSculpture = createSculptureFallback();
+        mountSculptureOnRock(fallbackSculpture);
+        setAssetStatus('status-sculpture', '3DModel.glb', false);
+      }
+    }
 
-      modelNode.rotation.set(
-        CONFIG.modelRotation.x,
-        CONFIG.modelRotation.y,
-        CONFIG.modelRotation.z
-      );
-      modelNode.updateMatrixWorld(true);
+    function mountSculptureOnRock(sculptureScene) {
+      while (sculptureHolder.children.length > 0) {
+        sculptureHolder.remove(sculptureHolder.children[0]);
+      }
 
-      const rawBox = new THREE.Box3().setFromObject(modelNode);
+      sculptureScene.rotation.set(0, 0, 0);
+      sculptureScene.scale.set(1, 1, 1);
+      sculptureScene.position.set(0, 0, 0);
+      sculptureScene.updateMatrixWorld(true);
+
+      const rawBox = new THREE.Box3().setFromObject(sculptureScene);
       const rawSize = rawBox.getSize(new THREE.Vector3());
       const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
       const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
-      const targetSculptureHeight = 1.52;
-      const scale = targetSculptureHeight / maxDim;
+      const scale = CONFIG.sculptureTargetHeight / maxDim;
 
-      modelNode.scale.setScalar(scale);
-      modelNode.position.x = -rawCenter.x * scale;
-      modelNode.position.z = -rawCenter.z * scale;
-      // Posicionar los pies/base de 3DModel.glb directamente sobre la cumbre de rock.glb (con -0.04m de encastre orgánico)
-      const rockSurfaceY = state.rockTopY - 0.04;
-      modelNode.position.y = rockSurfaceY - (rawBox.min.y * scale);
+      sculptureScene.scale.setScalar(scale);
 
-      modelNode.userData.baseScale = scale;
-      modelNode.userData.baseY = modelNode.position.y;
-      state.sculptureNode = modelNode;
+      // Apoyar la base inferior de la escultura (`rawBox.min.y`) directamente sobre la cumbre de `rock.glb` (`state.rockTopY - 0.02`)
+      const seatingY = state.rockTopY - 0.02;
+      sculptureScene.position.set(
+        -rawCenter.x * scale,
+        seatingY - (rawBox.min.y * scale),
+        -rawCenter.z * scale
+      );
 
-      modelNode.traverse((child) => {
+      sculptureScene.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material = child.material.map((m) => m.clone());
-            } else {
-              child.material = child.material.clone();
-              child.userData.originalMaterialState = {
-                color: child.material.color ? child.material.color.clone() : new THREE.Color(0xffffff),
-                emissive: child.material.emissive ? child.material.emissive.clone() : new THREE.Color(0x000000),
-                emissiveIntensity: child.material.emissiveIntensity !== undefined ? child.material.emissiveIntensity : 0.0,
-                roughness: child.material.roughness !== undefined ? child.material.roughness : 0.5,
-                metalness: child.material.metalness !== undefined ? child.material.metalness : 0.1
-              };
-              state.sculptureMeshes.push(child);
-            }
-          }
         }
       });
 
-      sculptureHolderGroup.add(modelNode);
-      midCorridorAltarGroup.updateMatrixWorld(true);
-      applyPortalStencilState(state.portalStencilActive);
-    }
+      sculptureHolder.add(sculptureScene);
+      sculptureHolder.updateMatrixWorld(true);
 
-    function createSculptedRockFallback() {
-      const rockGroup = new THREE.Group();
-      const rockGeo = new THREE.IcosahedronGeometry(0.65, 3);
-      const pos = rockGeo.attributes.position;
-      const vertex = new THREE.Vector3();
-      for (let i = 0; i < pos.count; i++) {
-        vertex.fromBufferAttribute(pos, i);
-        vertex.y *= 0.58;
-        if (vertex.y > 0.16) vertex.y = 0.16 + (vertex.y - 0.16) * 0.22;
-        const noise = Math.sin(vertex.x * 5.2 + vertex.z * 4.7) * 0.06;
-        vertex.x *= 1.12 + noise;
-        vertex.z *= 1.08 + noise;
-        pos.setXYZ(i, vertex.x, vertex.y, vertex.z);
+      // Actualizar lectura técnica en la ficha de museo
+      const totalBox = new THREE.Box3().setFromObject(museumPavilionGroup);
+      const totalSize = totalBox.getSize(new THREE.Vector3());
+      if (dimensionsReadout) {
+        dimensionsReadout.innerHTML = `
+          <div>Pasillo: ${totalSize.z.toFixed(2)}m largo × ${totalSize.x.toFixed(2)}m ancho (Piso y = 0.00m)</div>
+          <div>Roca a medio pasillo (z = 0.00m): Cumbre a +${state.rockTopY.toFixed(2)}m</div>
+          <div>Escultura sobre roca: Altura +${(state.rockTopY + CONFIG.sculptureTargetHeight).toFixed(2)}m · Estado: 100% Fijo</div>
+        `;
       }
-      rockGeo.computeVertexNormals();
-      const rockMat = new THREE.MeshStandardMaterial({
-        map: createStoneProceduralTexture(),
-        color: 0x3b5e4c,
-        roughness: 0.88,
-        metalness: 0.08
-      });
-      const boulder = new THREE.Mesh(rockGeo, rockMat);
-      boulder.castShadow = true;
-      boulder.receiveShadow = true;
-      rockGroup.add(boulder);
-      return rockGroup;
     }
 
-    function restoreSculptureOriginalMaterials() {
-      state.sculptureMeshes.forEach((mesh) => {
-        const orig = mesh.userData.originalMaterialState;
-        if (!orig || !mesh.material) return;
-        if (mesh.material.color) mesh.material.color.copy(orig.color);
-        if (mesh.material.emissive) {
-          mesh.material.emissive.copy(orig.emissive);
-          mesh.material.emissiveIntensity = orig.emissiveIntensity;
-        }
-      });
-      if (centerSpotLight) centerSpotLight.intensity = state.baseCenterSpotIntensity;
-      if (renderer) renderer.toneMappingExposure = state.baseExposure;
-    }
-
-    function createSurrealSculptureFallback() {
+    /* Geometrías de respaldo por si no hay conexión a internet */
+    function createArchitecturalCorridorFallback() {
       const group = new THREE.Group();
-      const bronzeMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.24, metalness: 0.82 });
-      const jadeMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.2, metalness: 0.3, emissive: 0x065f46, emissiveIntensity: 0.4 });
-      const torusKnot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.42, 0.11, 128, 32, 2, 3), bronzeMat);
-      torusKnot.position.y = 0.45;
-      group.add(torusKnot);
-      const innerCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.24, 2), jadeMat);
-      innerCore.position.y = 0.45;
-      group.add(innerCore);
+      const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3d5a4c, roughness: 0.82, metalness: 0.1 });
+      const floor = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.1, 8.0), stoneMat);
+      floor.position.set(0, 0.05, 0);
+      group.add(floor);
+
+      for (let z = -3.6; z <= 3.6; z += 1.2) {
+        const leftCol = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.1, 0.28), stoneMat);
+        leftCol.position.set(-1.18, 1.6, z);
+        group.add(leftCol);
+
+        const rightCol = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.1, 0.28), stoneMat);
+        rightCol.position.set(1.18, 1.6, z);
+        group.add(rightCol);
+
+        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.24, 0.28), stoneMat);
+        topBeam.position.set(0, 3.2, z);
+        group.add(topBeam);
+      }
       return group;
     }
 
+    function createRockFallback() {
+      const geo = new THREE.DodecahedronGeometry(0.52, 2);
+      geo.scale(1.1, 0.65, 1.0);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x4a5d52, roughness: 0.9 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.y = 0.34;
+      const g = new THREE.Group();
+      g.add(mesh);
+      return g;
+    }
+
+    function createSculptureFallback() {
+      const geo = new THREE.TorusKnotGeometry(0.32, 0.09, 100, 24);
+      const mat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.28, metalness: 0.82 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.y = 0.55;
+      const g = new THREE.Group();
+      g.add(mesh);
+      return g;
+    }
+
     /* =========================================================================
-       6. EXACTAMENTE 4 CAPAS DE VEGETACIÓN (25% POR CAPA = 100%) ANTES DE MEDIO PASILLO
+       4. DETECCIÓN DE PISO Y ANCLAJE 100% FIJO E INMÓVIL (matrixAutoUpdate = false)
        ========================================================================= */
-    function buildLayeredJungle(baseTextures) {
-      if (foliageRootGroup) portalInteriorGroup.remove(foliageRootGroup);
-      foliageRootGroup = new THREE.Group();
-      foliageRootGroup.name = 'FourCorridorFoliageLayers';
-      portalInteriorGroup.add(foliageRootGroup);
+    function setPreviewScanningState() {
+      state.isPlaced = false;
+      museumPavilionGroup.matrixAutoUpdate = true;
+      floorReticleGroup.visible = true;
+      floorDetectionGrid.visible = true;
 
-      state.foliagePlanes = [];
-      state.clearedLayersMap = { 1: false, 2: false, 3: false, 4: false };
-      state.clearedLayersCount = 0;
-      state.discoveryCompleted = false;
+      phaseDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0';
+      phaseTitle.textContent = 'FASE 1 · ESCANEANDO PLANO DEL PISO';
+      phaseSubtitle.textContent = 'Mueve la cámara sobre el suelo y pulsa "Fijar Sala en el Piso Aquí"';
 
-      // 4 cortinas botánicas situadas entre la entrada del portal (z = 1.20) y la roca + escultura a medio pasillo (z = -2.80)
-      // Usan EXCLUSIVAMENTE `arbustotropical.png` y `plantas.png`
-      const layerBlueprints = [
-        {
-          layerIndex: 1,
-          label: 'Capa 1 · Umbral del Portal (+25%)',
-          zDepth: 0.25,
-          windAmp: 0.046,
-          interactive: true,
-          colorTint: '#6ee7b7',
-          emissiveTint: '#062016',
-          slots: [
-            { key: 'arbusto', x: -0.56, y: -0.26, scale: 1.26, rotZ:  0.08, flipX: false },
-            { key: 'arbusto', x:  0.56, y: -0.26, scale: 1.26, rotZ: -0.08, flipX: true  },
-            { key: 'plantas', x:  0.00, y:  0.32, scale: 1.25, rotZ:  0.03, flipX: false }
-          ]
-        },
-        {
-          layerIndex: 2,
-          label: 'Capa 2 · Bóveda de Helechos (+50%)',
-          zDepth: -0.55,
-          windAmp: 0.040,
-          interactive: true,
-          colorTint: '#52b788',
-          emissiveTint: '#072419',
-          slots: [
-            { key: 'plantas', x: -0.60, y:  0.10, scale: 1.28, rotZ: -0.12, flipX: true  },
-            { key: 'plantas', x:  0.60, y:  0.10, scale: 1.28, rotZ:  0.12, flipX: false },
-            { key: 'arbusto', x:  0.00, y: -0.32, scale: 1.30, rotZ:  0.00, flipX: false }
-          ]
-        },
-        {
-          layerIndex: 3,
-          label: 'Capa 3 · Sotobosque de Xilitla (+75%)',
-          zDepth: -1.35,
-          windAmp: 0.035,
-          interactive: true,
-          colorTint: '#34d399',
-          emissiveTint: '#0a2e20',
-          slots: [
-            { key: 'arbusto', x: -0.52, y: -0.18, scale: 1.26, rotZ:  0.10, flipX: false },
-            { key: 'arbusto', x:  0.52, y: -0.18, scale: 1.26, rotZ: -0.10, flipX: true  },
-            { key: 'plantas', x:  0.00, y:  0.26, scale: 1.26, rotZ: -0.06, flipX: true  }
-          ]
-        },
-        {
-          layerIndex: 4,
-          label: 'Capa 4 · Velo del Altar a Medio Pasillo (+100%)',
-          zDepth: -2.05,
-          windAmp: 0.030,
-          interactive: true,
-          colorTint: '#a7f3d0',
-          emissiveTint: '#0f3828',
-          slots: [
-            { key: 'plantas', x:  0.00, y: -0.18, scale: 1.32, rotZ: -0.04, flipX: true  },
-            { key: 'arbusto', x: -0.54, y:  0.18, scale: 1.24, rotZ: -0.16, flipX: false },
-            { key: 'arbusto', x:  0.54, y:  0.18, scale: 1.24, rotZ:  0.16, flipX: true  }
-          ]
-        }
-      ];
+      btnPlacePavilion.classList.remove('hidden');
+      btnUnlockPavilion.classList.add('hidden');
+    }
 
-      layerBlueprints.forEach((layerSpec) => {
-        const layerGroup = new THREE.Group();
-        layerGroup.name = `FoliageLayer_${layerSpec.layerIndex}`;
-        foliageRootGroup.add(layerGroup);
+    function lockPavilionOnFloor() {
+      // Desbloquear temporalmente matrixAutoUpdate por si venía bloqueado
+      museumPavilionGroup.matrixAutoUpdate = true;
 
-        layerSpec.slots.forEach((slot, idx) => {
-          const assetMeta = CONFIG.vegetationAssets.find((a) => a.key === slot.key);
-          const texture = baseTextures[slot.key];
+      // Copiar exactamente la posición y orientación horizontal del plano del piso detectado por la retícula
+      museumPavilionGroup.position.copy(floorReticleGroup.position);
+      museumPavilionGroup.rotation.set(0, floorReticleGroup.rotation.y, 0);
+      museumPavilionGroup.scale.set(1, 1, 1);
 
-          const planeW = assetMeta.aspectWidth * slot.scale;
-          const planeH = assetMeta.aspectHeight * slot.scale;
-          const planeGeo = new THREE.PlaneGeometry(planeW, planeH, 10, 10);
+      // Calcular matriz final y CONGELARLA (100% inmóvil a partir de este instante)
+      museumPavilionGroup.updateMatrix();
+      museumPavilionGroup.updateMatrixWorld(true);
+      museumPavilionGroup.matrixAutoUpdate = false;
 
-          if (slot.flipX) {
-            const uv = planeGeo.attributes.uv;
-            for (let u = 0; u < uv.count; u++) {
-              uv.setX(u, 1.0 - uv.getX(u));
-            }
-            uv.needsUpdate = true;
-          }
+      state.isPlaced = true;
 
-          const posAttr = planeGeo.attributes.position;
-          const basePositions = new Float32Array(posAttr.array.length);
-          basePositions.set(posAttr.array);
+      // Ocultar retícula y grilla de escaneo para dejar la Sala de Museo limpia en el espacio
+      floorReticleGroup.visible = false;
+      floorDetectionGrid.visible = false;
 
-          const material = new THREE.MeshStandardMaterial({
-            map: texture,
-            color: new THREE.Color(layerSpec.colorTint),
-            emissive: new THREE.Color(layerSpec.emissiveTint),
-            emissiveIntensity: 0.26,
-            transparent: true,
-            alphaTest: 0.05,
-            side: THREE.DoubleSide,
-            roughness: 0.62,
-            metalness: 0.05,
-            depthWrite: true
+      // Actualizar UI al Estado 2: Anclado y Fijo
+      phaseDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
+      phaseTitle.textContent = 'FASE 2 · SALA DE MUSEO ANCLADA Y 100% FIJA EN EL PISO';
+      phaseSubtitle.textContent = 'El pasillo, la roca y la escultura están inmóviles. Camina o explora libremente.';
+
+      btnPlacePavilion.classList.add('hidden');
+      btnUnlockPavilion.classList.remove('hidden');
+
+      showToast('¡Sala de Museo fijada en el piso! El modelo permanecerá completamente inmóvil.');
+    }
+
+    // Navegación suave del visitante hacia puntos clave del pasillo sin mover jamás el modelo 3D
+    function moveVisitorCameraTo(localOffsetX, localOffsetY, localOffsetZ, lookAtLocalY, lookAtLocalZ, label) {
+      if (!state.isPlaced) {
+        lockPavilionOnFloor();
+      }
+
+      // Convertir coordenadas locales del pasillo fijo a coordenadas globales del mundo
+      const worldPos = new THREE.Vector3(localOffsetX, localOffsetY, localOffsetZ);
+      const worldLook = new THREE.Vector3(0, lookAtLocalY, lookAtLocalZ);
+
+      museumPavilionGroup.localToWorld(worldPos);
+      museumPavilionGroup.localToWorld(worldLook);
+
+      state.cameraTargetPos.copy(worldPos);
+      state.cameraTargetLookAt.copy(worldLook);
+      state.cameraLerpActive = true;
+
+      if (label) showToast(label);
+    }
+
+    /* =========================================================================
+       5. CÁMARA AR Y SESIÓN WEBXR HIT-TEST (DETECCIÓN DE PISO NATIVA Y UNIVERSAL)
+       ========================================================================= */
+    async function startARExperience() {
+      loadingModal.classList.add('opacity-0', 'pointer-events-none');
+
+      // Intentar primero WebXR nativo con hit-test sobre el piso si el navegador móvil lo soporta
+      if (navigator.xr && await navigator.xr.isSessionSupported('immersive-ar').catch(() => false)) {
+        try {
+          const session = await navigator.xr.requestSession('immersive-ar', {
+            requiredFeatures: ['hit-test', 'local-floor'],
+            optionalFeatures: ['dom-overlay'],
+            domOverlay: { root: document.getElementById('ar-dom-overlay') }
           });
+          await onXRSessionStarted(session);
+          return;
+        } catch (xrErr) {
+          console.warn('WebXR Hit-Test no disponible o cancelado, activando Cámara AR Universal:', xrErr);
+        }
+      }
 
-          const mesh = new THREE.Mesh(planeGeo, material);
-          const microZ = layerSpec.zDepth + idx * 0.025;
-          mesh.position.set(slot.x, slot.y, microZ);
-          mesh.rotation.set(0, 0, slot.rotZ);
-          mesh.renderOrder = 3;
+      // Fallback Universal: Stream de cámara trasera + Raycaster de plano horizontal (y = 0)
+      await enableRearCameraStream();
+    }
 
-          const sideSign = slot.x === 0 ? (idx % 2 === 0 ? -1 : 1) : Math.sign(slot.x);
-          const partedX = sideSign * (2.25 + idx * 0.18);
-          const partedY = slot.y + (slot.y >= 0 ? 0.28 : -0.22);
-          const partedRotZ = slot.rotZ + sideSign * -0.45;
+    async function onXRSessionStarted(session) {
+      state.xrSession = session;
+      renderer.xr.setReferenceSpaceType('local-floor');
+      await renderer.xr.setSession(session);
 
-          const matDelay = 0.85 + (layerSpec.layerIndex - 1) * 0.22 + idx * 0.06;
+      skyBackdrop.style.opacity = '0';
+      state.xrRefSpace = await session.requestReferenceSpace('local-floor');
+      const viewerSpace = await session.requestReferenceSpace('viewer');
+      state.xrHitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-          mesh.userData = {
-            layerIndex: layerSpec.layerIndex,
-            layerLabel: layerSpec.label,
-            interactive: true,
-            isCleared: false,
-            windAmplitude: layerSpec.windAmp,
-            basePositions,
-            planeHeight: planeH,
-            homePos: new THREE.Vector3(slot.x, slot.y, microZ),
-            homeRotZ: slot.rotZ,
-            restPos: new THREE.Vector3(slot.x, slot.y, microZ),
-            restRotZ: slot.rotZ,
-            partedPos: new THREE.Vector3(partedX, partedY, microZ),
-            partedRotZ,
-            velocity: new THREE.Vector2(0, 0),
-            rotVelocity: 0,
-            swaySpeed: 1.15 + layerSpec.layerIndex * 0.14 + (idx % 3) * 0.16,
-            swayPhase: idx * 1.3 + layerSpec.layerIndex * 0.85,
-            matDelay,
-            matDuration: 0.55
-          };
+      setPreviewScanningState();
+      showToast('Mueve tu teléfono apuntando al piso para detectar el plano horizontal');
 
-          layerGroup.add(mesh);
-          state.foliagePlanes.push(mesh);
-        });
+      session.addEventListener('end', () => {
+        state.xrSession = null;
+        state.xrHitTestSource = null;
+        skyBackdrop.style.opacity = '1';
       });
-
-      applyPortalStencilState(state.portalStencilActive);
     }
 
-    /* =========================================================================
-       7. COREOGRAFÍA DE APERTURA DEL PORTAL CON PARTÍCULAS DE BRILLO (2.45s)
-       ========================================================================= */
-    function easeOutBack(x) {
-      const c1 = 1.70158;
-      const c3 = c1 + 1;
-      return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
-    }
-
-    function updateLayerBadgesUI() {
-      for (let i = 1; i <= 4; i++) {
-        const badge = document.getElementById(`layer-badge-${i}`);
-        if (!badge) continue;
-        if (state.clearedLayersMap[i]) {
-          badge.className = 'text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/30 text-amber-200 border border-emerald-400/60 font-bold';
-        } else {
-          badge.className = 'text-[9px] font-mono px-1.5 py-0.2 rounded bg-stone-800/90 text-stone-400 border border-white/10';
-        }
-      }
-    }
-
-    function prepareForMaterialization() {
-      state.interactionEnabled = false;
-      state.clearedLayersMap = { 1: false, 2: false, 3: false, 4: false };
-      state.clearedLayersCount = 0;
-      state.discoveryCompleted = false;
-      state.revealFlashActive = false;
-      restoreSculptureOriginalMaterials();
-      updateLayerBadgesUI();
-      if (curatorialCard) curatorialCard.classList.add('hidden');
-
-      discoveryCount.textContent = '0%';
-      discoveryBar.style.width = '0%';
-      discoveryLabel.textContent = 'Abriendo Portal...';
-      statusDot.className = 'w-2.5 h-2.5 rounded-full bg-teal-300 animate-ping shrink-0';
-      onboardingHint.classList.add('opacity-0');
-
-      if (portalGroup) {
-        portalGroup.scale.set(0.005, 0.005, 1);
-      }
-      if (state.portalVortexUniforms) {
-        state.portalVortexUniforms.uOpenProgress.value = 0;
-      }
-
-      if (state.anchorRingGroup) state.anchorRingGroup.scale.setScalar(0.001);
-      if (rockHolderGroup) rockHolderGroup.scale.setScalar(0.001);
-      if (state.sculptureNode) {
-        state.sculptureNode.scale.setScalar(0.0001);
-      }
-
-      state.foliagePlanes.forEach((leaf) => {
-        const d = leaf.userData;
-        d.isCleared = false;
-        d.restPos.copy(d.homePos);
-        d.restRotZ = d.homeRotZ;
-        d.velocity.set(0, 0);
-        d.rotVelocity = 0;
-        leaf.scale.setScalar(0.0001);
-        leaf.position.set(d.homePos.x, d.homePos.y - d.planeHeight * 0.45, d.homePos.z);
-      });
-
-      if (bioParticles) bioParticles.visible = false;
-    }
-
-    function startMaterializationSequence() {
-      prepareForMaterialization();
-      state.materializing = true;
-      state.materializeStartTime = clock.getElapsedTime();
-      state.lastMaterializeRustleStage = 0;
-      playPortalOpeningSound();
-      showToast('Desplegando pasillo_optimizado.glb, roca y escultura dentro del portal...');
-    }
-
-    function updateMaterialization(elapsedTime) {
-      if (!state.materializing) return;
-      const t = elapsedTime - state.materializeStartTime;
-
-      // Etapa 1: El Portal se abre con destello de partículas de brillo (0.0s - 0.95s)
-      const verticalOpen = THREE.MathUtils.clamp(t / 0.45, 0.01, 1);
-      const horizontalOpen = THREE.MathUtils.clamp((t - 0.15) / 0.68, 0.02, 1);
-      const portalScaleY = easeOutBack(verticalOpen);
-      const portalScaleX = easeOutBack(horizontalOpen);
-
-      if (portalGroup) {
-        portalGroup.scale.set(Math.max(0.01, portalScaleX), Math.max(0.01, portalScaleY), 1);
-      }
-      if (state.portalVortexUniforms) {
-        state.portalVortexUniforms.uOpenProgress.value = THREE.MathUtils.clamp((t - 0.30) / 1.35, 0, 1);
-      }
-      if (portalSparkles) {
-        portalSparkles.material.uniforms.uSparkleBoost.value = 2.4 - THREE.MathUtils.clamp(t / 2.2, 0, 1) * 1.15;
-      }
-
-      // Etapa 2: `rock.glb` emerge a medio pasillo y `3DModel.glb` se posa sobre su cumbre
-      const rockP = THREE.MathUtils.clamp((t - 0.35) / 0.55, 0, 1);
-      const rockEase = easeOutBack(rockP);
-      if (state.anchorRingGroup) state.anchorRingGroup.scale.setScalar(Math.max(0.001, rockEase));
-      if (rockHolderGroup) rockHolderGroup.scale.setScalar(Math.max(0.001, rockEase));
-
-      if (state.sculptureNode) {
-        const sculpP = THREE.MathUtils.clamp((t - 0.65) / 0.68, 0, 1);
-        const sculpEase = easeOutBack(sculpP);
-        const targetS = state.sculptureNode.userData.baseScale * Math.max(0.0001, sculpEase);
-        state.sculptureNode.scale.setScalar(targetS);
-        state.sculptureNode.position.y = state.sculptureNode.userData.baseY - (1 - sculpP) * 0.32;
-      }
-
-      // Etapa 3: Las 4 capas de vegetación brotan dentro del pasillo
-      state.foliagePlanes.forEach((leaf) => {
-        const d = leaf.userData;
-        const leafP = THREE.MathUtils.clamp((t - d.matDelay) / d.matDuration, 0, 1);
-        const leafEase = easeOutBack(leafP);
-        const s = Math.max(0.0001, leafEase);
-        leaf.scale.set(s, s, s);
-        leaf.position.x = d.homePos.x;
-        leaf.position.y = d.homePos.y - (1 - leafP) * (d.planeHeight * 0.45);
-        leaf.rotation.z = d.homeRotZ + (1 - leafP) * 0.18;
-      });
-
-      if (t > 0.55 && state.lastMaterializeRustleStage < 1) {
-        state.lastMaterializeRustleStage = 1;
-        playFoliageRustle(0.5);
-      } else if (t > 1.35 && state.lastMaterializeRustleStage < 2) {
-        state.lastMaterializeRustleStage = 2;
-        playFoliageRustle(0.75);
-      }
-
-      if (t >= state.materializeDuration) {
-        state.materializing = false;
-        state.interactionEnabled = true;
-        if (portalGroup) portalGroup.scale.set(1, 1, 1);
-        if (portalSparkles) portalSparkles.material.uniforms.uSparkleBoost.value = 1.25;
-        if (bioParticles) bioParticles.visible = true;
-        discoveryLabel.textContent = 'Despeja 4 capas (25% c/u)';
-        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-300 animate-ping shrink-0';
-        onboardingHint.classList.remove('opacity-0');
-        showToast('¡Pasillo desplegado! Remueve las 4 capas de vegetación hacia el altar a medio pasillo');
-
-        setTimeout(() => {
-          if (!state.hasInteracted) onboardingHint.classList.add('opacity-0');
-        }, 4500);
-      }
-    }
-
-    /* =========================================================================
-       8. CARGA DE TEXTURAS BOTÁNICAS DEPURADAS Y PARTÍCULAS
-       ========================================================================= */
-    async function loadBaseVegetationTextures() {
-      const texLoader = new THREE.TextureLoader();
-      texLoader.setCrossOrigin('anonymous');
-      const texturesByKey = {};
-
-      for (const asset of CONFIG.vegetationAssets) {
-        let loadedTex = null;
-        for (const candidateUrl of asset.urls) {
-          try {
-            loadedTex = await new Promise((resolve, reject) => {
-              texLoader.load(candidateUrl, resolve, undefined, reject);
-            });
-            if (loadedTex) break;
-          } catch (e) {}
-        }
-        if (!loadedTex) {
-          loadedTex = createIllustrativeBotanicalTexture(asset.key);
-        }
-        loadedTex.colorSpace = THREE.SRGBColorSpace;
-        loadedTex.anisotropy = 4;
-        texturesByKey[asset.key] = loadedTex;
-      }
-      return texturesByKey;
-    }
-
-    function createIllustrativeBotanicalTexture(assetKey) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 640;
-      canvas.height = 640;
-      const ctx = canvas.getContext('2d');
-      const cx = canvas.width / 2;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.save();
-      ctx.shadowColor = 'rgba(2, 16, 10, 0.65)';
-      ctx.shadowBlur = 16;
-
-      if (assetKey === 'dosel_selva') {
-        const fronds = 13;
-        for (let i = 0; i < fronds; i++) {
-          const angle = ((i / (fronds - 1)) - 0.5) * 1.85;
-          ctx.save();
-          ctx.translate(cx, 520);
-          ctx.rotate(angle);
-          const grad = ctx.createLinearGradient(0, 0, 0, -440);
-          grad.addColorStop(0, '#042f2e');
-          grad.addColorStop(0.55, '#0f766e');
-          grad.addColorStop(1, '#6ee7b7');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.quadraticCurveTo(-48, -220, 0, -440);
-          ctx.quadraticCurveTo(48, -220, 0, 0);
-          ctx.fill();
-          ctx.restore();
-        }
-      } else if (assetKey === 'arbusto') {
-        const count = 15;
-        for (let i = 0; i < count; i++) {
-          const angle = ((i / (count - 1)) - 0.5) * 2.15;
-          const len = 210 + (i % 3) * 52;
-          ctx.save();
-          ctx.translate(cx, 565);
-          ctx.rotate(angle);
-          const grad = ctx.createLinearGradient(0, 0, 0, -len);
-          grad.addColorStop(0, '#042f2e');
-          grad.addColorStop(0.55, '#0d9488');
-          grad.addColorStop(1, '#6ee7b7');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.bezierCurveTo(-72, -len * 0.42, -54, -len * 0.85, 0, -len);
-          ctx.bezierCurveTo(54, -len * 0.85, 72, -len * 0.42, 0, 0);
-          ctx.fill();
-          ctx.restore();
-        }
-      } else {
-        for (let f = -2; f <= 2; f++) {
-          ctx.save();
-          ctx.translate(cx + f * 48, 575);
-          ctx.rotate(f * 0.25);
-          const grad = ctx.createLinearGradient(0, 0, 0, -460);
-          grad.addColorStop(0, '#064e3b');
-          grad.addColorStop(0.6, '#10b981');
-          grad.addColorStop(1, '#a7f3d0');
-          ctx.fillStyle = grad;
-          for (let j = 0; j < 14; j++) {
-            const t = j / 13;
-            const y = -55 - t * 380;
-            const w = Math.sin(t * Math.PI) * 102 + 20;
-            ctx.beginPath();
-            ctx.ellipse(-w * 0.55, y, w * 0.6, 15, -0.28, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(w * 0.55, y, w * 0.6, 15, 0.28, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
-      }
-
-      ctx.restore();
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.needsUpdate = true;
-      return tex;
-    }
-
-    function createLuminescentParticles() {
-      if (bioParticles) worldAnchorGroup.remove(bioParticles);
-
-      const count = CONFIG.particleCount;
-      const geo = new THREE.BufferGeometry();
-      const positions = new Float32Array(count * 3);
-      const colors = new Float32Array(count * 3);
-      const sizes = new Float32Array(count);
-      const phases = new Float32Array(count);
-
-      const palette = [
-        new THREE.Color('#fde047'),
-        new THREE.Color('#6ee7b7'),
-        new THREE.Color('#5eead4'),
-        new THREE.Color('#bef264')
-      ];
-
-      state.particleData = [];
-
-      for (let i = 0; i < count; i++) {
-        const x = (Math.random() - 0.5) * 3.6;
-        const y = (Math.random() - 0.35) * 3.4;
-        const z = -3.6 + Math.random() * 5.8;
-
-        positions[i * 3] = x;
-        positions[i * 3 + 1] = y;
-        positions[i * 3 + 2] = z;
-
-        const c = palette[i % palette.length];
-        colors[i * 3] = c.r;
-        colors[i * 3 + 1] = c.g;
-        colors[i * 3 + 2] = c.b;
-
-        sizes[i] = 0.85 + Math.random() * 1.65;
-        phases[i] = Math.random() * Math.PI * 2;
-
-        state.particleData.push({
-          baseX: x,
-          baseY: y,
-          baseZ: z,
-          speedY: 0.0022 + Math.random() * 0.004,
-          driftFreq: 0.5 + Math.random() * 0.85,
-          driftAmp: 0.14 + Math.random() * 0.20,
-          phase: phases[i]
-        });
-      }
-
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
-      geo.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
-
-      const mat = new THREE.ShaderMaterial({
-        uniforms: {
-          uTime: { value: 0 },
-          uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
-        },
-        vertexShader: `
-          attribute float aSize;
-          attribute float aPhase;
-          varying vec3 vColor;
-          varying float vPulse;
-          uniform float uTime;
-          uniform float uPixelRatio;
-
-          void main() {
-            vColor = color;
-            float pulse = 0.55 + 0.45 * sin(uTime * 2.5 + aPhase);
-            vPulse = pulse;
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            gl_PointSize = aSize * (42.0 * pulse) * uPixelRatio * (1.0 / max(1.2, -mvPosition.z));
-            gl_Position = projectionMatrix * mvPosition;
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vColor;
-          varying float vPulse;
-          void main() {
-            float dist = length(gl_PointCoord - vec2(0.5));
-            if (dist > 0.5) discard;
-            float core = smoothstep(0.5, 0.0, dist);
-            float halo = pow(core, 1.45);
-            vec3 finalColor = mix(vColor * 1.5, vec3(1.0, 1.0, 0.96), pow(core, 2.6));
-            gl_FragColor = vec4(finalColor, halo * (0.65 + 0.35 * vPulse));
-          }
-        `,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        vertexColors: true
-      });
-
-      bioParticles = new THREE.Points(geo, mat);
-      worldAnchorGroup.add(bioParticles);
-    }
-
-    function createRevealBurstParticles() {
-      if (burstParticles) worldAnchorGroup.remove(burstParticles);
-
-      const count = CONFIG.burstParticleCount;
-      const geo = new THREE.BufferGeometry();
-      const positions = new Float32Array(count * 3);
-      const colors = new Float32Array(count * 3);
-
-      const palette = [
-        new THREE.Color('#fffbeb'),
-        new THREE.Color('#fde047'),
-        new THREE.Color('#34d399'),
-        new THREE.Color('#2dd4bf')
-      ];
-
-      state.burstData = [];
-      for (let i = 0; i < count; i++) {
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-        const speed = 1.4 + Math.random() * 2.6;
-
-        state.burstData.push({
-          vx: Math.sin(phi) * Math.cos(theta) * speed,
-          vy: Math.sin(phi) * Math.sin(theta) * speed * 0.85 + 0.35,
-          vz: Math.cos(phi) * speed
-        });
-
-        const c = palette[i % palette.length];
-        colors[i * 3] = c.r;
-        colors[i * 3 + 1] = c.g;
-        colors[i * 3 + 2] = c.b;
-      }
-
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-      const mat = new THREE.PointsMaterial({
-        size: 0.11,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-
-      burstParticles = new THREE.Points(geo, mat);
-      burstParticles.visible = false;
-      worldAnchorGroup.add(burstParticles);
-    }
-
-    function triggerBurstWave() {
-      if (!burstParticles) return;
-      state.burstActive = true;
-      state.burstStartTime = clock.getElapsedTime();
-      burstParticles.visible = true;
-      burstParticles.material.opacity = 1.0;
-
-      const posAttr = burstParticles.geometry.attributes.position;
-      for (let i = 0; i < CONFIG.burstParticleCount; i++) {
-        posAttr.setXYZ(i, 0, 0.15, CONFIG.midCorridorAltarZ);
-      }
-      posAttr.needsUpdate = true;
-    }
-
-    /* =========================================================================
-       9. CAMINATA WEBAR EN EL PASILLO (PODÓMETRO INERCIAL + GIROSCOPIO + CONTROLES)
-       ========================================================================= */
-    function setWalkProgressTarget(newProgress, announce = false) {
-      state.targetWalkProgress = THREE.MathUtils.clamp(newProgress, 0, 1);
-      const pct = Math.round(state.targetWalkProgress * 100);
-      if (walkSlider) walkSlider.value = String(pct);
-      if (walkDepthLabel) walkDepthLabel.textContent = `Recorrido Pasillo (${pct}%)`;
-
-      let zoneDesc = 'Posición: Exterior del Portal';
-      if (pct >= 75) {
-        zoneDesc = 'Posición: Medio Pasillo (Frente a Roca y Escultura)';
-      } else if (pct >= 35) {
-        zoneDesc = 'Posición: Caminando Dentro de pasillo_optimizado.glb';
-      } else if (pct >= 18) {
-        zoneDesc = 'Posición: Cruzando el Umbral del Portal';
-      }
-      if (walkZoneText) walkZoneText.textContent = zoneDesc;
-
-      const stepBtnText = document.getElementById('step-inside-text');
-      if (stepBtnText) {
-        stepBtnText.textContent = pct >= 55 ? 'Volver al Exterior' : 'Ir a Medio Pasillo';
-      }
-
-      if (announce) {
-        showToast(zoneDesc);
-      }
-    }
-
-    function setupSpatialSensorsAndPedometer() {
-      const attachOrientation = () => {
-        window.addEventListener('deviceorientation', (e) => {
-          if (e.beta === null || e.gamma === null) return;
-          state.gyroAvailable = true;
-
-          if (state.gyroBaseline.beta === null) {
-            state.gyroBaseline.alpha = e.alpha || 0;
-            state.gyroBaseline.beta = e.beta;
-            state.gyroBaseline.gamma = e.gamma;
-          }
-
-          const dGamma = THREE.MathUtils.clamp((e.gamma - state.gyroBaseline.gamma) / 35, -1.2, 1.2);
-          const dBeta = THREE.MathUtils.clamp((e.beta - state.gyroBaseline.beta) / 35, -1.0, 1.0);
-
-          state.gyroOffset.set(dGamma * 1.15, -dBeta * 0.85);
-        });
-      };
-
-      // Podómetro WebAR por acelerómetro: cuando el usuario camina con el teléfono, avanza hacia dentro del pasillo
-      const attachMotionPedometer = () => {
-        window.addEventListener('devicemotion', (e) => {
-          if (!state.interactionEnabled) return;
-          const acc = e.accelerationIncludingGravity;
-          if (!acc || acc.x === null) return;
-          const mag = Math.hypot(acc.x, acc.y, acc.z);
-          const now = performance.now();
-          // Detectar pico de paso físico al caminar (> 13.2 m/s^2 con cooldown de 380ms)
-          if (mag > 13.2 && now - state.lastStepTime > 380) {
-            state.lastStepTime = now;
-            setWalkProgressTarget(state.targetWalkProgress + 0.065, false);
-          }
-        });
-      };
-
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        DeviceOrientationEvent.requestPermission()
-          .then((res) => {
-            if (res === 'granted') {
-              attachOrientation();
-              attachMotionPedometer();
-            }
-          })
-          .catch(() => {});
-      } else {
-        attachOrientation();
-        attachMotionPedometer();
-      }
-    }
-
-    function recenterSpatialAnchor() {
-      state.gyroBaseline.alpha = null;
-      state.gyroBaseline.beta = null;
-      state.gyroBaseline.gamma = null;
-      state.gyroOffset.set(0, 0);
-      state.smoothedGyro.set(0, 0);
-      worldAnchorGroup.position.set(0, 0, 0);
-      worldAnchorGroup.rotation.set(0, 0, 0);
-      showToast('Portal y pasillo re-anclados frente a ti');
-    }
-
-    async function launchExperience(useARCamera) {
-      initAudio();
-      setupSpatialSensorsAndPedometer();
-
-      if (useARCamera) {
-        await enableARCameraStream();
-      }
-
-      loadingScreen.classList.add('opacity-0', 'pointer-events-none');
-      uiLayer.classList.add('visible');
-      startMaterializationSequence();
-    }
-
-    async function enableARCameraStream() {
-      const btnText = document.getElementById('camera-btn-text');
+    async function enableRearCameraStream() {
+      const label = document.getElementById('camera-status-label');
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: 'environment' } },
           audio: false
         });
-        videoElement.srcObject = stream;
-        await videoElement.play();
-        videoElement.classList.add('active');
-        backdropElement.style.opacity = '0';
-        godRaysElement.style.opacity = '0.22';
-        if (state.arShadowFloor) state.arShadowFloor.visible = true;
-        scene.fog = null;
-        state.cameraActive = true;
-        btnText.textContent = 'Modo Virtual';
-        recenterSpatialAnchor();
+        videoEl.srcObject = stream;
+        await videoEl.play();
+        videoEl.classList.add('active');
+        skyBackdrop.style.opacity = '0';
+        state.cameraStreamActive = true;
+        if (label) label.textContent = 'Apagar Cámara';
+        showToast('Cámara AR activa: apunta al piso y pulsa "Fijar Sala en el Piso Aquí"');
       } catch (err) {
-        showToast('Cámara no disponible; abriendo portal en entorno virtual 3D');
+        skyBackdrop.style.opacity = '1';
+        state.cameraStreamActive = false;
+        if (label) label.textContent = 'Cámara AR';
+        showToast('Modo Sala Exterior 3D activo (Cámara no disponible en este dispositivo)');
       }
     }
 
-    async function toggleARCamera() {
-      const btnText = document.getElementById('camera-btn-text');
-      if (state.cameraActive) {
-        const stream = videoElement.srcObject;
+    async function toggleRearCameraStream() {
+      const label = document.getElementById('camera-status-label');
+      if (state.cameraStreamActive) {
+        const stream = videoEl.srcObject;
         if (stream) stream.getTracks().forEach((t) => t.stop());
-        videoElement.srcObject = null;
-        videoElement.classList.remove('active');
-        backdropElement.style.opacity = '1';
-        godRaysElement.style.opacity = '1';
-        if (state.arShadowFloor) state.arShadowFloor.visible = false;
-        scene.fog = new THREE.FogExp2(0x041811, 0.042);
-        state.cameraActive = false;
-        btnText.textContent = 'Cámara AR';
-        showToast('Entorno virtual de selva activo');
-        return;
-      }
-      await enableARCameraStream();
-      startMaterializationSequence();
-    }
-
-    function setupInteractionEvents() {
-      const dom = renderer.domElement;
-
-      document.getElementById('btn-launch-ar').addEventListener('click', () => launchExperience(true));
-      document.getElementById('btn-launch-virtual').addEventListener('click', () => launchExperience(false));
-      document.getElementById('btn-reanchor').addEventListener('click', recenterSpatialAnchor);
-      document.getElementById('btn-toggle-camera').addEventListener('click', toggleARCamera);
-      document.getElementById('btn-lighting-mode').addEventListener('click', cycleLightingPreset);
-
-      // Alternar modo de Stencil del Portal
-      document.getElementById('btn-portal-mask').addEventListener('click', () => {
-        if (state.portalStencilMode === 'auto') {
-          state.portalStencilMode = 'forced_off';
-          document.getElementById('portal-mask-text').textContent = 'Portal: 360°';
-          applyPortalStencilState(false);
-          showToast('Vista completa del pasillo 360° activada');
-        } else {
-          state.portalStencilMode = 'auto';
-          document.getElementById('portal-mask-text').textContent = 'Portal: Auto';
-          showToast('Modo Portal Automático (Ventana fuera / 360° al entrar)');
-        }
-      });
-
-      // Controles de caminata hacia medio pasillo (Slider, botones +/- y botón Ir a Medio Pasillo)
-      if (walkSlider) {
-        walkSlider.addEventListener('input', (e) => {
-          const val = parseFloat(e.target.value) / 100;
-          setWalkProgressTarget(val, false);
-        });
-      }
-
-      document.getElementById('btn-walk-forward').addEventListener('click', () => {
-        setWalkProgressTarget(state.targetWalkProgress + 0.22, true);
-      });
-
-      document.getElementById('btn-walk-back').addEventListener('click', () => {
-        setWalkProgressTarget(state.targetWalkProgress - 0.22, true);
-      });
-
-      document.getElementById('btn-step-inside').addEventListener('click', () => {
-        if (state.targetWalkProgress < 0.60) {
-          setWalkProgressTarget(0.85, true);
-        } else {
-          setWalkProgressTarget(0.0, true);
-        }
-      });
-
-      // Rueda del ratón para caminar suavemente hacia dentro/fuera del pasillo
-      window.addEventListener('wheel', (e) => {
-        if (!state.interactionEnabled) return;
-        const delta = -Math.sign(e.deltaY) * 0.06;
-        setWalkProgressTarget(state.targetWalkProgress + delta, false);
-      }, { passive: true });
-
-      // Gesto de pellizco con 2 dedos en pantallas táctiles para caminar hacia medio pasillo
-      dom.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          state.pinchStartDist = Math.hypot(dx, dy);
-          state.pinchStartWalk = state.targetWalkProgress;
-        }
-      }, { passive: true });
-
-      dom.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && state.pinchStartDist) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          const dist = Math.hypot(dx, dy);
-          const diff = (dist - state.pinchStartDist) / 220;
-          setWalkProgressTarget(state.pinchStartWalk + diff, false);
-        }
-      }, { passive: true });
-
-      dom.addEventListener('touchend', () => {
-        state.pinchStartDist = null;
-      }, { passive: true });
-
-      document.getElementById('btn-reset').addEventListener('click', () => {
-        state.modelTargetRotX = 0;
-        state.modelTargetRotY = 0;
-        setWalkProgressTarget(0, false);
-        recenterSpatialAnchor();
-        startMaterializationSequence();
-      });
-
-      document.getElementById('btn-sound').addEventListener('click', () => {
-        state.soundEnabled = !state.soundEnabled;
-        if (state.soundEnabled) initAudio();
-        document.getElementById('icon-sound-on').classList.toggle('text-emerald-400', state.soundEnabled);
-        document.getElementById('icon-sound-on').classList.toggle('text-stone-500', !state.soundEnabled);
-        showToast(state.soundEnabled ? 'Sonido activado' : 'Sonido silenciado');
-      });
-
-      dom.addEventListener('pointerdown', onPointerDown, { passive: false });
-      window.addEventListener('pointermove', onPointerMove, { passive: false });
-      window.addEventListener('pointerup', onPointerUp, { passive: false });
-      window.addEventListener('pointercancel', onPointerUp, { passive: false });
-    }
-
-    function updatePointerCoords(clientX, clientY) {
-      state.pointerNDC.x = (clientX / window.innerWidth) * 2 - 1;
-      state.pointerNDC.y = -(clientY / window.innerHeight) * 2 + 1;
-
-      touchRipple.style.left = `${clientX}px`;
-      touchRipple.style.top = `${clientY}px`;
-    }
-
-    function getPointerWorldAtZ(targetZ) {
-      raycaster.setFromCamera(state.pointerNDC, camera);
-      const planeZ = new THREE.Plane(new THREE.Vector3(0, 0, 1), -targetZ);
-      const hit = new THREE.Vector3();
-      raycaster.ray.intersectPlane(planeZ, hit);
-      return hit;
-    }
-
-    function onPointerDown(e) {
-      e.preventDefault();
-      initAudio();
-      if (!state.interactionEnabled) return;
-
-      state.pointerDown = true;
-      updatePointerCoords(e.clientX, e.clientY);
-      touchRipple.classList.add('active');
-
-      if (!state.hasInteracted) {
-        state.hasInteracted = true;
-        onboardingHint.classList.add('opacity-0');
-      }
-
-      const activeLeaves = state.foliagePlanes.filter((p) => p.userData.interactive && !p.userData.isCleared);
-      raycaster.setFromCamera(state.pointerNDC, camera);
-      const hits = raycaster.intersectObjects(activeLeaves, false);
-
-      if (hits.length > 0 && !state.discoveryCompleted) {
-        state.activeDraggedLeaf = hits[0].object;
-        const worldPt = getPointerWorldAtZ(state.activeDraggedLeaf.position.z);
-        if (worldPt) state.lastPointerWorld.copy(worldPt);
-        playFoliageRustle(0.75);
+        videoEl.srcObject = null;
+        videoEl.classList.remove('active');
+        skyBackdrop.style.opacity = '1';
+        state.cameraStreamActive = false;
+        if (label) label.textContent = 'Cámara AR';
+        showToast('Vista de Sala Exterior 3D activada');
       } else {
-        state.rotatingModel = true;
-        state.lastInspectClient.x = e.clientX;
-        state.lastInspectClient.y = e.clientY;
+        await enableRearCameraStream();
       }
-    }
-
-    function onPointerMove(e) {
-      updatePointerCoords(e.clientX, e.clientY);
-      if (!state.pointerDown || !state.interactionEnabled) return;
-
-      if (!state.discoveryCompleted && !state.rotatingModel && state.activeDraggedLeaf) {
-        const leaf = state.activeDraggedLeaf;
-        const d = leaf.userData;
-        const currentWorld = getPointerWorldAtZ(leaf.position.z);
-        if (currentWorld) {
-          const dx = currentWorld.x - state.lastPointerWorld.x;
-          const dy = currentWorld.y - state.lastPointerWorld.y;
-          const dragDelta = Math.hypot(dx, dy);
-
-          // Mover toda la capa simultáneamente mientras el usuario la arrastra para sentir que aparta la cortina botánica
-          const sameLayerLeaves = state.foliagePlanes.filter((p) => p.userData.layerIndex === d.layerIndex);
-          sameLayerLeaves.forEach((l) => {
-            const ld = l.userData;
-            const factor = l === leaf ? 1.35 : 0.65;
-            ld.restPos.x += dx * factor;
-            ld.restPos.y += dy * factor * 0.85;
-            ld.velocity.set(dx * 1.4, dy * 1.2);
-            ld.rotVelocity = -dx * 0.32;
-            ld.restRotZ += -dx * 0.18;
-          });
-
-          if (dragDelta > 0.003) {
-            playFoliageRustle(THREE.MathUtils.clamp(dragDelta * 14.5, 0.35, 1.25));
-          }
-
-          state.lastPointerWorld.copy(currentWorld);
-          checkIfLayerCleared(leaf);
-        }
-        return;
-      }
-
-      if (state.rotatingModel) {
-        const dx = e.clientX - state.lastInspectClient.x;
-        const dy = e.clientY - state.lastInspectClient.y;
-        state.modelTargetRotY += dx * 0.012;
-        state.modelTargetRotX = THREE.MathUtils.clamp(
-          state.modelTargetRotX + dy * 0.005,
-          -0.28,
-          0.32
-        );
-        state.lastInspectClient.x = e.clientX;
-        state.lastInspectClient.y = e.clientY;
-      }
-    }
-
-    function onPointerUp() {
-      state.pointerDown = false;
-      state.activeDraggedLeaf = null;
-      state.rotatingModel = false;
-      touchRipple.classList.remove('active');
-    }
-
-    /* Cada una de las 4 capas aporta exactamente 25% de avance al ser apartada */
-    function checkIfLayerCleared(draggedLeaf) {
-      const d = draggedLeaf.userData;
-      const layerIdx = d.layerIndex;
-      if (state.clearedLayersMap[layerIdx]) return;
-
-      const displacement = Math.hypot(
-        d.restPos.x - d.homePos.x,
-        (d.restPos.y - d.homePos.y) * 0.85
-      );
-
-      if (displacement > 0.62) {
-        state.clearedLayersMap[layerIdx] = true;
-        state.clearedLayersCount++;
-
-        // Abrir todas las plantas de esta capa hacia los muros laterales del pasillo
-        state.foliagePlanes.forEach((leaf) => {
-          const ld = leaf.userData;
-          if (ld.layerIndex === layerIdx) {
-            ld.isCleared = true;
-            ld.restPos.copy(ld.partedPos);
-            ld.restRotZ = ld.partedRotZ;
-          }
-        });
-
-        playFoliageRustle(1.0);
-        playLayerClearedChime(layerIdx);
-        updateLayerBadgesUI();
-        updateDiscoveryUI(layerIdx);
-      }
-    }
-
-    function updateDiscoveryUI(justClearedLayerIdx) {
-      // Exactamente 25% por cada una de las 4 capas de vegetación
-      const percent = Math.min(100, state.clearedLayersCount * 25);
-
-      discoveryCount.textContent = `${percent}%`;
-      discoveryBar.style.width = `${percent}%`;
-
-      // Avanzar un paso suave hacia dentro del pasillo conforme se despeja cada capa
-      if (state.targetWalkProgress < state.clearedLayersCount * 0.18) {
-        setWalkProgressTarget(state.clearedLayersCount * 0.18, false);
-      }
-
-      if (percent >= 100 && !state.discoveryCompleted) {
-        triggerFullSculptureReveal();
-      } else if (!state.discoveryCompleted) {
-        const remaining = 4 - state.clearedLayersCount;
-        discoveryLabel.textContent = `Capa ${justClearedLayerIdx} despejada (${remaining} más)`;
-        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-300 animate-ping shrink-0';
-        showToast(`¡Capa ${justClearedLayerIdx} removida (+25%)! Avance hacia la escultura: ${percent}%`);
-      }
-    }
-
-    function triggerFullSculptureReveal() {
-      state.discoveryCompleted = true;
-      discoveryCount.textContent = '100%';
-      discoveryBar.style.width = '100%';
-      discoveryLabel.textContent = '¡Altar a Medio Pasillo Revelado!';
-      statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
-
-      state.foliagePlanes.forEach((leaf) => {
-        const d = leaf.userData;
-        d.isCleared = true;
-        d.restPos.copy(d.partedPos);
-        d.restRotZ = d.partedRotZ;
-      });
-
-      state.revealFlashActive = true;
-      state.revealFlashStartTime = clock.getElapsedTime();
-      triggerBurstWave();
-
-      // Acercar suavemente al visitante hacia medio pasillo frente a rock.glb y 3DModel.glb
-      setWalkProgressTarget(0.86, false);
-
-      // Mostrar la Cédula Museográfica automáticamente
-      if (curatorialCard) curatorialCard.classList.remove('hidden');
-
-      playRevealChime();
-      showToast('¡Obra descubierta a medio pasillo! Arrastra para girar la escultura y la roca 360°');
     }
 
     /* =========================================================================
-       10. BUCLE PRINCIPAL DE ANIMACIÓN Y RENDERIZADO ESPACIAL
+       6. EVENTOS DE INTERFAZ Y CONTROLES DE USUARIO
        ========================================================================= */
-    function animate() {
-      const elapsedTime = clock.getElapsedTime();
+    function setupUIEvents() {
+      document.getElementById('btn-start-ar').addEventListener('click', startARExperience);
 
-      // Actualizar shaders del portal y sus 350 partículas de brillo
-      if (state.portalRimShaderUniforms) {
-        state.portalRimShaderUniforms.uTime.value = elapsedTime;
-      }
-      if (state.portalVortexUniforms) {
-        state.portalVortexUniforms.uTime.value = elapsedTime;
-      }
-      if (portalSparkles) {
-        portalSparkles.material.uniforms.uTime.value = elapsedTime;
-        const spAttr = portalSparkles.geometry.attributes.position;
-        for (let i = 0; i < CONFIG.portalSparkleCount; i++) {
-          const sp = state.portalSparkleData[i];
-          const angle = elapsedTime * sp.orbitSpeed + sp.phase;
-          const ox = sp.targetX + Math.cos(angle) * sp.orbitAmp;
-          const oy = sp.targetY + Math.sin(angle) * sp.orbitAmp;
-          const oz = sp.targetZ + Math.sin(angle * 0.7) * 0.08;
-          spAttr.setXYZ(i, ox, oy, oz);
-        }
-        spAttr.needsUpdate = true;
-      }
+      document.getElementById('btn-start-outdoor').addEventListener('click', () => {
+        loadingModal.classList.add('opacity-0', 'pointer-events-none');
+        showToast('Apunta al piso o pulsa "Fijar Sala en el Piso Aquí" para bloquear el pasillo');
+      });
 
-      // Interpolación suave de la caminata WebAR hacia medio pasillo
-      state.walkProgress = THREE.MathUtils.lerp(state.walkProgress, state.targetWalkProgress, 0.065);
+      btnPlacePavilion.addEventListener('click', lockPavilionOnFloor);
+      btnUnlockPavilion.addEventListener('click', () => {
+        setPreviewScanningState();
+        showToast('Modo escaneo de piso reactivado. Elige dónde fijar la Sala de Museo.');
+      });
 
-      // Seguimiento espacial: giroscopio 3DoF + paralaje + posición Z de caminata
-      state.smoothedGyro.x = THREE.MathUtils.lerp(state.smoothedGyro.x, state.gyroOffset.x, 0.07);
-      state.smoothedGyro.y = THREE.MathUtils.lerp(state.smoothedGyro.y, state.gyroOffset.y, 0.07);
-      state.smoothedParallax.x = THREE.MathUtils.lerp(state.smoothedParallax.x, state.pointerNDC.x * 0.22, 0.05);
-      state.smoothedParallax.y = THREE.MathUtils.lerp(state.smoothedParallax.y, state.pointerNDC.y * 0.14, 0.05);
+      document.getElementById('btn-toggle-camera').addEventListener('click', toggleRearCameraStream);
 
-      const currentCamZ = getCameraBaseZ();
-      const walkBobY = Math.sin(state.walkProgress * Math.PI * 10.0) * 0.022 * (Math.abs(state.targetWalkProgress - state.walkProgress) * 12.0);
+      // Vistas de recorrido museográfico (el pasillo jamás se mueve; se desplaza el visitante)
+      document.getElementById('btn-view-entrance').addEventListener('click', () => {
+        moveVisitorCameraTo(0, 1.60, 4.35, 1.25, 0, 'Ubicación: Entrada del Pasillo mirando hacia la Roca y Escultura');
+      });
 
-      camera.position.x = state.smoothedParallax.x + state.smoothedGyro.x * 0.60;
-      camera.position.y = 0.18 + state.smoothedParallax.y + state.smoothedGyro.y * 0.50 + walkBobY;
-      camera.position.z = currentCamZ;
-      camera.lookAt(
-        state.smoothedGyro.x * 0.32,
-        0.04 + state.smoothedGyro.y * 0.30,
-        CONFIG.midCorridorAltarZ
-      );
+      document.getElementById('btn-view-mid').addEventListener('click', () => {
+        moveVisitorCameraTo(0, 1.55, 1.75, state.rockTopY + 0.65, 0, 'Ubicación: Medio Pasillo frente a la Roca y la Escultura');
+      });
 
-      // Gestión automática del Stencil del Portal:
-      // Fuera del portal (currentCamZ > CONFIG.portalZ + 0.15) recorta el pasillo dentro de la ventana del portal.
-      // Al cruzar el umbral hacia medio pasillo, libera el Stencil para inmersión 360° dentro de pasillo_optimizado.glb.
-      if (state.portalStencilMode === 'auto') {
-        const shouldClipByPortal = currentCamZ > CONFIG.portalZ + 0.15;
-        if (shouldClipByPortal !== state.portalStencilActive) {
-          applyPortalStencilState(shouldClipByPortal);
-        }
-      }
+      document.getElementById('btn-view-overview').addEventListener('click', () => {
+        moveVisitorCameraTo(3.8, 2.2, 5.2, 1.1, 0, 'Ubicación: Vista Exterior de la Sala de Museo al Aire Libre');
+      });
 
-      if (state.materializing) {
-        updateMaterialization(elapsedTime);
-      }
+      // Interrumpir transición automática si el usuario interactúa manualmente con OrbitControls
+      renderer.domElement.addEventListener('pointerdown', () => {
+        state.cameraLerpActive = false;
+      });
 
-      if (state.anchorRingGroup && !state.materializing) {
-        const ringPulse = 1.0 + Math.sin(elapsedTime * 2.2) * 0.03;
-        state.anchorRingGroup.scale.setScalar(ringPulse);
-      }
+      // Ficha de museo
+      const plaque = document.getElementById('museum-plaque');
+      document.getElementById('btn-toggle-plaque').addEventListener('click', () => {
+        plaque.classList.toggle('hidden');
+      });
+      document.getElementById('btn-close-plaque').addEventListener('click', () => {
+        plaque.classList.add('hidden');
+      });
 
-      // Destello brillante sobre la escultura y recuperación a su material original
-      if (state.revealFlashActive) {
-        const flashElapsed = elapsedTime - state.revealFlashStartTime;
-        const t = Math.min(1.0, Math.max(0.0, flashElapsed / state.revealFlashDuration));
+      // Modal del Prompt Profesional
+      const promptModal = document.getElementById('prompt-modal');
+      const openPrompt = () => {
+        promptModal.classList.remove('hidden');
+        promptModal.classList.add('flex');
+      };
+      const closePrompt = () => {
+        promptModal.classList.add('hidden');
+        promptModal.classList.remove('flex');
+      };
+      document.getElementById('btn-open-prompt-init').addEventListener('click', openPrompt);
+      document.getElementById('btn-open-prompt-hud').addEventListener('click', openPrompt);
+      document.getElementById('btn-close-prompt').addEventListener('click', closePrompt);
 
-        let flashFactor = 0.0;
-        if (t < 0.18) {
-          const attackProgress = t / 0.18;
-          flashFactor = Math.sin(attackProgress * Math.PI * 0.5);
-        } else {
-          const decayProgress = (t - 0.18) / 0.82;
-          flashFactor = Math.pow(1.0 - decayProgress, 2.6);
-        }
+      document.getElementById('btn-copy-prompt').addEventListener('click', () => {
+        const text = document.getElementById('prompt-raw-text').innerText;
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          const copyToast = document.getElementById('copy-toast');
+          copyToast.classList.remove('opacity-0');
+          setTimeout(() => copyToast.classList.add('opacity-0'), 2500);
+        } catch (e) {}
+        document.body.removeChild(ta);
+      });
 
-        state.sculptureMeshes.forEach((mesh) => {
-          const orig = mesh.userData.originalMaterialState;
-          if (!orig || !mesh.material) return;
+      // Carga opcional de un archivo .GLB local
+      document.getElementById('local-glb-input').addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const objectUrl = URL.createObjectURL(file);
+        const nameLower = file.name.toLowerCase();
 
-          if (mesh.material.color) {
-            mesh.material.color.copy(orig.color).lerp(FLASH_COLOR_TARGET, flashFactor * 0.85);
+        gltfLoader.load(objectUrl, (gltf) => {
+          const wasPlaced = state.isPlaced;
+          museumPavilionGroup.matrixAutoUpdate = true;
+
+          if (nameLower.includes('rock') || nameLower.includes('roca')) {
+            mountMidCorridorRock(gltf.scene);
+            if (sculptureHolder.children[0]) mountSculptureOnRock(sculptureHolder.children[0]);
+            showToast(`Roca actualizada a medio pasillo: ${file.name}`);
+          } else if (nameLower.includes('3dmodel') || nameLower.includes('escultura')) {
+            mountSculptureOnRock(gltf.scene);
+            showToast(`Escultura actualizada sobre la roca: ${file.name}`);
+          } else {
+            mountCorridorModel(gltf.scene);
+            if (rockHolder.children[0]) mountMidCorridorRock(rockHolder.children[0]);
+            if (sculptureHolder.children[0]) mountSculptureOnRock(sculptureHolder.children[0]);
+            showToast(`Pasillo actualizado: ${file.name}`);
           }
-          if (mesh.material.emissive) {
-            mesh.material.emissive.copy(orig.emissive).lerp(FLASH_EMISSIVE_TARGET, flashFactor);
-            mesh.material.emissiveIntensity = THREE.MathUtils.lerp(orig.emissiveIntensity, 3.8, flashFactor);
+
+          if (wasPlaced) {
+            museumPavilionGroup.updateMatrix();
+            museumPavilionGroup.updateMatrixWorld(true);
+            museumPavilionGroup.matrixAutoUpdate = false;
           }
+          URL.revokeObjectURL(objectUrl);
         });
+      });
+    }
 
-        if (centerSpotLight) {
-          centerSpotLight.intensity = state.baseCenterSpotIntensity + flashFactor * 7.5;
-        }
-        if (renderer) {
-          renderer.toneMappingExposure = state.baseExposure + flashFactor * 0.55;
-        }
+    /* =========================================================================
+       7. BUCLE DE RENDERIZADO (DETECCIÓN DE PISO EN FASE 1 / INMOVILIDAD EN FASE 2)
+       ========================================================================= */
+    function renderLoop(timestamp, xrFrame) {
+      // Si la sala aún NO ha sido fijada (`state.isPlaced === false`), actualizamos la retícula sobre el piso
+      if (!state.isPlaced) {
+        if (xrFrame && state.xrHitTestSource && state.xrRefSpace) {
+          // Detección de plano horizontal real mediante WebXR Hit-Test
+          const hitTestResults = xrFrame.getHitTestResults(state.xrHitTestSource);
+          if (hitTestResults.length > 0) {
+            const hitPose = hitTestResults[0].getPose(state.xrRefSpace);
+            if (hitPose) {
+              floorReticleGroup.visible = true;
+              floorReticleGroup.position.set(
+                hitPose.transform.position.x,
+                hitPose.transform.position.y,
+                hitPose.transform.position.z
+              );
 
-        if (t >= 1.0) {
-          state.revealFlashActive = false;
-          restoreSculptureOriginalMaterials();
-        }
-      }
+              // Orientar el eje longitudinal del pasillo hacia la mirada horizontal de la cámara
+              const camDir = new THREE.Vector3();
+              camera.getWorldDirection(camDir);
+              const yaw = Math.atan2(camDir.x, camDir.z);
+              floorReticleGroup.rotation.set(0, yaw, 0);
 
-      // Onda expansiva de partículas alrededor del altar a medio pasillo
-      if (state.burstActive && burstParticles) {
-        const burstElapsed = elapsedTime - state.burstStartTime;
-        const duration = 1.65;
-        if (burstElapsed < duration) {
-          const progress = burstElapsed / duration;
-          const posAttr = burstParticles.geometry.attributes.position;
-          for (let i = 0; i < CONFIG.burstParticleCount; i++) {
-            const bd = state.burstData[i];
-            const easeOut = 1 - Math.pow(1 - progress, 2.2);
-            posAttr.setXYZ(
-              i,
-              bd.vx * easeOut * 1.4,
-              0.15 + bd.vy * easeOut * 1.4,
-              CONFIG.midCorridorAltarZ + bd.vz * easeOut * 1.4
-            );
+              // Mostrar vista previa del pasillo siguiendo la retícula antes de fijarlo
+              museumPavilionGroup.position.copy(floorReticleGroup.position);
+              museumPavilionGroup.rotation.copy(floorReticleGroup.rotation);
+            }
           }
-          posAttr.needsUpdate = true;
-          burstParticles.material.opacity = Math.max(0, 1 - progress);
         } else {
-          state.burstActive = false;
-          burstParticles.visible = false;
-        }
-      }
+          // Detección de plano horizontal (y = 0) mediante Raycaster desde la cámara hacia el suelo
+          screenCenterRaycaster.setFromCamera(screenCenterNDC, camera);
+          const floorHitPoint = new THREE.Vector3();
+          const hit = screenCenterRaycaster.ray.intersectPlane(virtualFloorPlane, floorHitPoint);
 
-      // Física orgánica de las 4 capas de vegetación
-      if (!state.materializing) {
-        state.foliagePlanes.forEach((leaf) => {
-          const d = leaf.userData;
-
-          if (d.interactive) {
-            leaf.position.x += d.velocity.x;
-            leaf.position.y += d.velocity.y;
-            leaf.rotation.z += d.rotVelocity;
-
-            d.velocity.multiplyScalar(CONFIG.damping);
-            d.rotVelocity *= CONFIG.damping;
-
-            leaf.position.x = THREE.MathUtils.lerp(leaf.position.x, d.restPos.x, CONFIG.restLerpSpeed);
-            leaf.position.y = THREE.MathUtils.lerp(leaf.position.y, d.restPos.y, CONFIG.restLerpSpeed);
-            leaf.rotation.z = THREE.MathUtils.lerp(leaf.rotation.z, d.restRotZ, CONFIG.restLerpSpeed);
+          if (hit && floorHitPoint.distanceTo(camera.position) < 18.0) {
+            floorReticleGroup.position.set(floorHitPoint.x, 0, floorHitPoint.z);
+            museumPavilionGroup.position.set(floorHitPoint.x, 0, floorHitPoint.z);
           }
-
-          const posAttr = leaf.geometry.attributes.position;
-          const basePos = d.basePositions;
-          const halfH = d.planeHeight * 0.5;
-          const windAmp = d.windAmplitude;
-
-          for (let v = 0; v < posAttr.count; v++) {
-            const idx = v * 3;
-            const bx = basePos[idx];
-            const by = basePos[idx + 1];
-
-            const tipWeight = THREE.MathUtils.clamp((by + halfH) / d.planeHeight, 0.0, 1.0);
-            const wave1 = Math.sin(elapsedTime * d.swaySpeed + bx * 1.5 + by * 1.1 + d.swayPhase);
-            const wave2 = Math.cos(elapsedTime * (d.swaySpeed * 0.78) - by * 1.6 + d.swayPhase);
-
-            const offsetX = wave1 * windAmp * tipWeight - (d.velocity.x * 1.4 * tipWeight);
-            const offsetY = wave2 * (windAmp * 0.4) * tipWeight - (d.velocity.y * 1.1 * tipWeight);
-            const offsetZ = wave1 * (windAmp * 0.75) * tipWeight;
-
-            posAttr.setXYZ(v, bx + offsetX, by + offsetY, offsetZ);
-          }
-          posAttr.needsUpdate = true;
-        });
+        }
       }
 
-      // Rotación curatorial 360° del conjunto de Roca (rock.glb) + Escultura (3DModel.glb) a medio pasillo
-      if (midCorridorAltarGroup && state.interactionEnabled) {
-        if (!state.rotatingModel) {
-          state.modelTargetRotY += 0.0038;
+      // Transición suave de la cámara del visitante cuando usa los botones de recorrido ("Entrada Pasillo" / "Medio Pasillo")
+      if (state.cameraLerpActive && ! renderer.xr.isPresenting) {
+        camera.position.lerp(state.cameraTargetPos, 0.08);
+        controls.target.lerp(state.cameraTargetLookAt, 0.08);
+        if (camera.position.distanceTo(state.cameraTargetPos) < 0.03) {
+          state.cameraLerpActive = false;
         }
-        midCorridorAltarGroup.rotation.y = THREE.MathUtils.lerp(midCorridorAltarGroup.rotation.y, state.modelTargetRotY, 0.08);
-        midCorridorAltarGroup.rotation.x = THREE.MathUtils.lerp(midCorridorAltarGroup.rotation.x, state.modelTargetRotX, 0.08);
       }
 
-      if (bioParticles && bioParticles.visible && state.particleData.length > 0) {
-        bioParticles.material.uniforms.uTime.value = elapsedTime;
-        const posAttr = bioParticles.geometry.attributes.position;
-        for (let i = 0; i < CONFIG.particleCount; i++) {
-          const p = state.particleData[i];
-          p.baseY += p.speedY;
-          if (p.baseY > 2.5) p.baseY = -1.4;
-          const x = p.baseX + Math.sin(elapsedTime * p.driftFreq + p.phase) * p.driftAmp;
-          const y = p.baseY + Math.cos(elapsedTime * p.driftFreq * 0.7 + p.phase) * (p.driftAmp * 0.5);
-          posAttr.setXYZ(i, x, y, p.baseZ);
-        }
-        posAttr.needsUpdate = true;
+      if (!renderer.xr.isPresenting) {
+        controls.update();
       }
 
       renderer.render(scene, camera);
     }
 
     function onWindowResize() {
-      updateCameraFramingForAspect();
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
