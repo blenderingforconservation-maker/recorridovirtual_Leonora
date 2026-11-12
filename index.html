@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Sala de Museo al Aire Libre · WebAR Pasillo Xilitla</title>
+  <title>Sala de Museo al Aire Libre · Pasillo Xilitla WebAR</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Tipografías de Museo: Cormorant Garamond (Títulos Curatoriales) e Inter (UI Técnica) -->
+  <!-- Tipografías Curatoriales: Cormorant Garamond y Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Importmap para Three.js r160, GLTFLoader, DRACOLoader y OrbitControls -->
+  <!-- Importmap Oficial Three.js r160 + Addons (GLTFLoader, DRACOLoader, MeshoptDecoder, OrbitControls) -->
   <script type="importmap">
     {
       "imports": {
@@ -37,7 +37,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #0c1210;
+      background-color: #0b1310;
       font-family: 'Inter', sans-serif;
       touch-action: none;
     }
@@ -46,19 +46,19 @@
       font-family: 'Cormorant Garamond', Georgia, serif;
     }
 
-    /* Fondo diurno de Sala de Museo al Aire Libre (cuando la cámara AR está apagada) */
+    /* Cielo diurno luminoso de Sala de Museo al Aire Libre (activo cuando la cámara trasera está apagada) */
     #outdoor-sky-backdrop {
       position: fixed;
       inset: 0;
       z-index: 0;
       background:
-        radial-gradient(circle at 50% 18%, rgba(254, 249, 195, 0.35) 0%, rgba(167, 243, 208, 0.18) 38%, rgba(15, 35, 29, 0.92) 78%, #091410 100%),
-        linear-gradient(180deg, #1b3b32 0%, #122922 58%, #0a1713 100%);
+        radial-gradient(circle at 50% 14%, rgba(254, 249, 195, 0.38) 0%, rgba(167, 243, 208, 0.22) 36%, rgba(16, 40, 32, 0.92) 76%, #08120e 100%),
+        linear-gradient(180deg, #1e4237 0%, #132a23 58%, #091511 100%);
       pointer-events: none;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.45s ease;
     }
 
-    /* Stream de cámara trasera para modo Cámara AR Fallback */
+    /* Video de cámara trasera para modo Cámara AR con detección de plano de piso */
     #ar-camera-video {
       position: fixed;
       inset: 0;
@@ -68,14 +68,14 @@
       z-index: 1;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.45s ease;
     }
 
     #ar-camera-video.active {
       opacity: 1;
     }
 
-    /* Contenedor WebGL */
+    /* Lienzo Three.js */
     #webgl-viewport {
       position: fixed;
       inset: 0;
@@ -85,7 +85,7 @@
       touch-action: none;
     }
 
-    /* Overlay DOM para WebXR y controles en pantalla */
+    /* Capa HUD / DOM Overlay para WebXR */
     #ar-dom-overlay {
       position: fixed;
       inset: 0;
@@ -94,75 +94,120 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: env(safe-area-inset-top, 14px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 14px) env(safe-area-inset-left, 16px);
+      padding: env(safe-area-inset-top, 12px) env(safe-area-inset-right, 14px) env(safe-area-inset-bottom, 12px) env(safe-area-inset-left, 14px);
     }
 
     .interactive {
       pointer-events: auto;
     }
 
+    /* Estilizado del deslizador de caminata por el pasillo */
+    input[type="range"].walk-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      background: rgba(16, 185, 129, 0.25);
+      border-radius: 999px;
+      outline: none;
+    }
+
+    input[type="range"].walk-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fbbf24;
+      border: 2px solid #064e3b;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+    }
+
     .custom-scroll::-webkit-scrollbar {
-      width: 6px;
+      width: 5px;
     }
     .custom-scroll::-webkit-scrollbar-track {
-      background: rgba(15, 23, 20, 0.6);
+      background: rgba(12, 20, 16, 0.6);
     }
     .custom-scroll::-webkit-scrollbar-thumb {
-      background: rgba(16, 185, 129, 0.45);
+      background: rgba(52, 211, 153, 0.45);
       border-radius: 9999px;
     }
   </style>
 </head>
 <body>
 
-  <!-- 1. CIELO DE MUSEO AL AIRE LIBRE (MODO ESTUDIO 3D) -->
+  <!-- 1. FONDO DE SALA DE MUSEO AL AIRE LIBRE -->
   <div id="outdoor-sky-backdrop"></div>
 
-  <!-- 2. VIDEO DE CÁMARA TRASERA (FALLBACK UNIVERSAL WEBAR) -->
+  <!-- 2. STREAM DE CÁMARA TRASERA (MODO CÁMARA AR) -->
   <video id="ar-camera-video" autoplay playsinline muted></video>
 
-  <!-- 3. LIENZO THREE.JS -->
+  <!-- 3. VIEWPORT WEBGL THREE.JS -->
   <div id="webgl-viewport"></div>
 
-  <!-- 4. PANTALLA DE CARGA Y AUDITORÍA DE MODELOS GLB -->
-  <div id="loading-modal" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-xl px-6 text-center transition-opacity duration-500">
-    <div class="w-14 h-14 mb-4 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center shadow-xl">
-      <svg class="w-7 h-7 text-amber-200 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <!-- 4. MODAL DE CARGA CON DECODIFICACIÓN MESHOPT Y AUDITORÍA DE NODOS REALES -->
+  <div id="loading-modal" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-xl px-5 text-center transition-opacity duration-500">
+    <div class="w-14 h-14 mb-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center shadow-xl">
+      <svg class="w-7 h-7 text-amber-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 21h18M4 18h16M6 18V9m4 9V9m4 9V9m4 9V9M3 9l9-5 9 5" />
       </svg>
     </div>
 
-    <span class="text-[10px] uppercase tracking-[0.28em] text-amber-300/90 font-semibold mb-1">Instalación Museográfica WebAR</span>
-    <h1 class="font-museum text-2xl sm:text-3xl text-stone-100 tracking-wide mb-2">Sala de Museo al Aire Libre · Xilitla</h1>
-    <p id="loading-message" class="text-xs sm:text-sm text-stone-300/85 max-w-md mb-5 leading-relaxed">
-      Cargando y ensamblando <code class="text-amber-200">pasillo_optimizado.glb</code>, <code class="text-amber-200">rock.glb</code> a medio pasillo y <code class="text-amber-200">3DModel.glb</code> sobre la roca...
+    <span class="text-[10px] uppercase tracking-[0.26em] text-amber-300/90 font-semibold mb-1">
+      Instalación Museográfica WebAR · EXT_meshopt_compression
+    </span>
+    <h1 class="font-museum text-2xl sm:text-3xl text-stone-100 tracking-wide mb-2">
+      Pasillo Xilitla · Roca Central y Escultura
+    </h1>
+    <p id="loading-message" class="text-xs sm:text-sm text-stone-300/85 max-w-lg mb-4 leading-relaxed">
+      Inicializando <code class="text-emerald-300">MeshoptDecoder</code> y descargando exclusivamente los modelos reales del repositorio GitHub...
     </p>
 
-    <!-- Estado individual de los 3 modelos del repositorio -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-lg mb-5 text-xs font-mono">
-      <div id="status-pasillo" class="px-3 py-2 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-        <span>pasillo_optimizado.glb</span>
+    <!-- Tarjetas de estado de los 3 archivos GLB reales -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-xl mb-4 text-xs font-mono">
+      <div id="status-pasillo" class="px-3 py-2.5 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-400 flex flex-col items-center gap-1">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          <span class="font-semibold text-stone-200">pasillo_optimizado.glb</span>
+        </div>
+        <span id="meta-pasillo" class="text-[10px] text-stone-400">Decodificando Meshopt...</span>
       </div>
-      <div id="status-rock" class="px-3 py-2 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-        <span>rock.glb</span>
+
+      <div id="status-rock" class="px-3 py-2.5 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-400 flex flex-col items-center gap-1">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          <span class="font-semibold text-stone-200">rock.glb</span>
+        </div>
+        <span id="meta-rock" class="text-[10px] text-stone-400">Medio pasillo (x=0, z=0)</span>
       </div>
-      <div id="status-sculpture" class="px-3 py-2 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-        <span>3DModel.glb</span>
+
+      <div id="status-sculpture" class="px-3 py-2.5 rounded-xl bg-stone-900/90 border border-stone-800 text-stone-400 flex flex-col items-center gap-1">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          <span class="font-semibold text-stone-200">3DModel.glb</span>
+        </div>
+        <span id="meta-sculpture" class="text-[10px] text-stone-400">Cumbre de la roca</span>
       </div>
     </div>
 
     <!-- Barra de progreso -->
-    <div id="progress-container" class="w-64 sm:w-80 flex flex-col items-center">
+    <div id="progress-container" class="w-64 sm:w-80 flex flex-col items-center mb-2">
       <div class="w-full h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
         <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-amber-300 w-0 transition-all duration-300"></div>
       </div>
-      <span id="progress-text" class="text-[11px] font-mono text-stone-400 mt-2">0%</span>
+      <span id="progress-text" class="text-[11px] font-mono text-stone-400 mt-1.5">0%</span>
     </div>
 
-    <!-- Botones de inicio una vez ensamblada la escena -->
+    <!-- Controles de error / reintento en caso de fallo de red (CERO pasillos falsos) -->
+    <div id="error-retry-box" class="hidden flex-col items-center gap-2 max-w-md bg-red-950/60 border border-red-400/40 rounded-2xl p-4 mt-2">
+      <p id="error-retry-text" class="text-xs text-red-200"></p>
+      <button id="btn-retry-load" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold text-xs transition-all">
+        Reintentar Descarga desde GitHub
+      </button>
+    </div>
+
+    <!-- Acciones de inicio cuando los 3 modelos reales están listos -->
     <div id="start-actions" class="hidden flex-col items-center gap-2.5 w-full max-w-xs mt-2">
       <button id="btn-start-ar" class="w-full py-3 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 active:scale-95 text-stone-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-950/60 flex items-center justify-center gap-2 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,40 +217,33 @@
         <span>Iniciar Cámara AR y Detectar Piso</span>
       </button>
 
-      <button id="btn-start-outdoor" class="w-full py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 active:scale-95 text-stone-200 font-medium text-xs border border-stone-700 transition-all">
-        Abrir en Modo Sala Exterior 3D (Sin Cámara)
-      </button>
-
-      <button id="btn-open-prompt-init" class="w-full py-2 px-3 rounded-xl bg-stone-900/60 hover:bg-stone-800 text-amber-200/90 text-[11px] border border-amber-400/25 transition-all flex items-center justify-center gap-1.5">
-        <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <span>Ver Prompt Profesional</span>
+      <button id="btn-start-outdoor" class="w-full py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 active:scale-95 text-stone-100 font-medium text-xs border border-stone-700 transition-all">
+        Explorar en Sala de Museo al Aire Libre (3D Fijo)
       </button>
     </div>
   </div>
 
-  <!-- 5. HUD MINIMALISTA DE SALA DE MUSEO (SOPORTA DOM-OVERLAY EN WEBXR) -->
+  <!-- 5. HUD INTERACTIVO DE SALA DE MUSEO -->
   <div id="ar-dom-overlay">
     <!-- Barra Superior -->
     <header class="w-full flex flex-wrap items-center justify-between gap-2">
-      <!-- Indicador de Fase (Fase 1: Detectando Piso -> Fase 2: Sala Fija e Inmóvil) -->
+      <!-- Estado del Anclaje en el Piso -->
       <div class="flex items-center gap-2.5 bg-stone-950/85 backdrop-blur-md border border-stone-700/80 rounded-2xl px-3.5 py-2 shadow-xl">
-        <span id="phase-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0"></span>
+        <span id="anchor-status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0"></span>
         <div class="flex flex-col">
-          <span id="phase-title" class="text-[11px] sm:text-xs font-semibold text-stone-100 tracking-wide">
-            FASE 1 · ESCANEANDO PLANO DEL PISO
+          <span id="anchor-status-title" class="text-[11px] sm:text-xs font-semibold text-stone-100 tracking-wide">
+            DETECCIÓN DE PISO ACTIVA
           </span>
-          <span id="phase-subtitle" class="text-[10px] font-mono text-emerald-300/90">
-            Apunta hacia el suelo y pulsa "Fijar Sala en el Piso"
+          <span id="anchor-status-subtitle" class="text-[10px] font-mono text-emerald-300/90">
+            Apunta al piso y toca "Fijar Sala de Museo en el Piso"
           </span>
         </div>
       </div>
 
-      <!-- Herramientas Superiores -->
+      <!-- Botones Superiores -->
       <div class="flex items-center gap-1.5 interactive flex-wrap">
         <!-- Cargar GLB Local Opcional -->
-        <label for="local-glb-input" title="Cargar un archivo .GLB local para pruebas" class="cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-stone-950/85 hover:bg-stone-900 text-stone-200 border border-stone-700/80 backdrop-blur-md shadow-lg transition-all">
+        <label for="local-glb-input" title="Probar o reemplazar un archivo .GLB local" class="cursor-pointer flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-stone-950/85 hover:bg-stone-900 text-stone-200 border border-stone-700/80 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
@@ -213,35 +251,31 @@
         </label>
         <input id="local-glb-input" type="file" accept=".glb,.gltf" class="hidden" />
 
-        <!-- Cédula de la Obra -->
-        <button id="btn-toggle-plaque" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-stone-950/85 hover:bg-stone-900 text-amber-200 border border-amber-400/30 backdrop-blur-md shadow-lg transition-all">
+        <!-- Inspector de Nodos y Cédula Museográfica -->
+        <button id="btn-toggle-plaque" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-stone-950/85 hover:bg-stone-900 text-amber-200 border border-amber-400/35 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>Ficha Museo</span>
+          <span>Cédula e Inspector GLB</span>
         </button>
 
-        <!-- Ver Prompt Profesional -->
-        <button id="btn-open-prompt-hud" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-stone-950/85 hover:bg-stone-900 text-emerald-200 border border-emerald-400/30 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <span class="hidden sm:inline">Prompt Profesional</span>
-        </button>
-
-        <!-- Alternar Cámara AR -->
+        <!-- Conmutador de Cámara AR -->
         <button id="btn-toggle-camera" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-emerald-600/90 hover:bg-emerald-500 text-white border border-emerald-300/40 shadow-lg transition-all">
-          <span id="camera-status-label">Cámara AR</span>
+          <span id="camera-status-label">Activar Cámara AR</span>
         </button>
       </div>
     </header>
 
-    <!-- Cédula Museográfica (Esquina derecha) -->
-    <aside id="museum-plaque" class="hidden self-end max-w-xs bg-stone-950/90 backdrop-blur-xl border border-amber-300/35 rounded-2xl p-4 shadow-2xl text-left interactive">
-      <div class="flex items-start justify-between gap-2 mb-1">
+    <!-- Cédula Museográfica + Inspector en Vivo de Nodos de pasillo_optimizado.glb -->
+    <aside id="museum-plaque" class="hidden self-end max-w-sm w-full bg-stone-950/92 backdrop-blur-xl border border-amber-300/35 rounded-2xl p-4 shadow-2xl text-left interactive max-h-[62vh] overflow-y-auto custom-scroll">
+      <div class="flex items-start justify-between gap-2 mb-2">
         <div>
-          <span class="text-[9px] uppercase tracking-[0.2em] text-amber-300 font-semibold block">Cédula Curatorial · Sala Exterior</span>
-          <h3 class="font-museum text-lg text-stone-100 leading-tight">Pabellón Xilitla y Escultura Central</h3>
+          <span class="text-[9px] uppercase tracking-[0.2em] text-amber-300 font-semibold block">
+            Cédula Curatorial · Auditoría GLB en Vivo
+          </span>
+          <h3 class="font-museum text-lg text-stone-100 leading-tight">
+            Pasillo Xilitla, Roca de Altar y Escultura
+          </h3>
         </div>
         <button id="btn-close-plaque" class="p-1 rounded-lg bg-stone-800 text-stone-300 hover:bg-stone-700">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,117 +283,125 @@
           </svg>
         </button>
       </div>
+
       <p class="text-[11px] text-stone-300 leading-relaxed mb-2.5">
-        El corredor arquitectónico (<code class="text-emerald-300">pasillo_optimizado.glb</code>) se ancla de forma 100% estática sobre el plano del suelo. En su centro exacto (<code class="text-emerald-300">x=0, z=0</code>) descansa la roca monolítica (<code class="text-emerald-300">rock.glb</code>) sosteniendo en su cumbre la escultura (<code class="text-emerald-300">3DModel.glb</code>).
+        Instalación decodificada con <code class="text-emerald-300">MeshoptDecoder</code> directamente desde <code class="text-amber-200">models/pasillo_optimizado.glb</code>. El conjunto permanece <strong>100% fijo e inmóvil</strong> sobre el suelo detectado para permitir recorrer desde la entrada abierta hasta la reja de hierro del fondo.
       </p>
-      <div id="dimensions-readout" class="text-[10px] font-mono text-stone-400 border-t border-stone-800 pt-2 space-y-0.5">
-        <div>Pasillo: 8.00 m largo (Fijo en piso y = 0.00 m)</div>
-        <div>Roca y Escultura: Centro exacto (z = 0.00 m)</div>
+
+      <!-- Lectura de Coordenadas y Escala Humana -->
+      <div id="spatial-metrics-box" class="text-[10px] font-mono text-stone-300 bg-stone-900/90 border border-stone-800 rounded-xl p-2.5 mb-2.5 space-y-1">
+        <div>Cargando métricas espaciales...</div>
+      </div>
+
+      <!-- Lista de Nodos Reales detectados dentro de pasillo_optimizado.glb -->
+      <div>
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-emerald-300 block mb-1">
+          Nodos y Materiales Reales en Escena:
+        </span>
+        <div id="live-node-inspector" class="text-[10px] font-mono text-stone-400 bg-stone-900/70 border border-stone-800/90 rounded-xl p-2.5 space-y-1 max-h-40 overflow-y-auto custom-scroll">
+          Verificando anatomía del GLB...
+        </div>
       </div>
     </aside>
 
-    <!-- Controles Inferiores: Botón de Anclaje en Piso + Vistas de Recorrido Museográfico -->
+    <!-- Panel Inferior: Anclaje en Piso + Recorrido Longitudinal y Vistas Curatoriales -->
     <footer class="w-full flex flex-col items-center gap-2">
-      <!-- Mensaje Toast -->
-      <div id="toast-banner" class="px-4 py-1.5 rounded-full bg-stone-950/90 border border-emerald-400/35 text-stone-100 text-xs shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none">
-        Plano del piso detectado
+      <!-- Notificación Flotante (Toast) -->
+      <div id="toast-banner" class="px-4 py-1.5 rounded-full bg-stone-950/90 border border-emerald-400/35 text-stone-100 text-xs shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none text-center">
+        Sala lista
       </div>
 
-      <!-- Barra Principal de Acción en el Piso y Recorrido -->
-      <div class="w-full max-w-2xl bg-stone-950/90 backdrop-blur-xl border border-stone-700/80 rounded-2xl p-2.5 shadow-2xl flex flex-wrap items-center justify-between gap-2 interactive">
-        <!-- Botón Primario: Fijar Sala en el Piso / Desbloquear -->
-        <div class="flex items-center gap-2">
-          <button id="btn-place-pavilion" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-300 via-amber-400 to-emerald-400 hover:from-amber-200 hover:to-emerald-300 active:scale-95 text-stone-950 font-bold text-xs tracking-wide shadow-lg flex items-center gap-2 transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span id="place-btn-label">Fijar Sala en el Piso Aquí</span>
-          </button>
+      <!-- Controles Principales -->
+      <div class="w-full max-w-3xl bg-stone-950/90 backdrop-blur-xl border border-stone-700/80 rounded-2xl p-3 shadow-2xl flex flex-col gap-2.5 interactive">
+        <!-- Fila 1: Fijar en el Piso + Control Deslizante de Caminata por el Pasillo -->
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          <!-- Botones de Anclaje Fijo en Piso -->
+          <div class="flex items-center gap-2">
+            <button id="btn-anchor-floor" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-300 via-amber-400 to-emerald-400 hover:from-amber-200 hover:to-emerald-300 active:scale-95 text-stone-950 font-bold text-xs tracking-wide shadow-lg flex items-center gap-1.5 transition-all">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Fijar Sala de Museo en el Piso</span>
+            </button>
 
-          <button id="btn-unlock-pavilion" class="hidden px-3 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-amber-200 border border-amber-400/30 text-xs font-medium flex items-center gap-1.5 transition-all">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span>Reposicionar en Piso</span>
-          </button>
+            <button id="btn-reposition-floor" class="hidden px-3 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-amber-200 border border-amber-400/30 text-xs font-medium flex items-center gap-1.5 transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Reposicionar en el Piso</span>
+            </button>
+          </div>
+
+          <!-- Deslizador de Recorrido Longitudinal dentro del Pasillo Fijo (+3.2m Entrada a -1.5m Reja) -->
+          <div class="flex items-center gap-2 flex-1 min-w-[220px] bg-stone-900/90 border border-stone-800 rounded-xl px-3 py-1.5">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-300 whitespace-nowrap">
+              Recorrido Pasillo:
+            </span>
+            <input
+              id="corridor-walk-slider"
+              type="range"
+              min="-1.5"
+              max="3.4"
+              step="0.05"
+              value="3.1"
+              class="walk-slider w-full"
+            />
+            <span id="walk-z-readout" class="text-[10px] font-mono text-amber-200 w-14 text-right">
+              +3.10m
+            </span>
+          </div>
         </div>
 
-        <!-- Vistas de Recorrido Museográfico (Mueven solo al visitante/cámara; el modelo jamás se mueve) -->
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <span class="text-[10px] font-mono uppercase tracking-wider text-stone-400 mr-1 hidden sm:inline">Caminar a:</span>
-          <button id="btn-view-entrance" class="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-[11px] font-medium transition-all">
-            Entrada Pasillo
-          </button>
-          <button id="btn-view-mid" class="px-2.5 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 border border-emerald-500/40 text-[11px] font-semibold transition-all">
-            Medio Pasillo (Roca + Escultura)
-          </button>
-          <button id="btn-view-overview" class="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-[11px] font-medium transition-all">
-            Vista Exterior
-          </button>
+        <!-- Fila 2: Botones de Estaciones Curatoriales (mueven solo al visitante; el modelo jamás se mueve) -->
+        <div class="flex items-center justify-between gap-1.5 flex-wrap border-t border-stone-800/80 pt-2">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-stone-400">
+            Estaciones de Visita:
+          </span>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button id="btn-station-entrance" class="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-[11px] font-medium transition-all">
+              1. Entrada (+3.2m)
+            </button>
+            <button id="btn-station-botanical" class="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-[11px] font-medium transition-all">
+              2. Palmeras y Orquídeas (+1.7m)
+            </button>
+            <button id="btn-station-midrock" class="px-2.5 py-1.5 rounded-lg bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 border border-emerald-500/40 text-[11px] font-semibold transition-all">
+              3. Medio Pasillo · Roca y Escultura (+1.1m)
+            </button>
+            <button id="btn-station-closeup" class="px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900/80 text-amber-200 border border-amber-400/40 text-[11px] font-medium transition-all">
+              4. Detalle Escultura
+            </button>
+            <button id="btn-station-gate" class="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-700 text-[11px] font-medium transition-all">
+              5. Reja Fondo (-1.4m)
+            </button>
+            <button id="btn-station-overview" class="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-300 border border-stone-700 text-[11px] font-medium transition-all">
+              Vista General
+            </button>
+          </div>
         </div>
       </div>
     </footer>
   </div>
 
-  <!-- 6. MODAL DEL PROMPT PROFESIONAL -->
-  <div id="prompt-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
-    <div class="bg-stone-950 border border-emerald-500/35 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-stone-800 bg-stone-900/60">
-        <div>
-          <span class="text-[10px] uppercase tracking-widest text-amber-300 font-semibold">Especificación Técnica WebAR · Sala de Museo al Aire Libre</span>
-          <h2 class="font-museum text-lg text-stone-100">Prompt Profesional de Ingeniería WebAR</h2>
-        </div>
-        <button id="btn-close-prompt" class="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <div id="prompt-raw-text" class="p-5 overflow-y-auto custom-scroll text-xs text-stone-200 space-y-3 leading-relaxed font-mono select-text">
-Actúa como un Ingeniero Senior de WebAR (Three.js r160 + WebXR Hit-Test API) y Museógrafo Digital.
-
-OBJETIVO:
-Desarrollar desde cero en un único archivo HTML5 una experiencia WebAR de "Sala de Museo al Aire Libre" conectada al repositorio `blenderingforconservation-maker/recorridovirtual_Leonora` (rama `main`). Cuando la cámara del teléfono detecte un plano horizontal (el piso), el usuario despliega el modelo `models/pasillo_optimizado.glb`. Exactamente a medio pasillo (`x = 0, z = 0`) se ubica `models/rock.glb` y, apoyada sobre la cumbre de la roca, la escultura `models/3DModel.glb`. Una vez colocado en el suelo, el conjunto arquitectónico y escultórico debe quedar 100% FIJO E INMÓVIL en el mundo real (`matrixAutoUpdate = false`).
-
-REGLAS DE INGENIERÍA ESPACIAL Y ENSAMBLAJE (`THREE.Box3`):
-1. Nodo Ancla Estático (`museumPavilionGroup`):
-   - Agrupa el pasillo, la roca, la escultura y el plano receptor de sombras bajo `museumPavilionGroup`.
-2. Normalización y Nivelación de `models/pasillo_optimizado.glb`:
-   - Calcula su `THREE.Box3`. Si el eje mayor horizontal está en X (`size.x > size.z`), rota el modelo `90°` en Y para alinear el túnel con el eje Z.
-   - Escala uniformemente el pasillo a `8.0 metros` de longitud. Centra `x = 0` y `z = 0`, y nivela su base exactamente con el suelo (`min.y = 0`).
-3. Posicionamiento de `models/rock.glb` a Medio Pasillo (`x = 0, z = 0`):
-   - Calcula su `THREE.Box3`, escálala a `1.05 metros` de ancho y colócala en el centro geométrico exacto del pasillo (`x = 0, z = 0`), apoyando su base sobre el suelo del corredor (`min.y = corridorFloorY`). Obtén la cota superior exacta `rockTopY = mountedRockBox.max.y`.
-4. Montaje de `models/3DModel.glb` sobre la Roca:
-   - Calcula su `THREE.Box3`, escálala a `1.45 metros` de altura, céntrala en `x = 0, z = 0` y apoya su base directamente sobre la cumbre de `rock.glb` (`min.y = rockTopY - 0.02`).
-
-DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
-- En fase de escaneo (`isPlaced = false`), proyecta una retícula sobre el plano horizontal del piso (mediante WebXR `hit-test` con espacio de referencia `local-floor` o `Raycaster` contra el plano `y = 0`).
-- Al confirmar la colocación, transfiere la posición `(x, y, z)` y orientación horizontal `(yaw)` de la retícula al `museumPavilionGroup`, oculta la retícula y ejecuta `museumPavilionGroup.updateMatrix()` seguido de `museumPavilionGroup.matrixAutoUpdate = false`.
-- Elimina cualquier rotación automática, oscilación o deriva de sensores sobre los modelos: el pasillo, la roca y la escultura permanecen completamente fijos como una instalación arquitectónica real.</div>
-
-      <div class="px-5 py-3 border-t border-stone-800 bg-stone-900/60 flex items-center justify-between">
-        <span id="copy-toast" class="text-[11px] text-emerald-400 opacity-0 transition-opacity">¡Prompt copiado al portapapeles!</span>
-        <button id="btn-copy-prompt" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs transition-all">
-          Copiar Prompt Profesional
-        </button>
-      </div>
-    </div>
-  </div>
-
+  <!-- =========================================================================
+       LÓGICA PRINCIPAL THREE.JS r160 + MESHOPT DECODER + WEBXR HIT-TEST
+       ========================================================================= -->
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+    import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     const REPO_RAW_BASE = 'https://raw.githubusercontent.com/blenderingforconservation-maker/recorridovirtual_Leonora/main/';
 
-    const CONFIG = {
-      corridorTargetLength: 8.0, // 8.0 metros de longitud arquitectónica real
-      rockTargetWidth: 1.05,     // 1.05 metros de diámetro para el altar pétreo a medio pasillo
-      sculptureTargetHeight: 1.45, // 1.45 metros de altura para la escultura sobre la roca
-      paths: {
+    // Parámetros exactos de ingeniería espacial y escala humana museográfica
+    const SPATIAL_CONFIG = {
+      corridorScaleFactor: 2.6,      // Escala uniforme 2.6x: ancho interior libre ~1.85m, muros ~3.1m alto, largo ~6.7m
+      rockTargetWidth: 0.62,         // 0.62m de ancho para rock.glb en medio pasillo (x=0, z=0)
+      sculptureTargetHeight: 0.95,   // 0.95m de alto para 3DModel.glb sobre la cumbre de rock.glb
+      sculptureSeatingEmbed: 0.015,  // Asentamiento orgánico (1.5 cm) sobre la cumbre de la roca
+      visitorEyeHeight: 1.55,        // Altura de vista humana dentro del pasillo (1.55m)
+      urls: {
         corridor: [
           `${REPO_RAW_BASE}models/pasillo_optimizado.glb`,
           'models/pasillo_optimizado.glb'
@@ -375,17 +417,49 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
       }
     };
 
+    // Clasificación exacta de materiales exportados en pasillo_optimizado.glb para corregir alphaMode: "BLEND"
+    const OPAQUE_ARCHITECTURAL_MATERIALS = new Set([
+      'murocear',
+      'pisoceart1',
+      'stones',
+      'Rusty Iron (Old Iron)',
+      'metal.chrome',
+      'plant.wood',
+      'Metal',
+      'Green Plastic',
+      'Green Plastic.001',
+      'Pollinium',
+      'Blossom Stem',
+      'STEM'
+    ]);
+
+    const CUTOUT_BOTANICAL_AND_GRILLE_MATERIALS = new Set([
+      'AlexandraPalm',
+      'Wild Bush_Leaf.038',
+      'plantas',
+      'plant.leaf',
+      'rejapared',
+      'Leaves',
+      'Orchid Main Petals',
+      'Lateral Sepal'
+    ]);
+
+    // Estado de la aplicación
     const state = {
-      isPlaced: false,           // Cuando es true, museumPavilionGroup queda 100% bloqueado e inmóvil
+      isAnchored: false,          // Cuando es true, museumPavilionGroup permanece 100% fijo e inmóvil en el piso
       cameraStreamActive: false,
       xrSession: null,
       xrHitTestSource: null,
       xrRefSpace: null,
-      corridorFloorY: 0.0,       // Cota Y del piso interior del pasillo
-      rockTopY: 0.65,            // Cota Y exacta de la cumbre de rock.glb
-      cameraLerpActive: false,
-      cameraTargetPos: new THREE.Vector3(),
-      cameraTargetLookAt: new THREE.Vector3()
+      corridorFloorY: 0.0,        // Cota Y exacta de la superficie superior de pisoceart1.001 (nivel 0.00m)
+      rockTopY: 0.42,             // Cota Y exacta de la cumbre de rock.glb
+      sculptureTopY: 1.35,        // Cota Y superior de 3DModel.glb
+      corridorDimensions: new THREE.Vector3(),
+      cameraTransitionActive: false,
+      cameraGoalPos: new THREE.Vector3(),
+      cameraGoalTarget: new THREE.Vector3(),
+      inspectedNodes: [],
+      inspectedMaterials: new Set()
     };
 
     // Referencias DOM
@@ -393,47 +467,55 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
     const videoEl = document.getElementById('ar-camera-video');
     const skyBackdrop = document.getElementById('outdoor-sky-backdrop');
     const loadingModal = document.getElementById('loading-modal');
+    const loadingMessage = document.getElementById('loading-message');
     const progressBar = document.getElementById('progress-bar');
     const progressText = document.getElementById('progress-text');
-    const loadingMessage = document.getElementById('loading-message');
     const progressContainer = document.getElementById('progress-container');
+    const errorRetryBox = document.getElementById('error-retry-box');
+    const errorRetryText = document.getElementById('error-retry-text');
     const startActions = document.getElementById('start-actions');
-    const phaseDot = document.getElementById('phase-dot');
-    const phaseTitle = document.getElementById('phase-title');
-    const phaseSubtitle = document.getElementById('phase-subtitle');
-    const btnPlacePavilion = document.getElementById('btn-place-pavilion');
-    const placeBtnLabel = document.getElementById('place-btn-label');
-    const btnUnlockPavilion = document.getElementById('btn-unlock-pavilion');
-    const toastBanner = document.getElementById('toast-banner');
-    const dimensionsReadout = document.getElementById('dimensions-readout');
 
-    // Escena Three.js
+    const anchorStatusDot = document.getElementById('anchor-status-dot');
+    const anchorStatusTitle = document.getElementById('anchor-status-title');
+    const anchorStatusSubtitle = document.getElementById('anchor-status-subtitle');
+    const btnAnchorFloor = document.getElementById('btn-anchor-floor');
+    const btnRepositionFloor = document.getElementById('btn-reposition-floor');
+    const walkSlider = document.getElementById('corridor-walk-slider');
+    const walkZReadout = document.getElementById('walk-z-readout');
+    const toastBanner = document.getElementById('toast-banner');
+    const spatialMetricsBox = document.getElementById('spatial-metrics-box');
+    const liveNodeInspector = document.getElementById('live-node-inspector');
+
+    // Variables Three.js
     let scene, camera, renderer, controls, gltfLoader;
     let museumPavilionGroup, corridorHolder, rockHolder, sculptureHolder, shadowFloorMesh;
-    let floorReticleGroup, floorDetectionGrid, virtualFloorPlane;
-    const screenCenterRaycaster = new THREE.Raycaster();
-    const screenCenterNDC = new THREE.Vector2(0, -0.15); // Apunta ligeramente hacia el piso frente al usuario
+    let floorReticleGroup, floorGridHelper, mathematicalFloorPlane;
+    const floorRaycaster = new THREE.Raycaster();
+    const screenFloorNDC = new THREE.Vector2(0, -0.18);
 
-    function setAssetStatus(elementId, label, success) {
-      const el = document.getElementById(elementId);
-      if (!el) return;
-      if (success) {
-        el.className = 'px-3 py-2 rounded-xl bg-emerald-950/85 border border-emerald-400/50 text-emerald-200 flex items-center justify-center gap-2';
-        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>${label} ✓</span>`;
+    function updateProgress(percent, message) {
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${percent}%`;
+      if (message) loadingMessage.innerHTML = message;
+    }
+
+    function setCardStatus(cardId, metaId, ok, metaText) {
+      const card = document.getElementById(cardId);
+      const meta = document.getElementById(metaId);
+      if (!card || !meta) return;
+      const dot = card.querySelector('span.rounded-full');
+      if (ok) {
+        card.className = 'px-3 py-2.5 rounded-xl bg-emerald-950/85 border border-emerald-400/50 text-emerald-100 flex flex-col items-center gap-1';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
       } else {
-        el.className = 'px-3 py-2 rounded-xl bg-amber-950/80 border border-amber-400/40 text-amber-200 flex items-center justify-center gap-2';
-        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>${label} (Respaldo)</span>`;
+        card.className = 'px-3 py-2.5 rounded-xl bg-red-950/80 border border-red-400/50 text-red-200 flex flex-col items-center gap-1';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-red-400';
       }
+      meta.textContent = metaText;
     }
 
-    function updateProgress(pct, msg) {
-      progressBar.style.width = `${pct}%`;
-      progressText.textContent = `${pct}%`;
-      if (msg) loadingMessage.textContent = msg;
-    }
-
-    function showToast(text) {
-      toastBanner.textContent = text;
+    function showToast(msg) {
+      toastBanner.textContent = msg;
       toastBanner.classList.remove('opacity-0');
       toastBanner.classList.add('opacity-100');
       clearTimeout(showToast.timer);
@@ -444,15 +526,15 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
     }
 
     /* =========================================================================
-       1. INICIALIZACIÓN DE THREE.JS E ILUMINACIÓN DE MUSEO AL AIRE LIBRE
+       1. INICIALIZACIÓN DE THREE.JS Y DECODIFICADOR OBLIGATORIO MESHOPT
        ========================================================================= */
-    async function init() {
-      updateProgress(10, 'Inicializando motor gráfico Three.js r160...');
+    async function initApp() {
+      updateProgress(8, 'Inicializando escena Three.js r160 y esperando <code class="text-emerald-300">MeshoptDecoder.ready</code>...');
 
       scene = new THREE.Scene();
 
-      camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.05, 120);
-      camera.position.set(0, 1.65, 6.2); // Altura de ojos humanos (1.65m) mirando hacia el plano del suelo
+      camera = new THREE.PerspectiveCamera(54, window.innerWidth / window.innerHeight, 0.04, 100);
+      camera.position.set(0, SPATIAL_CONFIG.visitorEyeHeight, 3.35);
 
       renderer = new THREE.WebGLRenderer({
         antialias: true,
@@ -461,38 +543,43 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.22;
+      renderer.toneMappingExposure = 1.25;
       renderer.xr.enabled = true;
       viewport.appendChild(renderer.domElement);
 
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.06;
-      controls.maxPolarAngle = Math.PI * 0.495; // Evita que la cámara atraviese debajo del piso
-      controls.minDistance = 0.4;
-      controls.maxDistance = 22.0;
-      controls.target.set(0, 1.0, 0);
+      controls.maxPolarAngle = Math.PI * 0.495; // Nunca atravesar debajo del piso y = 0
+      controls.minDistance = 0.25;
+      controls.maxDistance = 16.0;
+      controls.target.set(0, 1.15, 0);
 
-      // Cargador GLTF + DRACO
-      gltfLoader = new GLTFLoader();
-      gltfLoader.setCrossOrigin('anonymous');
+      // SOLUCIÓN TÉCNICA OBLIGATORIA: Inicializar MeshoptDecoder + DRACOLoader en GLTFLoader
+      await MeshoptDecoder.ready;
+
       const dracoLoader = new DRACOLoader();
       dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+
+      gltfLoader = new GLTFLoader();
+      gltfLoader.setMeshoptDecoder(MeshoptDecoder);
       gltfLoader.setDRACOLoader(dracoLoader);
+      gltfLoader.setCrossOrigin('anonymous');
 
-      setupOutdoorMuseumLighting();
-      createFloorDetectionReticleAndPlane();
+      setupMuseumLighting();
+      setupFloorDetectionReticle();
 
-      // Nodo raíz estático de la Sala de Museo
+      // Grupo raíz estático que contiene el pasillo real, la roca a medio pasillo y la escultura
       museumPavilionGroup = new THREE.Group();
-      museumPavilionGroup.name = 'StaticMuseumPavilionGroup';
+      museumPavilionGroup.name = 'MuseumPavilionStaticRoot';
       scene.add(museumPavilionGroup);
 
       corridorHolder = new THREE.Group();
-      corridorHolder.name = 'CorridorGLBHolder';
+      corridorHolder.name = 'RealPasilloOptimizadoHolder';
       museumPavilionGroup.add(corridorHolder);
 
       rockHolder = new THREE.Group();
@@ -500,452 +587,499 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
       museumPavilionGroup.add(rockHolder);
 
       sculptureHolder = new THREE.Group();
-      sculptureHolder.name = 'TopOfRockSculptureHolder';
+      sculptureHolder.name = 'SummitSculptureHolder';
       museumPavilionGroup.add(sculptureHolder);
 
-      // Receptor de sombras sobre el piso real
-      const shadowGeo = new THREE.PlaneGeometry(24, 24);
-      const shadowMat = new THREE.ShadowMaterial({ opacity: 0.42 });
-      shadowFloorMesh = new THREE.Mesh(shadowGeo, shadowMat);
+      // Sombra proyectada sobre el suelo real
+      const shadowPlaneGeo = new THREE.PlaneGeometry(18, 18);
+      const shadowPlaneMat = new THREE.ShadowMaterial({ opacity: 0.38 });
+      shadowFloorMesh = new THREE.Mesh(shadowPlaneGeo, shadowPlaneMat);
       shadowFloorMesh.rotation.x = -Math.PI / 2;
-      shadowFloorMesh.position.y = 0.002;
+      shadowFloorMesh.position.y = 0.001;
       shadowFloorMesh.receiveShadow = true;
       museumPavilionGroup.add(shadowFloorMesh);
 
-      // Carga rigurosa y secuencial de los 3 modelos GLB para ensamblaje exacto
-      updateProgress(30, 'Cargando models/pasillo_optimizado.glb...');
-      await loadAndAssembleCorridor();
-
-      updateProgress(62, 'Colocando models/rock.glb exactamente a medio pasillo (z = 0)...');
-      await loadAndAssembleMidCorridorRock();
-
-      updateProgress(88, 'Posando models/3DModel.glb sobre la cumbre de la roca...');
-      await loadAndAssembleSculptureOnRock();
-
-      // Iniciar en Fase 1 (Escaneo de piso con vista previa semitransparente sobre la retícula)
-      setPreviewScanningState();
-
-      setupUIEvents();
+      setupUIEventListeners();
       window.addEventListener('resize', onWindowResize);
 
-      updateProgress(100, '¡Sala de Museo ensamblada y lista para colocarse en el piso!');
-      progressContainer.classList.add('hidden');
-      startActions.classList.remove('hidden');
-      startActions.classList.add('flex');
+      // Descargar y ensamblar exclusivamente los 3 modelos reales
+      await loadAllRealModels();
 
       renderer.setAnimationLoop(renderLoop);
     }
 
-    function setupOutdoorMuseumLighting() {
-      // Luz hemisférica diurna (cielo claro / rebote de piedra y vegetación en el suelo)
-      const hemiLight = new THREE.HemisphereLight(0xfef9c3, 0x1f3a2e, 1.65);
-      hemiLight.position.set(0, 12, 0);
+    function setupMuseumLighting() {
+      // Luz hemisférica natural de museo al aire libre
+      const hemiLight = new THREE.HemisphereLight(0xfef9c3, 0x1e3a2f, 1.75);
+      hemiLight.position.set(0, 10, 0);
       scene.add(hemiLight);
 
-      // Sol direccional de museo al aire libre proyectando sombras nítidas en el suelo y sobre la roca
-      const sunLight = new THREE.DirectionalLight(0xfffbeb, 2.8);
-      sunLight.position.set(4.5, 9.5, 5.0);
-      sunLight.castShadow = true;
-      sunLight.shadow.mapSize.width = 2048;
-      sunLight.shadow.mapSize.height = 2048;
-      sunLight.shadow.camera.near = 0.5;
-      sunLight.shadow.camera.far = 25;
-      const d = 6.5;
-      sunLight.shadow.camera.left = -d;
-      sunLight.shadow.camera.right = d;
-      sunLight.shadow.camera.top = d;
-      sunLight.shadow.camera.bottom = -d;
-      sunLight.shadow.bias = -0.0005;
-      scene.add(sunLight);
+      // Luz solar direccional con sombras suaves de alta resolución
+      const dirLight = new THREE.DirectionalLight(0xfffbeb, 2.6);
+      dirLight.position.set(3.2, 8.5, 4.5);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 2048;
+      dirLight.shadow.mapSize.height = 2048;
+      dirLight.shadow.camera.near = 0.5;
+      dirLight.shadow.camera.far = 22;
+      const d = 5.5;
+      dirLight.shadow.camera.left = -d;
+      dirLight.shadow.camera.right = d;
+      dirLight.shadow.camera.top = d;
+      dirLight.shadow.camera.bottom = -d;
+      dirLight.shadow.bias = -0.0005;
+      scene.add(dirLight);
 
-      // Luz museográfica cenital dedicada al centro del pasillo (x = 0, z = 0) iluminando la escultura y la roca
-      const midCorridorSpot = new THREE.SpotLight(0xfffef0, 3.6);
-      midCorridorSpot.position.set(0, 3.6, 1.2);
-      midCorridorSpot.target.position.set(0, 1.1, 0);
-      midCorridorSpot.angle = Math.PI / 3.2;
-      midCorridorSpot.penumbra = 0.85;
-      scene.add(midCorridorSpot);
-      scene.add(midCorridorSpot.target);
+      // Iluminación museográfica puntual dedicada al altar central (roca + escultura en x=0, z=0)
+      const altarSpot = new THREE.SpotLight(0xfff7ed, 3.8);
+      altarSpot.position.set(0, 2.95, 1.15);
+      altarSpot.target.position.set(0, 0.85, 0);
+      altarSpot.angle = Math.PI / 3;
+      altarSpot.penumbra = 0.8;
+      altarSpot.castShadow = true;
+      scene.add(altarSpot);
+      scene.add(altarSpot.target);
 
-      // Luz suave de relleno interior a medio pasillo
-      const fillPoint = new THREE.PointLight(0xa7f3d0, 1.6, 8.0);
-      fillPoint.position.set(0, 2.1, -1.2);
-      scene.add(fillPoint);
+      // Luz cálida de relleno a lo largo del corredor (resalta palmeras, orquídeas y reja del fondo)
+      const entranceLight = new THREE.PointLight(0xd1fae5, 1.4, 6.0);
+      entranceLight.position.set(0, 2.2, 2.2);
+      scene.add(entranceLight);
+
+      const gateLight = new THREE.PointLight(0xfef08a, 1.5, 6.0);
+      gateLight.position.set(0, 2.1, -2.0);
+      scene.add(gateLight);
     }
 
-    /* =========================================================================
-       2. RETÍCULA DE DETECCIÓN DE PLANO HORIZONTAL (PISO y = 0)
-       ========================================================================= */
-    function createFloorDetectionReticleAndPlane() {
-      // Plano matemático horizontal en y = 0 para detección de piso con Raycaster
-      virtualFloorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    function setupFloorDetectionReticle() {
+      mathematicalFloorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
-      // Grilla sutil que visualiza el plano del suelo durante el escaneo
-      floorDetectionGrid = new THREE.GridHelper(14, 28, 0x34d399, 0x1e3a2f);
-      floorDetectionGrid.position.y = 0.001;
-      floorDetectionGrid.material.transparent = true;
-      floorDetectionGrid.material.opacity = 0.45;
-      scene.add(floorDetectionGrid);
+      // Grilla de referencia de nivel de suelo (visible únicamente mientras se elige punto de anclaje)
+      floorGridHelper = new THREE.GridHelper(12, 24, 0x34d399, 0x1b382e);
+      floorGridHelper.position.y = 0.001;
+      floorGridHelper.material.transparent = true;
+      floorGridHelper.material.opacity = 0.42;
+      scene.add(floorGridHelper);
 
-      // Retícula de anclaje en el piso
+      // Retícula de piso en el punto exacto de anclaje (x, y=0, z)
       floorReticleGroup = new THREE.Group();
-      floorReticleGroup.position.set(0, 0.004, 0);
+      floorReticleGroup.position.set(0, 0.003, 0);
 
       const outerRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.55, 0.62, 64),
+        new THREE.RingGeometry(0.45, 0.52, 64),
         new THREE.MeshBasicMaterial({ color: 0x34d399, side: THREE.DoubleSide, transparent: true, opacity: 0.95 })
       );
       outerRing.rotation.x = -Math.PI / 2;
       floorReticleGroup.add(outerRing);
 
-      const innerDisc = new THREE.Mesh(
-        new THREE.RingGeometry(0.12, 0.16, 32),
-        new THREE.MeshBasicMaterial({ color: 0xfde047, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
+      const centerRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.10, 0.14, 32),
+        new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.95 })
       );
-      innerDisc.rotation.x = -Math.PI / 2;
-      floorReticleGroup.add(innerDisc);
+      centerRing.rotation.x = -Math.PI / 2;
+      floorReticleGroup.add(centerRing);
 
-      // Indicador del contorno del pasillo (8.0m x 2.6m) sobre el suelo para saber exactamente dónde quedará fijo
-      const footprintGeo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(2.6, CONFIG.corridorTargetLength));
-      const footprintLine = new THREE.LineSegments(
-        footprintGeo,
-        new THREE.LineBasicMaterial({ color: 0x6ee7b7, transparent: true, opacity: 0.55 })
+      // Contorno de la huella real del pasillo escalado (1.85m ancho x 6.7m largo)
+      const footprintEdges = new THREE.EdgesGeometry(new THREE.PlaneGeometry(1.9, 6.7));
+      const footprintFrame = new THREE.LineSegments(
+        footprintEdges,
+        new THREE.LineBasicMaterial({ color: 0x6ee7b7, transparent: true, opacity: 0.65 })
       );
-      footprintLine.rotation.x = -Math.PI / 2;
-      floorReticleGroup.add(footprintLine);
+      footprintFrame.rotation.x = -Math.PI / 2;
+      floorReticleGroup.add(footprintFrame);
 
       scene.add(floorReticleGroup);
     }
 
     /* =========================================================================
-       3. CARGA Y ENSAMBLAJE EXACTO CON BOUNDING BOX (PASILLO + ROCA + ESCULTURA)
+       2. CARGA EXCLUSIVA DE LOS MODELOS REALES (CERO GEOMETRÍAS PROCEDURALES)
        ========================================================================= */
-    async function loadGLBFromPaths(urlList) {
-      for (const url of urlList) {
+    async function loadGLBWithFallbackUrls(urlCandidates, onProgressCallback) {
+      let lastError = null;
+      for (const url of urlCandidates) {
         try {
           const gltf = await new Promise((resolve, reject) => {
-            gltfLoader.load(url, resolve, undefined, reject);
+            gltfLoader.load(url, resolve, onProgressCallback, reject);
           });
-          if (gltf && gltf.scene) return gltf.scene;
+          if (gltf && gltf.scene) {
+            return gltf;
+          }
         } catch (err) {
-          console.warn(`No se pudo cargar desde ${url}`);
+          lastError = err;
+          console.warn(`Intento fallido en ruta ${url}:`, err);
         }
       }
-      return null;
+      throw lastError || new Error('No se pudo descargar el archivo GLB.');
     }
 
-    // PASO A: Cargar `pasillo_optimizado.glb`, centrarlo en (0, 0) y apoyar su base en el piso (y = 0)
-    async function loadAndAssembleCorridor() {
-      const loadedCorridor = await loadGLBFromPaths(CONFIG.paths.corridor);
-      if (loadedCorridor) {
-        mountCorridorModel(loadedCorridor);
-        setAssetStatus('status-pasillo', 'pasillo_optimizado.glb', true);
-      } else {
-        const fallbackCorridor = createArchitecturalCorridorFallback();
-        mountCorridorModel(fallbackCorridor);
-        setAssetStatus('status-pasillo', 'pasillo_optimizado.glb', false);
+    async function loadAllRealModels() {
+      errorRetryBox.classList.add('hidden');
+      progressContainer.classList.remove('hidden');
+
+      try {
+        // 1. Cargar pasillo_optimizado.glb (con EXT_meshopt_compression)
+        updateProgress(20, 'Descargando y decodificando <code class="text-amber-200">models/pasillo_optimizado.glb</code>...');
+        const corridorGLTF = await loadGLBWithFallbackUrls(SPATIAL_CONFIG.urls.corridor, (evt) => {
+          if (evt.lengthComputable) {
+            const pct = Math.min(55, 20 + Math.round((evt.loaded / evt.total) * 35));
+            updateProgress(pct);
+          }
+        });
+        assembleRealCorridor(corridorGLTF.scene);
+        setCardStatus('status-pasillo', 'meta-pasillo', true, 'Meshopt OK · Escala 2.6x');
+
+        // 2. Cargar rock.glb y posicionarla a medio pasillo (x = 0, z = 0)
+        updateProgress(65, 'Colocando <code class="text-amber-200">models/rock.glb</code> exactamente a medio pasillo (x=0, z=0)...');
+        const rockGLTF = await loadGLBWithFallbackUrls(SPATIAL_CONFIG.urls.rock);
+        assembleMidCorridorRock(rockGLTF.scene);
+        setCardStatus('status-rock', 'meta-rock', true, `En x=0, z=0 · Cumbre +${state.rockTopY.toFixed(2)}m`);
+
+        // 3. Cargar 3DModel.glb y posarla sobre la cumbre de rock.glb
+        updateProgress(85, 'Montando escultura <code class="text-amber-200">models/3DModel.glb</code> sobre la cumbre de la roca...');
+        const sculptureGLTF = await loadGLBWithFallbackUrls(SPATIAL_CONFIG.urls.sculpture);
+        assembleSculptureOnRock(sculptureGLTF.scene);
+        setCardStatus('status-sculpture', 'meta-sculpture', true, `Sobre roca · Alto ${SPATIAL_CONFIG.sculptureTargetHeight}m`);
+
+        updateInspectorPanel();
+
+        // Fijar la sala inicialmente en el origen del piso (y = 0) para que esté 100% inmóvil desde el primer instante
+        anchorPavilionAtCurrentFloorPose(true);
+
+        updateProgress(100, '¡Modelos reales <code class="text-emerald-300">pasillo_optimizado.glb</code>, <code class="text-emerald-300">rock.glb</code> y <code class="text-emerald-300">3DModel.glb</code> ensamblados!');
+        progressContainer.classList.add('hidden');
+        startActions.classList.remove('hidden');
+        startActions.classList.add('flex');
+      } catch (err) {
+        console.error('Error cargando modelos GLB reales:', err);
+        errorRetryText.textContent = `Error al cargar el modelo real desde GitHub (${err.message || 'Verifica tu conexión'}). Prohibido usar geometrías falsas.`;
+        errorRetryBox.classList.remove('hidden');
+        errorRetryBox.classList.add('flex');
       }
     }
 
-    function mountCorridorModel(corridorScene) {
+    /* =========================================================================
+       3. ANATOMÍA DE `pasillo_optimizado.glb`, CORRECCIÓN PBR Y ESCALADO 2.6x
+       ========================================================================= */
+    function assembleRealCorridor(corridorRoot) {
       while (corridorHolder.children.length > 0) {
         corridorHolder.remove(corridorHolder.children[0]);
       }
 
-      corridorScene.rotation.set(0, 0, 0);
-      corridorScene.scale.set(1, 1, 1);
-      corridorScene.position.set(0, 0, 0);
-      corridorScene.updateMatrixWorld(true);
+      state.inspectedNodes = [];
+      state.inspectedMaterials.clear();
 
-      const initialBox = new THREE.Box3().setFromObject(corridorScene);
-      const initialSize = initialBox.getSize(new THREE.Vector3());
+      corridorRoot.position.set(0, 0, 0);
+      corridorRoot.rotation.set(0, 0, 0);
+      corridorRoot.scale.setScalar(SPATIAL_CONFIG.corridorScaleFactor);
+      corridorRoot.updateMatrixWorld(true);
 
-      // Si el eje más largo del pasillo viene sobre el eje X, lo rotamos 90° en Y para que el corredor se alinee con el eje Z
-      if (initialSize.x > initialSize.z) {
-        corridorScene.rotation.y = Math.PI * 0.5;
-        corridorScene.updateMatrixWorld(true);
-      }
+      const floorMeshes = [];
+      let leftWallBox = null;
+      let rightWallBox = null;
 
-      const orientedBox = new THREE.Box3().setFromObject(corridorScene);
-      const orientedSize = orientedBox.getSize(new THREE.Vector3());
-      const orientedCenter = orientedBox.getCenter(new THREE.Vector3());
+      corridorRoot.traverse((node) => {
+        if (node.name) {
+          state.inspectedNodes.push(node.name);
+        }
 
-      // Escalar uniformemente para que la longitud del pasillo en Z sea exactamente CONFIG.corridorTargetLength (8.0 metros)
-      const horizLength = Math.max(orientedSize.z, orientedSize.x) || 1;
-      const scale = CONFIG.corridorTargetLength / horizLength;
+        if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
 
-      corridorScene.scale.setScalar(scale);
-
-      // Centrar en X = 0 y Z = 0 (Así z = 0 es matemáticamente LA MITAD EXACTA DEL PASILLO)
-      // Apoyar la base inferior del pasillo exactamente en el piso (y = 0)
-      corridorScene.position.set(
-        -orientedCenter.x * scale,
-        -orientedBox.min.y * scale,
-        -orientedCenter.z * scale
-      );
-
-      corridorScene.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          if (child.material) {
-            const mats = Array.isArray(child.material) ? child.material : [child.material];
-            mats.forEach((m) => {
-              m.side = THREE.DoubleSide;
-            });
+          // Identificar las losas reales del piso: pisoceart1, pisoceart1.001, pisoceart1.002
+          const nLower = (node.name || '').toLowerCase();
+          if (nLower.startsWith('pisoceart1')) {
+            floorMeshes.push(node);
           }
+          if (node.name === 'murocear') {
+            leftWallBox = new THREE.Box3().setFromObject(node);
+          } else if (node.name === 'murocear.001') {
+            rightWallBox = new THREE.Box3().setFromObject(node);
+          }
+
+          // Corrección rigurosa de materiales PBR exportados con alphaMode: "BLEND"
+          const materials = Array.isArray(node.material) ? node.material : [node.material];
+          materials.forEach((mat) => {
+            if (!mat) return;
+            const matName = mat.name || '';
+            state.inspectedMaterials.add(matName || '(sin nombre)');
+
+            if (OPAQUE_ARCHITECTURAL_MATERIALS.has(matName)) {
+              // Muros, piso, piedras, barrotes de hierro y tallos sólidos: forzar opacidad y depthWrite real
+              mat.transparent = false;
+              mat.depthWrite = true;
+              mat.alphaTest = 0;
+              mat.side = THREE.DoubleSide;
+              mat.needsUpdate = true;
+            } else if (
+              CUTOUT_BOTANICAL_AND_GRILLE_MATERIALS.has(matName) ||
+              matName.toLowerCase().includes('leaf') ||
+              matName.toLowerCase().includes('palm') ||
+              matName.toLowerCase().includes('planta') ||
+              matName.toLowerCase().includes('reja') ||
+              matName.toLowerCase().includes('sepal') ||
+              matName.toLowerCase().includes('petal')
+            ) {
+              // Hojas de palmera, plantas colgantes, pétalos de orquídea y reja del fondo: alphaTest nítido con profundidad
+              mat.transparent = false;
+              mat.alphaTest = 0.4;
+              mat.depthWrite = true;
+              mat.side = THREE.DoubleSide;
+              mat.needsUpdate = true;
+            } else {
+              // Cualquier otro material del GLB: asegurar depthWrite y doble cara
+              mat.depthWrite = true;
+              mat.side = THREE.DoubleSide;
+              mat.needsUpdate = true;
+            }
+          });
         }
       });
 
-      corridorHolder.add(corridorScene);
+      // Calcular caja envolvente total del pasillo escalado 2.6x
+      const fullCorridorBox = new THREE.Box3().setFromObject(corridorRoot);
+      const fullCenter = fullCorridorBox.getCenter(new THREE.Vector3());
+
+      // Calcular el centro X exacto del corredor libre entre murocear y murocear.001
+      let aisleCenterX = fullCenter.x;
+      if (leftWallBox && rightWallBox) {
+        aisleCenterX = (leftWallBox.max.x + rightWallBox.min.x) * 0.5;
+      }
+
+      // Calcular el nivel exacto de las losas de piso (`pisoceart1`, `pisoceart1.001`, `pisoceart1.002`)
+      let floorSurfaceY = fullCorridorBox.min.y;
+      if (floorMeshes.length > 0) {
+        const combinedFloorBox = new THREE.Box3();
+        floorMeshes.forEach((m) => combinedFloorBox.expandByObject(m));
+        // Usamos la cara superior de la losa de piso para que quede exactamente en y = 0.00m
+        floorSurfaceY = combinedFloorBox.max.y;
+      }
+
+      // Alinear pasillo para que el eje central del corredor sea X = 0, la mitad longitudinal sea Z = 0, y el piso sea Y = 0
+      corridorRoot.position.set(
+        -aisleCenterX,
+        -floorSurfaceY,
+        -fullCenter.z
+      );
+      corridorRoot.updateMatrixWorld(true);
+
+      corridorHolder.add(corridorRoot);
       corridorHolder.updateMatrixWorld(true);
 
-      // Detectar mediante Raycast vertical hacia abajo la altura exacta de la losa/piso interior en el centro (0, z=0)
-      const downRay = new THREE.Raycaster(new THREE.Vector3(0, 1.5, 0), new THREE.Vector3(0, -1, 0));
-      const floorHits = downRay.intersectObjects(corridorHolder.children, true);
-      if (floorHits.length > 0 && floorHits[0].point.y >= 0 && floorHits[0].point.y < 0.65) {
-        state.corridorFloorY = floorHits[0].point.y;
-      } else {
-        state.corridorFloorY = 0.02;
-      }
+      // Verificar altura exacta de la losa central `pisoceart1.001` en (x = 0, z = 0) ya centrado
+      const centeredBox = new THREE.Box3().setFromObject(corridorHolder);
+      centeredBox.getSize(state.corridorDimensions);
+      state.corridorFloorY = 0.0;
     }
 
-    // PASO B: Cargar `rock.glb` y colocarla EXACTAMENTE A MEDIO PASILLO (`x = 0, z = 0`)
-    async function loadAndAssembleMidCorridorRock() {
-      const loadedRock = await loadGLBFromPaths(CONFIG.paths.rock);
-      if (loadedRock) {
-        mountMidCorridorRock(loadedRock);
-        setAssetStatus('status-rock', 'rock.glb', true);
-      } else {
-        const fallbackRock = createRockFallback();
-        mountMidCorridorRock(fallbackRock);
-        setAssetStatus('status-rock', 'rock.glb', false);
-      }
-    }
-
-    function mountMidCorridorRock(rockScene) {
+    /* =========================================================================
+       4. COLOCACIÓN DE `models/rock.glb` A MEDIO PASILLO (x = 0, z = 0)
+       ========================================================================= */
+    function assembleMidCorridorRock(rockRoot) {
       while (rockHolder.children.length > 0) {
         rockHolder.remove(rockHolder.children[0]);
       }
 
-      rockScene.rotation.set(0, 0, 0);
-      rockScene.scale.set(1, 1, 1);
-      rockScene.position.set(0, 0, 0);
-      rockScene.updateMatrixWorld(true);
+      rockRoot.position.set(0, 0, 0);
+      rockRoot.rotation.set(0, 0, 0);
+      rockRoot.scale.set(1, 1, 1);
+      rockRoot.updateMatrixWorld(true);
 
-      const rawBox = new THREE.Box3().setFromObject(rockScene);
+      const rawBox = new THREE.Box3().setFromObject(rockRoot);
       const rawSize = rawBox.getSize(new THREE.Vector3());
       const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
-      const maxHoriz = Math.max(rawSize.x, rawSize.z) || 1;
-      const scale = CONFIG.rockTargetWidth / maxHoriz;
+      // Escalar proporcionalmente para que tenga un diámetro/ancho de 0.62 metros
+      const horizSpan = Math.max(rawSize.x, rawSize.z) || 1;
+      const scale = SPATIAL_CONFIG.rockTargetWidth / horizSpan;
+      rockRoot.scale.setScalar(scale);
 
-      rockScene.scale.setScalar(scale);
-
-      // Posicionar en X = 0, Z = 0 (MEDIO PASILLO EXACTO) y apoyar sobre el piso del pasillo (state.corridorFloorY)
-      rockScene.position.set(
+      // Posicionar en x = 0, z = 0 (medio pasillo exacto) apoyando su base min.y en y = corridorFloorY (0.00m)
+      rockRoot.position.set(
         -rawCenter.x * scale,
         state.corridorFloorY - (rawBox.min.y * scale),
         -rawCenter.z * scale
       );
 
-      rockScene.traverse((child) => {
+      rockRoot.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
+          if (child.material) {
+            child.material.depthWrite = true;
+            child.material.transparent = false;
+            child.material.needsUpdate = true;
+          }
         }
       });
 
-      rockHolder.add(rockScene);
+      rockHolder.add(rockRoot);
       rockHolder.updateMatrixWorld(true);
 
-      // Medir la cota superior exacta (`max.y`) de `rock.glb` ya colocada a medio pasillo
+      // Cota superior exacta de la roca en medio pasillo
       const mountedRockBox = new THREE.Box3().setFromObject(rockHolder);
       state.rockTopY = mountedRockBox.max.y;
     }
 
-    // PASO C: Cargar `3DModel.glb` y posarla directamente SOBRE la roca a medio pasillo (`x = 0, z = 0`)
-    async function loadAndAssembleSculptureOnRock() {
-      const loadedSculpture = await loadGLBFromPaths(CONFIG.paths.sculpture);
-      if (loadedSculpture) {
-        mountSculptureOnRock(loadedSculpture);
-        setAssetStatus('status-sculpture', '3DModel.glb', true);
-      } else {
-        const fallbackSculpture = createSculptureFallback();
-        mountSculptureOnRock(fallbackSculpture);
-        setAssetStatus('status-sculpture', '3DModel.glb', false);
-      }
-    }
-
-    function mountSculptureOnRock(sculptureScene) {
+    /* =========================================================================
+       5. COLOCACIÓN DE `models/3DModel.glb` SOBRE LA CUMBRE DE LA ROCA
+       ========================================================================= */
+    function assembleSculptureOnRock(sculptureRoot) {
       while (sculptureHolder.children.length > 0) {
         sculptureHolder.remove(sculptureHolder.children[0]);
       }
 
-      sculptureScene.rotation.set(0, 0, 0);
-      sculptureScene.scale.set(1, 1, 1);
-      sculptureScene.position.set(0, 0, 0);
-      sculptureScene.updateMatrixWorld(true);
+      sculptureRoot.position.set(0, 0, 0);
+      sculptureRoot.rotation.set(0, 0, 0);
+      sculptureRoot.scale.set(1, 1, 1);
+      sculptureRoot.updateMatrixWorld(true);
 
-      const rawBox = new THREE.Box3().setFromObject(sculptureScene);
+      const rawBox = new THREE.Box3().setFromObject(sculptureRoot);
       const rawSize = rawBox.getSize(new THREE.Vector3());
       const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
-      const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
-      const scale = CONFIG.sculptureTargetHeight / maxDim;
+      // Escalar a una altura museográfica de 0.95 metros
+      const heightSpan = rawSize.y || Math.max(rawSize.x, rawSize.z) || 1;
+      const scale = SPATIAL_CONFIG.sculptureTargetHeight / heightSpan;
+      sculptureRoot.scale.setScalar(scale);
 
-      sculptureScene.scale.setScalar(scale);
-
-      // Apoyar la base inferior de la escultura (`rawBox.min.y`) directamente sobre la cumbre de `rock.glb` (`state.rockTopY - 0.02`)
-      const seatingY = state.rockTopY - 0.02;
-      sculptureScene.position.set(
+      // Apoyar la base inferior (min.y) de la escultura sobre la cumbre de rock.glb (rockTopY - 0.015) en x = 0, z = 0
+      const targetBaseY = state.rockTopY - SPATIAL_CONFIG.sculptureSeatingEmbed;
+      sculptureRoot.position.set(
         -rawCenter.x * scale,
-        seatingY - (rawBox.min.y * scale),
+        targetBaseY - (rawBox.min.y * scale),
         -rawCenter.z * scale
       );
 
-      sculptureScene.traverse((child) => {
+      sculptureRoot.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
+          if (child.material) {
+            child.material.depthWrite = true;
+            child.material.side = THREE.DoubleSide;
+            child.material.needsUpdate = true;
+          }
         }
       });
 
-      sculptureHolder.add(sculptureScene);
+      sculptureHolder.add(sculptureRoot);
       sculptureHolder.updateMatrixWorld(true);
 
-      // Actualizar lectura técnica en la ficha de museo
-      const totalBox = new THREE.Box3().setFromObject(museumPavilionGroup);
-      const totalSize = totalBox.getSize(new THREE.Vector3());
-      if (dimensionsReadout) {
-        dimensionsReadout.innerHTML = `
-          <div>Pasillo: ${totalSize.z.toFixed(2)}m largo × ${totalSize.x.toFixed(2)}m ancho (Piso y = 0.00m)</div>
-          <div>Roca a medio pasillo (z = 0.00m): Cumbre a +${state.rockTopY.toFixed(2)}m</div>
-          <div>Escultura sobre roca: Altura +${(state.rockTopY + CONFIG.sculptureTargetHeight).toFixed(2)}m · Estado: 100% Fijo</div>
+      const mountedSculptureBox = new THREE.Box3().setFromObject(sculptureHolder);
+      state.sculptureTopY = mountedSculptureBox.max.y;
+    }
+
+    function updateInspectorPanel() {
+      if (spatialMetricsBox) {
+        spatialMetricsBox.innerHTML = `
+          <div class="text-emerald-300 font-semibold">Escala Pasillo: ${SPATIAL_CONFIG.corridorScaleFactor}x (${state.corridorDimensions.z.toFixed(2)}m largo × ${state.corridorDimensions.y.toFixed(2)}m alto)</div>
+          <div>Piso <code class="text-amber-200">pisoceart1</code>: Nivelado en y = ${state.corridorFloorY.toFixed(2)} m</div>
+          <div>Roca <code class="text-amber-200">rock.glb</code>: Centro (x=0, z=0) · Ø ${SPATIAL_CONFIG.rockTargetWidth}m · Cumbre +${state.rockTopY.toFixed(2)}m</div>
+          <div>Escultura <code class="text-amber-200">3DModel.glb</code>: Sobre roca · Cumbre +${state.sculptureTopY.toFixed(2)}m</div>
+          <div class="text-amber-300">Inmovilidad: matrixAutoUpdate = false (100% Fijo)</div>
+        `;
+      }
+
+      if (liveNodeInspector) {
+        const keyNodes = [
+          'murocear', 'murocear.001',
+          'pisoceart1', 'pisoceart1.001', 'pisoceart1.002',
+          'rejapared', 'Alexandra Palm Plant Elder',
+          'Hanging Plant', 'Pollinium_0', 'plantas'
+        ];
+        const foundBadges = keyNodes.map((kn) => {
+          const present = state.inspectedNodes.some((n) => n.includes(kn));
+          return `<span class="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded ${present ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40' : 'bg-stone-800 text-stone-400'}">${kn} ${present ? '✓' : ''}</span>`;
+        }).join('');
+
+        const matList = Array.from(state.inspectedMaterials).join(', ');
+        liveNodeInspector.innerHTML = `
+          <div class="mb-1.5">${foundBadges}</div>
+          <div class="text-[9px] text-stone-400 border-t border-stone-800 pt-1">
+            <strong>Total Nodos GLB:</strong> ${state.inspectedNodes.length} | <strong>Materiales PBR corregidos:</strong> ${matList}
+          </div>
         `;
       }
     }
 
-    /* Geometrías de respaldo por si no hay conexión a internet */
-    function createArchitecturalCorridorFallback() {
-      const group = new THREE.Group();
-      const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3d5a4c, roughness: 0.82, metalness: 0.1 });
-      const floor = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.1, 8.0), stoneMat);
-      floor.position.set(0, 0.05, 0);
-      group.add(floor);
-
-      for (let z = -3.6; z <= 3.6; z += 1.2) {
-        const leftCol = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.1, 0.28), stoneMat);
-        leftCol.position.set(-1.18, 1.6, z);
-        group.add(leftCol);
-
-        const rightCol = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.1, 0.28), stoneMat);
-        rightCol.position.set(1.18, 1.6, z);
-        group.add(rightCol);
-
-        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.24, 0.28), stoneMat);
-        topBeam.position.set(0, 3.2, z);
-        group.add(topBeam);
-      }
-      return group;
-    }
-
-    function createRockFallback() {
-      const geo = new THREE.DodecahedronGeometry(0.52, 2);
-      geo.scale(1.1, 0.65, 1.0);
-      const mat = new THREE.MeshStandardMaterial({ color: 0x4a5d52, roughness: 0.9 });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.y = 0.34;
-      const g = new THREE.Group();
-      g.add(mesh);
-      return g;
-    }
-
-    function createSculptureFallback() {
-      const geo = new THREE.TorusKnotGeometry(0.32, 0.09, 100, 24);
-      const mat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.28, metalness: 0.82 });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.y = 0.55;
-      const g = new THREE.Group();
-      g.add(mesh);
-      return g;
-    }
-
     /* =========================================================================
-       4. DETECCIÓN DE PISO Y ANCLAJE 100% FIJO E INMÓVIL (matrixAutoUpdate = false)
+       6. ANCLAJE 100% FIJO E INMÓVIL EN EL PISO Y NAVEGACIÓN DE VISITANTE
        ========================================================================= */
-    function setPreviewScanningState() {
-      state.isPlaced = false;
+    function enableFloorScanningMode() {
+      state.isAnchored = false;
       museumPavilionGroup.matrixAutoUpdate = true;
       floorReticleGroup.visible = true;
-      floorDetectionGrid.visible = true;
+      floorGridHelper.visible = true;
 
-      phaseDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0';
-      phaseTitle.textContent = 'FASE 1 · ESCANEANDO PLANO DEL PISO';
-      phaseSubtitle.textContent = 'Mueve la cámara sobre el suelo y pulsa "Fijar Sala en el Piso Aquí"';
+      anchorStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0';
+      anchorStatusTitle.textContent = 'ESCANEANDO PLANO DEL PISO';
+      anchorStatusSubtitle.textContent = 'Apunta al suelo y toca "Fijar Sala de Museo en el Piso"';
 
-      btnPlacePavilion.classList.remove('hidden');
-      btnUnlockPavilion.classList.add('hidden');
+      btnAnchorFloor.classList.remove('hidden');
+      btnRepositionFloor.classList.add('hidden');
     }
 
-    function lockPavilionOnFloor() {
-      // Desbloquear temporalmente matrixAutoUpdate por si venía bloqueado
+    function anchorPavilionAtCurrentFloorPose(silent = false) {
       museumPavilionGroup.matrixAutoUpdate = true;
 
-      // Copiar exactamente la posición y orientación horizontal del plano del piso detectado por la retícula
+      // Fijar el grupo raíz en la posición y orientación horizontal de la retícula del piso
       museumPavilionGroup.position.copy(floorReticleGroup.position);
       museumPavilionGroup.rotation.set(0, floorReticleGroup.rotation.y, 0);
       museumPavilionGroup.scale.set(1, 1, 1);
 
-      // Calcular matriz final y CONGELARLA (100% inmóvil a partir de este instante)
+      // Congelar matriz de transformación para garantizar 100% de inmovilidad en el espacio
       museumPavilionGroup.updateMatrix();
       museumPavilionGroup.updateMatrixWorld(true);
       museumPavilionGroup.matrixAutoUpdate = false;
 
-      state.isPlaced = true;
-
-      // Ocultar retícula y grilla de escaneo para dejar la Sala de Museo limpia en el espacio
+      state.isAnchored = true;
       floorReticleGroup.visible = false;
-      floorDetectionGrid.visible = false;
+      floorGridHelper.visible = false;
 
-      // Actualizar UI al Estado 2: Anclado y Fijo
-      phaseDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
-      phaseTitle.textContent = 'FASE 2 · SALA DE MUSEO ANCLADA Y 100% FIJA EN EL PISO';
-      phaseSubtitle.textContent = 'El pasillo, la roca y la escultura están inmóviles. Camina o explora libremente.';
+      anchorStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
+      anchorStatusTitle.textContent = 'SALA DE MUSEO ANCLADA Y 100% FIJA EN EL PISO';
+      anchorStatusSubtitle.textContent = 'El pasillo, la roca y la escultura están inmóviles. Usa el control de recorrido.';
 
-      btnPlacePavilion.classList.add('hidden');
-      btnUnlockPavilion.classList.remove('hidden');
+      btnAnchorFloor.classList.add('hidden');
+      btnRepositionFloor.classList.remove('hidden');
 
-      showToast('¡Sala de Museo fijada en el piso! El modelo permanecerá completamente inmóvil.');
+      if (!silent) {
+        showToast('¡Sala de Museo fijada en el piso! El modelo está 100% inmóvil.');
+      }
     }
 
-    // Navegación suave del visitante hacia puntos clave del pasillo sin mover jamás el modelo 3D
-    function moveVisitorCameraTo(localOffsetX, localOffsetY, localOffsetZ, lookAtLocalY, lookAtLocalZ, label) {
-      if (!state.isPlaced) {
-        lockPavilionOnFloor();
+    // Desplaza únicamente el punto de vista del visitante a lo largo del pasillo fijo
+    function moveVisitorToCorridorStation(localX, localY, localZ, targetX, targetY, targetZ, description) {
+      if (!state.isAnchored) {
+        anchorPavilionAtCurrentFloorPose(true);
       }
 
-      // Convertir coordenadas locales del pasillo fijo a coordenadas globales del mundo
-      const worldPos = new THREE.Vector3(localOffsetX, localOffsetY, localOffsetZ);
-      const worldLook = new THREE.Vector3(0, lookAtLocalY, lookAtLocalZ);
+      const worldCamPos = new THREE.Vector3(localX, localY, localZ);
+      const worldLookTarget = new THREE.Vector3(targetX, targetY, targetZ);
 
-      museumPavilionGroup.localToWorld(worldPos);
-      museumPavilionGroup.localToWorld(worldLook);
+      museumPavilionGroup.localToWorld(worldCamPos);
+      museumPavilionGroup.localToWorld(worldLookTarget);
 
-      state.cameraTargetPos.copy(worldPos);
-      state.cameraTargetLookAt.copy(worldLook);
-      state.cameraLerpActive = true;
+      state.cameraGoalPos.copy(worldCamPos);
+      state.cameraGoalTarget.copy(worldLookTarget);
+      state.cameraTransitionActive = true;
 
-      if (label) showToast(label);
+      // Sincronizar el deslizador de caminata longitudinal si estamos dentro del pasillo
+      if (Math.abs(localX) < 1.2 && localZ >= -1.5 && localZ <= 3.4) {
+        walkSlider.value = localZ.toFixed(2);
+        walkZReadout.textContent = `${localZ >= 0 ? '+' : ''}${localZ.toFixed(2)}m`;
+      }
+
+      if (description) showToast(description);
     }
 
     /* =========================================================================
-       5. CÁMARA AR Y SESIÓN WEBXR HIT-TEST (DETECCIÓN DE PISO NATIVA Y UNIVERSAL)
+       7. SESIÓN WEBXR HIT-TEST Y CÁMARA AR TRASERA
        ========================================================================= */
-    async function startARExperience() {
+    async function startCameraARMode() {
       loadingModal.classList.add('opacity-0', 'pointer-events-none');
 
-      // Intentar primero WebXR nativo con hit-test sobre el piso si el navegador móvil lo soporta
+      // Intentar sesión nativa WebXR immersive-ar con detección de plano de piso (hit-test)
       if (navigator.xr && await navigator.xr.isSessionSupported('immersive-ar').catch(() => false)) {
         try {
           const session = await navigator.xr.requestSession('immersive-ar', {
@@ -953,18 +1087,18 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
             optionalFeatures: ['dom-overlay'],
             domOverlay: { root: document.getElementById('ar-dom-overlay') }
           });
-          await onXRSessionStarted(session);
+          await onWebXRSessionStarted(session);
           return;
         } catch (xrErr) {
-          console.warn('WebXR Hit-Test no disponible o cancelado, activando Cámara AR Universal:', xrErr);
+          console.warn('WebXR Hit-Test no iniciado, activando cámara trasera AR:', xrErr);
         }
       }
 
-      // Fallback Universal: Stream de cámara trasera + Raycaster de plano horizontal (y = 0)
-      await enableRearCameraStream();
+      await startRearCameraVideoStream();
+      enableFloorScanningMode();
     }
 
-    async function onXRSessionStarted(session) {
+    async function onWebXRSessionStarted(session) {
       state.xrSession = session;
       renderer.xr.setReferenceSpaceType('local-floor');
       await renderer.xr.setSession(session);
@@ -974,8 +1108,8 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
       const viewerSpace = await session.requestReferenceSpace('viewer');
       state.xrHitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
-      setPreviewScanningState();
-      showToast('Mueve tu teléfono apuntando al piso para detectar el plano horizontal');
+      enableFloorScanningMode();
+      showToast('Apunta hacia el piso y toca "Fijar Sala de Museo en el Piso"');
 
       session.addEventListener('end', () => {
         state.xrSession = null;
@@ -984,8 +1118,8 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
       });
     }
 
-    async function enableRearCameraStream() {
-      const label = document.getElementById('camera-status-label');
+    async function startRearCameraVideoStream() {
+      const camLabel = document.getElementById('camera-status-label');
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: 'environment' } },
@@ -996,18 +1130,18 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
         videoEl.classList.add('active');
         skyBackdrop.style.opacity = '0';
         state.cameraStreamActive = true;
-        if (label) label.textContent = 'Apagar Cámara';
-        showToast('Cámara AR activa: apunta al piso y pulsa "Fijar Sala en el Piso Aquí"');
+        if (camLabel) camLabel.textContent = 'Apagar Cámara AR';
+        showToast('Cámara AR activa. El pasillo se mantiene fijo sobre el plano del suelo.');
       } catch (err) {
         skyBackdrop.style.opacity = '1';
         state.cameraStreamActive = false;
-        if (label) label.textContent = 'Cámara AR';
-        showToast('Modo Sala Exterior 3D activo (Cámara no disponible en este dispositivo)');
+        if (camLabel) camLabel.textContent = 'Activar Cámara AR';
+        showToast('Explora en Modo Sala de Museo al Aire Libre 3D');
       }
     }
 
     async function toggleRearCameraStream() {
-      const label = document.getElementById('camera-status-label');
+      const camLabel = document.getElementById('camera-status-label');
       if (state.cameraStreamActive) {
         const stream = videoEl.srcObject;
         if (stream) stream.getTracks().forEach((t) => t.stop());
@@ -1015,51 +1149,121 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
         videoEl.classList.remove('active');
         skyBackdrop.style.opacity = '1';
         state.cameraStreamActive = false;
-        if (label) label.textContent = 'Cámara AR';
-        showToast('Vista de Sala Exterior 3D activada');
+        if (camLabel) camLabel.textContent = 'Activar Cámara AR';
+        showToast('Cámara apagada · Fondo de Sala al Aire Libre activo');
       } else {
-        await enableRearCameraStream();
+        await startRearCameraVideoStream();
       }
     }
 
     /* =========================================================================
-       6. EVENTOS DE INTERFAZ Y CONTROLES DE USUARIO
+       8. EVENTOS DE INTERFAZ Y RECORRIDO MUSEOGRÁFICO
        ========================================================================= */
-    function setupUIEvents() {
-      document.getElementById('btn-start-ar').addEventListener('click', startARExperience);
+    function setupUIEventListeners() {
+      document.getElementById('btn-retry-load').addEventListener('click', loadAllRealModels);
+
+      document.getElementById('btn-start-ar').addEventListener('click', startCameraARMode);
 
       document.getElementById('btn-start-outdoor').addEventListener('click', () => {
         loadingModal.classList.add('opacity-0', 'pointer-events-none');
-        showToast('Apunta al piso o pulsa "Fijar Sala en el Piso Aquí" para bloquear el pasillo');
+        anchorPavilionAtCurrentFloorPose(true);
+        moveVisitorToCorridorStation(0, SPATIAL_CONFIG.visitorEyeHeight, 3.2, 0, 1.05, 0, 'Entrada del Pasillo Xilitla · Sala 100% fija en el piso');
       });
 
-      btnPlacePavilion.addEventListener('click', lockPavilionOnFloor);
-      btnUnlockPavilion.addEventListener('click', () => {
-        setPreviewScanningState();
-        showToast('Modo escaneo de piso reactivado. Elige dónde fijar la Sala de Museo.');
+      btnAnchorFloor.addEventListener('click', () => anchorPavilionAtCurrentFloorPose(false));
+
+      btnRepositionFloor.addEventListener('click', () => {
+        enableFloorScanningMode();
+        showToast('Apunta al piso para elegir la nueva ubicación fija del pasillo');
       });
 
       document.getElementById('btn-toggle-camera').addEventListener('click', toggleRearCameraStream);
 
-      // Vistas de recorrido museográfico (el pasillo jamás se mueve; se desplaza el visitante)
-      document.getElementById('btn-view-entrance').addEventListener('click', () => {
-        moveVisitorCameraTo(0, 1.60, 4.35, 1.25, 0, 'Ubicación: Entrada del Pasillo mirando hacia la Roca y Escultura');
+      // Control deslizante para caminar suavemente a lo largo del eje Z del pasillo fijo
+      walkSlider.addEventListener('input', (e) => {
+        const zVal = parseFloat(e.target.value);
+        walkZReadout.textContent = `${zVal >= 0 ? '+' : ''}${zVal.toFixed(2)}m`;
+
+        if (!state.isAnchored) {
+          anchorPavilionAtCurrentFloorPose(true);
+        }
+
+        // Si el visitante se acerca al centro (z entre -0.55 y +0.65), rodeamos ligeramente en X (0.48m) para no atravesar la roca central
+        let lateralAvoidanceX = 0;
+        if (zVal > -0.65 && zVal < 0.75) {
+          const t = 1 - Math.abs(zVal - 0.05) / 0.7;
+          lateralAvoidanceX = 0.46 * Math.max(0, t);
+        }
+
+        // Mirar hacia la roca/escultura cuando estamos en la mitad frontal, o hacia la reja cuando avanzamos al fondo
+        const lookZ = zVal > 0.35 ? 0.0 : -2.8;
+        const lookY = zVal > 0.35 ? (state.rockTopY + 0.42) : 1.35;
+
+        const worldCam = new THREE.Vector3(lateralAvoidanceX, SPATIAL_CONFIG.visitorEyeHeight, zVal);
+        const worldTarget = new THREE.Vector3(0, lookY, lookZ);
+        museumPavilionGroup.localToWorld(worldCam);
+        museumPavilionGroup.localToWorld(worldTarget);
+
+        state.cameraGoalPos.copy(worldCam);
+        state.cameraGoalTarget.copy(worldTarget);
+        state.cameraTransitionActive = true;
       });
 
-      document.getElementById('btn-view-mid').addEventListener('click', () => {
-        moveVisitorCameraTo(0, 1.55, 1.75, state.rockTopY + 0.65, 0, 'Ubicación: Medio Pasillo frente a la Roca y la Escultura');
+      // Botones de Estaciones Curatoriales dentro del pasillo inmóvil
+      document.getElementById('btn-station-entrance').addEventListener('click', () => {
+        moveVisitorToCorridorStation(
+          0, SPATIAL_CONFIG.visitorEyeHeight, 3.2,
+          0, state.rockTopY + 0.45, 0,
+          'Estación 1: Entrada abierta del pasillo (+3.2m)'
+        );
       });
 
-      document.getElementById('btn-view-overview').addEventListener('click', () => {
-        moveVisitorCameraTo(3.8, 2.2, 5.2, 1.1, 0, 'Ubicación: Vista Exterior de la Sala de Museo al Aire Libre');
+      document.getElementById('btn-station-botanical').addEventListener('click', () => {
+        moveVisitorToCorridorStation(
+          0, SPATIAL_CONFIG.visitorEyeHeight, 1.7,
+          0, state.rockTopY + 0.45, 0,
+          'Estación 2: Entre las palmeras Alexandra y orquídeas (+1.7m)'
+        );
       });
 
-      // Interrumpir transición automática si el usuario interactúa manualmente con OrbitControls
+      document.getElementById('btn-station-midrock').addEventListener('click', () => {
+        moveVisitorToCorridorStation(
+          0, 1.42, 1.12,
+          0, state.rockTopY + 0.42, 0,
+          'Estación 3: Medio Pasillo frente a rock.glb y 3DModel.glb'
+        );
+      });
+
+      document.getElementById('btn-station-closeup').addEventListener('click', () => {
+        moveVisitorToCorridorStation(
+          0.32, state.rockTopY + 0.52, 0.72,
+          0, state.rockTopY + 0.46, 0,
+          'Estación 4: Acercamiento curatorial a la escultura sobre la roca'
+        );
+      });
+
+      document.getElementById('btn-station-gate').addEventListener('click', () => {
+        moveVisitorToCorridorStation(
+          0, SPATIAL_CONFIG.visitorEyeHeight, -1.4,
+          0, state.rockTopY + 0.42, 0,
+          'Estación 5: Fondo del pasillo junto a la reja mirando hacia el altar central'
+        );
+      });
+
+      document.getElementById('btn-station-overview').addEventListener('click', () => {
+        moveVisitorToCorridorStation(
+          2.8, 2.35, 4.6,
+          0, 1.1, 0,
+          'Vista General Exterior de la Sala de Museo Fija'
+        );
+      });
+
+      // Detener interpolación automática cuando el usuario rota o hace zoom manualmente
       renderer.domElement.addEventListener('pointerdown', () => {
-        state.cameraLerpActive = false;
+        state.cameraTransitionActive = false;
       });
 
-      // Ficha de museo
+      // Cédula e Inspector GLB
       const plaque = document.getElementById('museum-plaque');
       document.getElementById('btn-toggle-plaque').addEventListener('click', () => {
         plaque.classList.toggle('hidden');
@@ -1068,119 +1272,92 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
         plaque.classList.add('hidden');
       });
 
-      // Modal del Prompt Profesional
-      const promptModal = document.getElementById('prompt-modal');
-      const openPrompt = () => {
-        promptModal.classList.remove('hidden');
-        promptModal.classList.add('flex');
-      };
-      const closePrompt = () => {
-        promptModal.classList.add('hidden');
-        promptModal.classList.remove('flex');
-      };
-      document.getElementById('btn-open-prompt-init').addEventListener('click', openPrompt);
-      document.getElementById('btn-open-prompt-hud').addEventListener('click', openPrompt);
-      document.getElementById('btn-close-prompt').addEventListener('click', closePrompt);
-
-      document.getElementById('btn-copy-prompt').addEventListener('click', () => {
-        const text = document.getElementById('prompt-raw-text').innerText;
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand('copy');
-          const copyToast = document.getElementById('copy-toast');
-          copyToast.classList.remove('opacity-0');
-          setTimeout(() => copyToast.classList.add('opacity-0'), 2500);
-        } catch (e) {}
-        document.body.removeChild(ta);
-      });
-
-      // Carga opcional de un archivo .GLB local
+      // Carga opcional de un archivo .GLB local con soporte MeshoptDecoder
       document.getElementById('local-glb-input').addEventListener('change', (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
-        const objectUrl = URL.createObjectURL(file);
-        const nameLower = file.name.toLowerCase();
+        const blobUrl = URL.createObjectURL(file);
+        const lowerName = file.name.toLowerCase();
 
-        gltfLoader.load(objectUrl, (gltf) => {
-          const wasPlaced = state.isPlaced;
+        gltfLoader.load(blobUrl, (gltf) => {
+          const prevAnchored = state.isAnchored;
           museumPavilionGroup.matrixAutoUpdate = true;
 
-          if (nameLower.includes('rock') || nameLower.includes('roca')) {
-            mountMidCorridorRock(gltf.scene);
-            if (sculptureHolder.children[0]) mountSculptureOnRock(sculptureHolder.children[0]);
+          if (lowerName.includes('rock') || lowerName.includes('roca')) {
+            assembleMidCorridorRock(gltf.scene);
+            if (sculptureHolder.children[0]) assembleSculptureOnRock(sculptureHolder.children[0]);
             showToast(`Roca actualizada a medio pasillo: ${file.name}`);
-          } else if (nameLower.includes('3dmodel') || nameLower.includes('escultura')) {
-            mountSculptureOnRock(gltf.scene);
+          } else if (lowerName.includes('3dmodel') || lowerName.includes('escultura')) {
+            assembleSculptureOnRock(gltf.scene);
             showToast(`Escultura actualizada sobre la roca: ${file.name}`);
           } else {
-            mountCorridorModel(gltf.scene);
-            if (rockHolder.children[0]) mountMidCorridorRock(rockHolder.children[0]);
-            if (sculptureHolder.children[0]) mountSculptureOnRock(sculptureHolder.children[0]);
-            showToast(`Pasillo actualizado: ${file.name}`);
+            assembleRealCorridor(gltf.scene);
+            if (rockHolder.children[0]) assembleMidCorridorRock(rockHolder.children[0]);
+            if (sculptureHolder.children[0]) assembleSculptureOnRock(sculptureHolder.children[0]);
+            showToast(`Pasillo actualizado con MeshoptDecoder: ${file.name}`);
           }
 
-          if (wasPlaced) {
+          updateInspectorPanel();
+
+          if (prevAnchored) {
             museumPavilionGroup.updateMatrix();
             museumPavilionGroup.updateMatrixWorld(true);
             museumPavilionGroup.matrixAutoUpdate = false;
           }
-          URL.revokeObjectURL(objectUrl);
+          URL.revokeObjectURL(blobUrl);
         });
       });
     }
 
     /* =========================================================================
-       7. BUCLE DE RENDERIZADO (DETECCIÓN DE PISO EN FASE 1 / INMOVILIDAD EN FASE 2)
+       9. BUCLE DE RENDERIZADO (CERO ROTACIÓN DEL MODELO / DETECCIÓN DE PISO)
        ========================================================================= */
     function renderLoop(timestamp, xrFrame) {
-      // Si la sala aún NO ha sido fijada (`state.isPlaced === false`), actualizamos la retícula sobre el piso
-      if (!state.isPlaced) {
+      // Si el usuario está en modo de escaneo de piso (isAnchored === false), actualizar la retícula sobre el suelo
+      if (!state.isAnchored) {
         if (xrFrame && state.xrHitTestSource && state.xrRefSpace) {
-          // Detección de plano horizontal real mediante WebXR Hit-Test
-          const hitTestResults = xrFrame.getHitTestResults(state.xrHitTestSource);
-          if (hitTestResults.length > 0) {
-            const hitPose = hitTestResults[0].getPose(state.xrRefSpace);
-            if (hitPose) {
+          const hitResults = xrFrame.getHitTestResults(state.xrHitTestSource);
+          if (hitResults.length > 0) {
+            const pose = hitResults[0].getPose(state.xrRefSpace);
+            if (pose) {
               floorReticleGroup.visible = true;
               floorReticleGroup.position.set(
-                hitPose.transform.position.x,
-                hitPose.transform.position.y,
-                hitPose.transform.position.z
+                pose.transform.position.x,
+                pose.transform.position.y,
+                pose.transform.position.z
               );
 
-              // Orientar el eje longitudinal del pasillo hacia la mirada horizontal de la cámara
-              const camDir = new THREE.Vector3();
-              camera.getWorldDirection(camDir);
-              const yaw = Math.atan2(camDir.x, camDir.z);
+              // Orientar la entrada abierta (+Z) del pasillo hacia el visitante
+              const camForward = new THREE.Vector3();
+              camera.getWorldDirection(camForward);
+              const yaw = Math.atan2(-camForward.x, -camForward.z);
               floorReticleGroup.rotation.set(0, yaw, 0);
 
-              // Mostrar vista previa del pasillo siguiendo la retícula antes de fijarlo
               museumPavilionGroup.position.copy(floorReticleGroup.position);
               museumPavilionGroup.rotation.copy(floorReticleGroup.rotation);
             }
           }
         } else {
-          // Detección de plano horizontal (y = 0) mediante Raycaster desde la cámara hacia el suelo
-          screenCenterRaycaster.setFromCamera(screenCenterNDC, camera);
-          const floorHitPoint = new THREE.Vector3();
-          const hit = screenCenterRaycaster.ray.intersectPlane(virtualFloorPlane, floorHitPoint);
-
-          if (hit && floorHitPoint.distanceTo(camera.position) < 18.0) {
-            floorReticleGroup.position.set(floorHitPoint.x, 0, floorHitPoint.z);
-            museumPavilionGroup.position.set(floorHitPoint.x, 0, floorHitPoint.z);
+          // Raycast hacia el plano horizontal matemático del suelo (y = 0)
+          floorRaycaster.setFromCamera(screenFloorNDC, camera);
+          const hitPoint = new THREE.Vector3();
+          const hit = floorRaycaster.ray.intersectPlane(mathematicalFloorPlane, hitPoint);
+          if (hit && hitPoint.distanceTo(camera.position) < 14.0) {
+            floorReticleGroup.position.set(hitPoint.x, 0, hitPoint.z);
+            museumPavilionGroup.position.set(hitPoint.x, 0, hitPoint.z);
           }
         }
       }
 
-      // Transición suave de la cámara del visitante cuando usa los botones de recorrido ("Entrada Pasillo" / "Medio Pasillo")
-      if (state.cameraLerpActive && ! renderer.xr.isPresenting) {
-        camera.position.lerp(state.cameraTargetPos, 0.08);
-        controls.target.lerp(state.cameraTargetLookAt, 0.08);
-        if (camera.position.distanceTo(state.cameraTargetPos) < 0.03) {
-          state.cameraLerpActive = false;
+      // Desplazamiento suave únicamente de la cámara del visitante cuando navega por el pasillo fijo
+      if (state.cameraTransitionActive && !renderer.xr.isPresenting) {
+        camera.position.lerp(state.cameraGoalPos, 0.085);
+        controls.target.lerp(state.cameraGoalTarget, 0.085);
+        if (
+          camera.position.distanceTo(state.cameraGoalPos) < 0.015 &&
+          controls.target.distanceTo(state.cameraGoalTarget) < 0.015
+        ) {
+          state.cameraTransitionActive = false;
         }
       }
 
@@ -1197,7 +1374,7 @@ DETECCIÓN DE PISO E INMOVILIDAD ABSOLUTA:
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    window.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
