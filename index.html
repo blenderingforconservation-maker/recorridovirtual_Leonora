@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>WebAR Portal Dimensional · Pasillo Xilitla y Escultura</title>
+  <title>Colección Leonora · Instalación WebAR en Pasillo de Xilitla</title>
   
   <!-- Tailwind CSS para la interfaz de usuario (UI/UX) -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Google Fonts: Cinzel (Arte) e Inter (Lectura UI) -->
+  <!-- Google Fonts: Cinzel (Curaduría de Museo) e Inter (Lectura UI) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Importmap para Three.js r160, GLTFLoader y DRACOLoader -->
   <script type="importmap">
@@ -198,80 +198,87 @@
   <div class="jungle-vignette"></div>
   <div id="touch-ripple"></div>
 
-  <!-- INPUT OCULTO PARA CARGAR .GLB PERSONALIZADO (PASILLO O ESCULTURA) -->
-  <input id="glb-file-input" type="file" accept=".glb,.gltf" class="hidden" />
-
-  <!-- 5. PANTALLA DE PRECARGA Y PORTAL DE INICIO AR -->
-  <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-xl transition-opacity duration-700 px-6 text-center">
-    <div class="w-16 h-16 mb-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center shadow-lg shadow-emerald-950/70 relative">
-      <div class="absolute inset-1 rounded-xl border border-amber-300/30 animate-ping opacity-30"></div>
-      <svg class="w-9 h-9 text-emerald-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3m8-18h3a2 2 0 012 2v14a2 2 0 01-2 2h-3M12 3v18m0-18l-3 3m3-3l3 3" />
+  <!-- 5. PANTALLA DE PRECARGA MUSEOGRÁFICA Y PORTAL DE INICIO AR -->
+  <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-2xl transition-opacity duration-700 px-6 text-center">
+    <div class="w-16 h-16 mb-4 rounded-2xl bg-emerald-500/10 border border-amber-300/35 flex items-center justify-center shadow-2xl shadow-emerald-950/90 relative">
+      <div class="absolute inset-1 rounded-xl border border-emerald-400/30 animate-ping opacity-30"></div>
+      <svg class="w-8 h-8 text-amber-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3m8-18h3a2 2 0 012 2v14a2 2 0 01-2 2h-3M12 3v18m0-18l-3 3m3-3l3 3" />
       </svg>
     </div>
 
-    <span class="text-[10px] uppercase tracking-[0.25em] text-amber-300/90 font-semibold mb-1">Experiencia WebAR · Portal Dimensional y Caminata</span>
-    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-2">PORTAL XILITLA · PASILLO Y ESCULTURA EN ROCA</h1>
-    <p id="loading-status" class="text-xs sm:text-sm text-emerald-200/75 mb-5 max-w-xs leading-relaxed">
-      Preparando portal con partículas de brillo, pasillo 3D, roca ceremonial y 4 capas botánicas (25% c/u)...
+    <span class="text-[10px] uppercase tracking-[0.28em] text-amber-300/90 font-semibold mb-1">Curaduría Digital · Instalación Espacial WebAR</span>
+    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-1.5">PORTAL XILITLA · ALTAR A MEDIO PASILLO</h1>
+    <p id="loading-status" class="text-xs sm:text-sm text-emerald-200/75 mb-5 max-w-md leading-relaxed">
+      Sincronizando <code class="text-amber-200">pasillo_optimizado.glb</code>, altar <code class="text-amber-200">rock.glb</code> a medio corredor y escultura <code class="text-amber-200">3DModel.glb</code>...
     </p>
+
+    <!-- Checklist de auditoría de assets cargados desde GitHub -->
+    <div id="asset-audit-list" class="grid grid-cols-3 gap-2 max-w-md w-full mb-5 text-[10px] font-mono">
+      <div id="badge-pasillo" class="px-2.5 py-1.5 rounded-lg bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+        <span>pasillo.glb</span>
+      </div>
+      <div id="badge-rock" class="px-2.5 py-1.5 rounded-lg bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+        <span>rock.glb</span>
+      </div>
+      <div id="badge-sculpture" class="px-2.5 py-1.5 rounded-lg bg-stone-900/90 border border-stone-800 text-stone-400 flex items-center justify-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+        <span>3DModel.glb</span>
+      </div>
+    </div>
 
     <!-- Barra de progreso de carga -->
     <div id="loading-progress-wrap" class="flex flex-col items-center">
-      <div class="w-60 sm:w-72 h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
+      <div class="w-64 sm:w-80 h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
         <div id="loading-bar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 w-0 transition-all duration-300"></div>
       </div>
       <span id="loading-percent" class="text-[11px] font-mono text-stone-400 mt-2">0%</span>
     </div>
 
     <!-- Portal de Despliegue AR (Aparece al llegar al 100% de carga) -->
-    <div id="ar-start-portal" class="hidden flex-col items-center gap-2.5 mt-2 max-w-xs w-full animate-fade-in">
+    <div id="ar-start-portal" class="hidden flex-col items-center gap-2.5 mt-1 max-w-xs w-full animate-fade-in">
       <button id="btn-launch-ar" class="w-full py-3 px-6 rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 hover:from-emerald-400 hover:to-amber-200 active:scale-95 text-stone-950 font-bold text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-950/80 border border-emerald-100/60 flex items-center justify-center gap-2 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        <span>Abrir Portal en Cámara AR</span>
+        <span>Desplegar Portal en Cámara AR</span>
       </button>
 
       <button id="btn-launch-virtual" class="w-full py-2.5 px-4 rounded-full bg-stone-900/85 hover:bg-stone-800 active:scale-95 text-emerald-200/95 font-medium text-xs border border-emerald-400/25 transition-all">
-        Abrir Portal en Entorno Virtual 3D
+        Explorar en Sala Virtual 3D
       </button>
 
       <div class="flex items-center justify-center gap-2 w-full mt-1">
-        <button id="btn-open-prompt-start" class="flex-1 py-1.5 px-3 rounded-full bg-stone-900/70 hover:bg-stone-800 text-amber-200/90 text-[11px] border border-amber-400/25 transition-all flex items-center justify-center gap-1">
+        <button id="btn-open-prompt-start" class="w-full py-1.5 px-3 rounded-full bg-stone-900/70 hover:bg-stone-800 text-amber-200/90 text-[11px] border border-amber-400/25 transition-all flex items-center justify-center gap-1.5">
           <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <span>Prompt Profesional</span>
-        </button>
-        <button id="btn-upload-corridor-start" class="flex-1 py-1.5 px-3 rounded-full bg-stone-900/70 hover:bg-stone-800 text-teal-200/90 text-[11px] border border-teal-400/25 transition-all flex items-center justify-center gap-1">
-          <svg class="w-3.5 h-3.5 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          <span>Cargar .GLB Local</span>
+          <span>Ver Prompt Profesional de Ingeniería y Curaduría</span>
         </button>
       </div>
 
-      <p id="corridor-source-badge" class="text-[10px] text-emerald-300/75 font-mono mt-1">
-        Estado: Listo para materializar el portal con partículas
+      <p id="corridor-source-badge" class="text-[10px] text-emerald-300/80 font-mono mt-1">
+        Escena lista: Portal + Pasillo + Roca y Escultura a medio corredor
       </p>
     </div>
   </div>
 
-  <!-- 6. INTERFAZ HUD DURANTE LA EXPERIENCIA -->
+  <!-- 6. INTERFAZ HUD MUSEOGRÁFICA DURANTE LA EXPERIENCIA -->
   <div id="ui-layer" class="p-3 sm:p-4">
-    <header class="w-full flex flex-wrap items-center justify-between gap-2">
+    <header class="w-full flex flex-wrap items-start justify-between gap-2">
       <!-- Píldora de Progreso de las 4 Capas de Vegetación (25% cada una = 100%) -->
-      <div id="discovery-pill" class="flex items-center gap-3 bg-stone-950/75 backdrop-blur-md border border-emerald-400/35 rounded-2xl px-3.5 py-2 shadow-xl transition-all duration-500">
+      <div id="discovery-pill" class="flex items-center gap-3 bg-stone-950/80 backdrop-blur-xl border border-emerald-400/35 rounded-2xl px-3.5 py-2 shadow-2xl transition-all duration-500">
         <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-300 animate-ping shrink-0"></span>
         <div class="flex flex-col">
           <div class="flex items-center justify-between gap-3">
-            <span id="discovery-label" class="text-[11px] sm:text-xs font-semibold text-emerald-50 tracking-wide">Materializando Portal...</span>
+            <span id="discovery-label" class="text-[11px] sm:text-xs font-semibold text-emerald-50 tracking-wide">Abriendo Portal...</span>
             <span id="discovery-count" class="text-xs font-mono font-bold text-amber-300">0%</span>
           </div>
           <!-- Barra continua + 4 segmentos indicadores (25% por capa) -->
-          <div class="w-36 sm:w-44 h-1.5 bg-stone-800/90 rounded-full overflow-hidden mt-1">
+          <div class="w-40 sm:w-48 h-1.5 bg-stone-800/90 rounded-full overflow-hidden mt-1">
             <div id="discovery-bar" class="h-full bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 w-0 transition-all duration-300"></div>
           </div>
           <div class="flex items-center justify-between gap-1 mt-1">
@@ -283,49 +290,56 @@
         </div>
       </div>
 
-      <!-- Controles Flotantes Superiores -->
+      <!-- Controles Curatoriales y Espaciales Superiores -->
       <div class="flex items-center gap-1.5 interactive-ui flex-wrap">
+        <!-- Selector de Iluminación de Galería -->
+        <button id="btn-lighting-mode" title="Cambiar Iluminación Museográfica" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-amber-200 border border-amber-400/30 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span id="lighting-mode-text" class="hidden sm:inline">Luz: Museo</span>
+        </button>
+
         <!-- Alternar Recorte de Portal (Stencil) vs Inmersión Completa -->
-        <button id="btn-portal-mask" title="Alternar ventana de Portal o Pasillo Completo" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/75 hover:bg-stone-900/90 active:scale-95 text-teal-200 border border-teal-400/30 backdrop-blur-md shadow-lg transition-all">
+        <button id="btn-portal-mask" title="Alternar ventana de Portal o Pasillo 360°" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-teal-200 border border-teal-400/30 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3m8-18h3a2 2 0 012 2v14a2 2 0 01-2 2h-3" />
           </svg>
           <span id="portal-mask-text" class="hidden sm:inline">Portal: Auto</span>
         </button>
 
-        <!-- Cargar GLB de pasillo local en tiempo real -->
-        <button id="btn-upload-corridor" title="Cargar archivo pasillo_optimizado.glb local" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/75 hover:bg-stone-900/90 active:scale-95 text-emerald-200 border border-emerald-400/25 backdrop-blur-md shadow-lg transition-all">
+        <!-- Cédula Museográfica -->
+        <button id="btn-curatorial-card" title="Abrir Cédula Museográfica de la Obra" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-emerald-200 border border-emerald-400/30 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span class="hidden md:inline">Cargar .GLB</span>
+          <span class="hidden md:inline">Cédula</span>
         </button>
 
         <!-- Re-anclar en el espacio frente al usuario -->
-        <button id="btn-reanchor" title="Anclar portal frente a mí" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/75 hover:bg-stone-900/90 active:scale-95 text-amber-200 border border-amber-300/25 backdrop-blur-md shadow-lg transition-all">
+        <button id="btn-reanchor" title="Anclar portal frente a mí" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-stone-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.657-5.657l-2.828 2.828m-5.03 5.03l-2.828 2.828m0-10.686l2.828 2.828m5.03 5.03l2.828 2.828" />
           </svg>
-          <span class="hidden sm:inline">Re-anclar</span>
+          <span class="hidden lg:inline">Re-anclar</span>
         </button>
 
         <!-- Reiniciar y Re-abrir Portal -->
-        <button id="btn-reset" title="Re-abrir portal dimensional" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/75 hover:bg-stone-900/90 active:scale-95 text-emerald-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
-          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="btn-reset" title="Reiniciar experiencia y volver a abrir el portal" class="p-2 rounded-full bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span class="hidden lg:inline">Reiniciar</span>
         </button>
 
         <!-- Botón Ver Prompt Profesional -->
-        <button id="btn-open-prompt" title="Ver Prompt Técnico Profesional" class="p-2 rounded-full bg-stone-950/75 hover:bg-stone-900/90 active:scale-95 text-amber-300 border border-amber-400/25 backdrop-blur-md shadow-lg transition-all">
+        <button id="btn-open-prompt" title="Ver Prompt Profesional de Ingeniería" class="p-2 rounded-full bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-amber-300 border border-amber-400/25 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </button>
 
         <!-- Pantalla Completa -->
-        <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/75 hover:bg-stone-900/90 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+        <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg id="icon-expand" class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
           </svg>
@@ -335,7 +349,7 @@
         </button>
 
         <!-- Sonido -->
-        <button id="btn-sound" title="Sonido interactivo" class="p-2 rounded-full bg-stone-950/75 hover:bg-stone-900/90 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+        <button id="btn-sound" title="Sonido espacial" class="p-2 rounded-full bg-stone-950/80 hover:bg-stone-900 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
@@ -343,45 +357,67 @@
       </div>
     </header>
 
+    <!-- Cédula Museográfica Flotante (Se abre al descubrir el 100% o al pulsar "Cédula") -->
+    <aside id="curatorial-card" class="self-end max-w-xs sm:max-w-sm bg-stone-950/88 backdrop-blur-xl border border-amber-300/35 rounded-2xl p-4 shadow-2xl text-left transition-all duration-500 hidden interactive-ui">
+      <div class="flex items-start justify-between gap-2 mb-1.5">
+        <div>
+          <span class="text-[9px] uppercase tracking-[0.22em] text-amber-300 font-semibold block">Cédula Curatorial · Sala WebAR</span>
+          <h3 class="font-serif-art text-sm sm:text-base text-emerald-50">Guardián en el Pasillo de Xilitla</h3>
+        </div>
+        <button id="btn-close-curatorial" class="p-1 rounded-lg bg-stone-800/80 hover:bg-stone-700 text-stone-300">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <p class="text-[11px] text-stone-300 leading-relaxed mb-2.5">
+        Dispuesta exactamente a medio pasillo (<code class="text-emerald-300">pasillo_optimizado.glb</code>) y elevada sobre un monolito pétreo (<code class="text-emerald-300">rock.glb</code>), la escultura (<code class="text-emerald-300">3DModel.glb</code>) emerge tras despejar 4 velos botánicos de la selva huasteca.
+      </p>
+      <div class="grid grid-cols-2 gap-1.5 text-[10px] font-mono text-emerald-200/90 border-t border-white/10 pt-2">
+        <div>Ubicación: Medio Pasillo</div>
+        <div>Interacción: Giro 360°</div>
+      </div>
+    </aside>
+
     <!-- Guía Gestual Central -->
     <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none opacity-0 transition-opacity duration-700">
-      <div class="w-11 h-11 rounded-full bg-stone-950/70 border border-amber-300/45 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
+      <div class="w-11 h-11 rounded-full bg-stone-950/75 border border-amber-300/45 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
         <svg class="w-6 h-6 text-amber-300 animate-swipe-hand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
         </svg>
       </div>
-      <p id="hint-text" class="px-4 py-1.5 rounded-full bg-stone-950/80 backdrop-blur-md border border-emerald-400/30 text-emerald-50 text-xs font-medium shadow-xl max-w-xs sm:max-w-md">
-        Desliza las 4 capas de vegetación (25% c/u) y camina hacia dentro del pasillo para descubrir la escultura sobre la roca
+      <p id="hint-text" class="px-4 py-1.5 rounded-full bg-stone-950/85 backdrop-blur-md border border-emerald-400/30 text-emerald-50 text-xs font-medium shadow-xl max-w-xs sm:max-w-md">
+        Desliza las 4 capas de vegetación (25% c/u) para despejar el pasillo y revelar la roca y la escultura a medio corredor
       </p>
     </div>
 
-    <!-- Pie de Página: Controles de Caminata WebAR dentro del Pasillo + Cámara -->
+    <!-- Pie de Página: Controles de Caminata WebAR hacia Medio Pasillo + Cámara -->
     <footer class="w-full flex flex-col gap-2">
       <div class="w-full flex items-center justify-between pointer-events-none">
         <div id="toast-message" class="bg-stone-950/85 backdrop-blur-md border border-emerald-400/35 text-emerald-100 px-3.5 py-1.5 rounded-full text-xs shadow-xl transition-all duration-300 opacity-0 transform translate-y-2">
-          Portal dimensional activo
+          Portal dimensional desplegado
         </div>
-        <div id="pedometer-badge" class="hidden sm:flex items-center gap-1.5 bg-stone-950/75 backdrop-blur-md border border-teal-400/25 text-teal-200 px-3 py-1 rounded-full text-[11px] font-mono">
+        <div id="pedometer-badge" class="hidden sm:flex items-center gap-1.5 bg-stone-950/80 backdrop-blur-md border border-teal-400/25 text-teal-200 px-3 py-1 rounded-full text-[11px] font-mono">
           <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
           <span id="walk-zone-text">Posición: Exterior del Portal</span>
         </div>
       </div>
 
-      <!-- Barra de Caminata Inmersiva WebAR (Permite caminar físicamente o deslizar para entrar al pasillo) -->
-      <div class="w-full flex flex-wrap items-center justify-between gap-2 bg-stone-950/80 backdrop-blur-xl border border-white/15 rounded-2xl px-3 py-2 shadow-2xl interactive-ui">
+      <!-- Barra de Recorrido Museográfico WebAR -->
+      <div class="w-full flex flex-wrap items-center justify-between gap-2 bg-stone-950/85 backdrop-blur-xl border border-white/15 rounded-2xl px-3 py-2 shadow-2xl interactive-ui">
         <div class="flex items-center gap-2 flex-1 min-w-[210px]">
           <button id="btn-walk-back" title="Retroceder hacia el exterior del portal" class="w-8 h-8 rounded-xl bg-stone-900 hover:bg-stone-800 active:scale-95 text-emerald-200 border border-white/10 flex items-center justify-center font-bold text-sm">
             -
           </button>
           <div class="flex flex-col flex-1">
             <div class="flex items-center justify-between text-[10px] text-emerald-200/90 font-medium mb-0.5 px-1">
-              <span>Exterior</span>
-              <span id="walk-depth-label" class="font-mono text-amber-300">Caminar al Pasillo (0%)</span>
-              <span>Roca / Escultura</span>
+              <span>Umbral Portal</span>
+              <span id="walk-depth-label" class="font-mono text-amber-300">Recorrido Pasillo (0%)</span>
+              <span>Medio Pasillo (Roca + Escultura)</span>
             </div>
             <input id="walk-slider" type="range" min="0" max="100" value="0" class="w-full accent-emerald-400 h-1.5 bg-stone-800 rounded-lg cursor-pointer" />
           </div>
-          <button id="btn-walk-forward" title="Caminar hacia dentro del pasillo" class="w-8 h-8 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 active:scale-95 text-amber-200 border border-emerald-400/35 flex items-center justify-center font-bold text-sm">
+          <button id="btn-walk-forward" title="Avanzar hacia medio pasillo" class="w-8 h-8 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 active:scale-95 text-amber-200 border border-emerald-400/35 flex items-center justify-center font-bold text-sm">
             +
           </button>
         </div>
@@ -391,7 +427,7 @@
             <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
-            <span id="step-inside-text">Entrar al Pasillo</span>
+            <span id="step-inside-text">Ir a Medio Pasillo</span>
           </button>
 
           <button id="btn-toggle-camera" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600/85 hover:bg-emerald-500 active:scale-95 text-white border border-emerald-300/40 shadow-lg transition-all">
@@ -411,8 +447,8 @@
     <div class="bg-stone-950 border border-emerald-500/35 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-stone-800 bg-stone-900/60">
         <div>
-          <span class="text-[10px] uppercase tracking-widest text-amber-300 font-semibold">Ingeniería WebAR · Three.js r160 · Stencil & Walk Tracking</span>
-          <h2 class="font-serif-art text-sm sm:text-base text-emerald-50">Prompt Profesional Analizado, Depurado y Ejecutado</h2>
+          <span class="text-[10px] uppercase tracking-widest text-amber-300 font-semibold">Arquitectura WebAR · Curaduría Digital · Three.js r160</span>
+          <h2 class="font-serif-art text-sm sm:text-base text-emerald-50">Prompt Maestro de Ingeniería y Museografía</h2>
         </div>
         <button id="btn-close-prompt" class="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -422,31 +458,37 @@
       </div>
 
       <div class="p-5 overflow-y-auto custom-scroll text-xs text-stone-200 space-y-3 leading-relaxed font-mono select-text" id="prompt-content-text">
-Actúa como un Principal Creative Technologist e Ingeniero Senior de WebAR / Gráficos 3D experto en Three.js (r160), Shaders GLSL, Stencil Buffers y Sensores Inerciales Móviles.
+Actúa como un Principal Creative Technologist, Arquitecto Senior de WebAR (Three.js r160 / GLSL / Stencil Buffer) y Curador Digital de Colecciones de Museo.
 
 OBJETIVO DEL PROYECTO:
-Desarrollar, depurar y optimizar en un único archivo HTML5 una experiencia inmersiva WebAR conectada al repositorio `blenderingforconservation-maker/recorridovirtual_Leonora` (rama `main`), donde se materializa un Portal Dimensional con partículas de brillo que revela en su interior el escenario del Pasillo de Xilitla, 4 capas de vegetación interactivas (25% de avance por capa) y la escultura central posada sobre una roca ceremonial al fondo del corredor.
+Construir en un único archivo HTML5 una instalación inmersiva WebAR para el repositorio `blenderingforconservation-maker/recorridovirtual_Leonora` (rama `main`). La experiencia inicia abriendo un Portal Dimensional con partículas de brillo en el espacio físico del visitante, desplegando en su interior el modelo arquitectónico `models/pasillo_optimizado.glb`. Exactamente a medio pasillo se alza el modelo de roca `models/rock.glb` y, posada sobre su cumbre, la escultura `models/3DModel.glb`, resguardada por 4 capas de vegetación interactiva (25% de avance por capa).
 
-FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
-1. Apertura del Portal Dimensional con Partículas de Brillo (`z = 1.45`):
-   - Configurar `THREE.WebGLRenderer({ antialias: true, alpha: true, stencil: true })`.
-   - En los primeros 2.4 segundos, animar la apertura del arco surrealista de Xilitla desde una singularidad (`easeOutBack`), rodeado por un sistema aditivo de 320 partículas de brillo dorado y esmeralda (`portalSparkles`) con shader GLSL orbital y síntesis de audio cristalina.
-   - Implementar una máscara `portalStencilMask` (`stencilRef = 1`, `THREE.ReplaceStencilOp`) en la abertura del arco. Mientras el usuario se encuentra fuera del portal (`camera.position.z > 1.45`), todo el mundo interior (pasillo, vegetación, roca y escultura) se renderiza exclusivamente a través de la ventana del portal (`THREE.EqualStencilFunc`). Al caminar y cruzar el umbral (`camera.position.z <= 1.45`), desactivar automáticamente el recorte stencil para otorgar inmersión 360° dentro del pasillo.
+ESTRUCTURA AUDITADA DEL REPOSITORIO (CERO ERRORES 404):
+- Modelos 3D (`models/`):
+  1. `models/pasillo_optimizado.glb` (Escenario principal del corredor).
+  2. `models/rock.glb` (Monolito pétreo situado a medio pasillo).
+  3. `models/3DModel.glb` (Escultura surrealista ensamblada sobre `rock.glb`).
+- Texturas (`assets/`):
+  1. `assets/arbustotropical.png`
+  2. `assets/plantas.png`
+  3. `assets/pasillo_xilitla.jpg`
+  (Omitir cualquier llamado a `image_c64162.jpg` y `tree-tropical.png` ya eliminados del repositorio).
 
-2. Escenario del Pasillo de Xilitla (`pasillo_optimizado.glb` + Assets del Repositorio):
-   - Cargar el corredor con `GLTFLoader` + `DRACOLoader` desde las rutas del repositorio (`models/pasillo_optimizado.glb`, `models/pasillo.glb`, `models/pasillo_xilitla.glb`) y auto-encuadrar su `THREE.Box3` entre `z = 1.45` y `z = -3.8`.
-   - Construir en paralelo la arquitectura 3D abovedada del pasillo utilizando las texturas reales del repositorio `assets/pasillo_xilitla.jpg` (muros laterales con arcos y perspectiva profunda) y `assets/image_c64162.jpg` (suelo de losas húmedas y nervaduras de piedra), garantizando fidelidad visual inmediata y soporte para inyectar cualquier `.glb` local.
+ARQUITECTURA ESPACIAL Y FLUJO DE EXPERIENCIA (UX/UI):
+1. Portal Dimensional y Máscara Stencil (`z = 1.20`):
+   - Configurar `WebGLRenderer({ antialias: true, alpha: true, stencil: true })`.
+   - Animar la apertura del portal con 350 partículas de brillo (`portalSparkles`) y escribir `stencilRef = 1` en la abertura del arco. Mientras `camera.position.z > 1.20`, el pasillo, la roca, la escultura y las plantas solo son visibles a través de la ventana del portal (`THREE.EqualStencilFunc`). Al cruzar el umbral (`camera.position.z <= 1.20`), liberar el Stencil para inmersión 360° dentro del pasillo.
 
-3. Escultura (`models/3DModel.glb`) sobre Roca Ceremonial Esculpida (`z = -2.25`):
-   - Generar un pedestal de roca volcánica/caliza musgosa (`rockPedestalGroup`) mediante subdivisión icosaédrica con desplazamiento procedural de vértices, textura `assets/image_c64162.jpg` y anillos de musgo bioluminiscente.
-   - Cargar `models/3DModel.glb`, normalizar su escala (`targetHeight = 1.68`) y posicionar su base exactamente sobre la cumbre de la roca con proyección de sombras suaves.
+2. Despliegue de `models/pasillo_optimizado.glb`:
+   - Cargar con `GLTFLoader` + `DRACOLoader`, calcular su `THREE.Box3`, alinear su eje longitudinal con `-Z` para que se extienda desde `z = 1.20` (umbral del portal) hasta `z = -7.60` (fondo del corredor), nivelando su suelo en `y = -1.25`.
 
-4. 4 Capas de Vegetación Interactiva (25% de Avance por Capa = 100%):
-   - Distribuir exactamente 4 cortinas botánicas dentro del pasillo en `z = [0.65, -0.05, -0.75, -1.45]` usando `assets/plantas.png` y `assets/arbustotropical.png` (con fallback depurado para `tree-tropical.png`).
-   - Al deslizar o apartar una capa, abrir sus hojas hacia los laterales del pasillo con deformación de vértices por viento, sonido granular de follaje e incrementar exactamente +25% el progreso (`25% -> 50% -> 75% -> 100%`) hasta disparar el destello y onda expansiva de revelación de la escultura.
+3. Ensamblaje Curatorial a Medio Pasillo (`z = -2.80`):
+   - Posicionar `models/rock.glb` sobre el suelo en `z = -2.80` (punto medio del corredor). Calcular dinámicamente la cota superior real (`rockTopY`) de su `Box3`.
+   - Montar `models/3DModel.glb` directamente sobre la superficie superior de `rock.glb` (`y = rockTopY - 0.04`), iluminada con un SpotLight cenital de museo, luces cálidas de acento y modo de inspección 360°.
 
-5. Caminata WebAR hacia Dentro del Pasillo:
-   - Integrar la cámara trasera (`facingMode: 'environment'`), giroscopio 3DoF (`deviceorientation`), podómetro inercial por acelerómetro (`devicemotion`) que avanza por el pasillo al dar pasos físicos, y un control táctil deslizante en el HUD para caminar libremente desde el exterior (`z = 4.65`), cruzar el umbral (`z = 1.45`) y llegar hasta la escultura sobre la roca (`z = -0.45`).</div>
+4. 4 Capas de Vegetación Interactiva (25% por Capa = 100%):
+   - Distribuir 4 cortinas botánicas entre la entrada del portal y el altar a medio pasillo (`z = 0.25, -0.55, -1.35, -2.05`) usando `assets/arbustotropical.png` y `assets/plantas.png`.
+   - Al deslizar cada capa, abrir sus hojas hacia los muros laterales del pasillo con sonido binaural de follaje, sumar +25% al progreso y avanzar suavemente por el corredor hasta revelar la obra y desplegar su Cédula Museográfica.</div>
 
       <div class="px-5 py-3 border-t border-stone-800 bg-stone-900/60 flex items-center justify-between">
         <span id="copy-feedback" class="text-[11px] text-emerald-400 opacity-0 transition-opacity">¡Prompt copiado al portapapeles!</span>
@@ -466,48 +508,41 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
 
     const CONFIG = {
       // Posición inicial de la cámara (en el exterior mirando hacia el portal)
-      cameraStartZ: 4.65,
-      // Posición mínima de caminata (frente a la roca y la escultura dentro del pasillo)
-      cameraMinWalkZ: -0.55,
+      cameraStartZ: 4.25,
+      // Posición de caminata frente al conjunto de roca + escultura a medio pasillo
+      cameraMinWalkZ: -1.10,
       // Ubicación del umbral del Portal Dimensional
-      portalZ: 1.45,
-      portalWidth: 2.75,
-      portalHeight: 3.45,
-      // Ubicación de la roca y la escultura al fondo del pasillo
-      sculptureZ: -2.25,
+      portalZ: 1.20,
+      portalWidth: 2.85,
+      portalHeight: 3.55,
+      // Longitud total del pasillo dentro del portal (desde z = 1.20 hasta z = -7.60)
+      corridorFrontZ: 1.20,
+      corridorBackZ: -7.60,
+      // Ubicación EXACTA A MEDIO PASILLO para rock.glb + 3DModel.glb
+      midCorridorAltarZ: -2.80,
+      floorY: -1.25,
       modelRotation: { x: 0, y: 0, z: 0 },
-      // Rutas para la escultura central (3DModel.glb)
-      modelPaths: [
-        'models/3DModel.glb',
-        `${REPO_RAW_BASE}models/3DModel.glb`,
-        'models/3Dmodel.glb',
-        `${REPO_RAW_BASE}models/3Dmodel.glb`,
-        '3DModel.glb',
-        `${REPO_RAW_BASE}3DModel.glb`
-      ],
-      // Rutas para el modelo GLB de pasillo optimizado
+      // 1. Modelo del Pasillo Optimizado
       corridorModelPaths: [
-        'models/pasillo_optimizado.glb',
         `${REPO_RAW_BASE}models/pasillo_optimizado.glb`,
-        'models/pasillo.glb',
-        `${REPO_RAW_BASE}models/pasillo.glb`,
-        'models/pasillo_xilitla.glb',
-        `${REPO_RAW_BASE}models/pasillo_xilitla.glb`,
-        'pasillo_optimizado.glb',
-        `${REPO_RAW_BASE}pasillo_optimizado.glb`
+        'models/pasillo_optimizado.glb'
       ],
-      // Texturas reales del repositorio (carpeta assets/)
-      corridorTexturePaths: {
-        pasilloXilitla: [
-          `${REPO_RAW_BASE}assets/pasillo_xilitla.jpg`,
-          'assets/pasillo_xilitla.jpg'
-        ],
-        stoneDetail: [
-          `${REPO_RAW_BASE}assets/image_c64162.jpg`,
-          'assets/image_c64162.jpg'
-        ]
-      },
-      // Assets botánicos depurados según el estado real del repositorio GitHub
+      // 2. Modelo de la Roca (situada a medio pasillo)
+      rockModelPaths: [
+        `${REPO_RAW_BASE}models/rock.glb`,
+        'models/rock.glb'
+      ],
+      // 3. Modelo de la Escultura (situada sobre la roca)
+      sculptureModelPaths: [
+        `${REPO_RAW_BASE}models/3DModel.glb`,
+        'models/3DModel.glb'
+      ],
+      // Textura de atmósfera al fondo del pasillo (único JPG vigente en assets/)
+      backdropTexturePaths: [
+        `${REPO_RAW_BASE}assets/pasillo_xilitla.jpg`,
+        'assets/pasillo_xilitla.jpg'
+      ],
+      // Únicamente los 2 PNG botánicos existentes en assets/ (Cero llamadas a archivos eliminados)
       vegetationAssets: [
         {
           key: 'arbusto',
@@ -527,21 +562,10 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
             'assets/plantas.png'
           ],
           aspectWidth: 1.95,
-          aspectHeight: 2.10
-        },
-        {
-          key: 'dosel_selva',
-          name: 'tree-tropical-fallback',
-          // Como tree-tropical.png fue eliminado en el commit b4ac1ed, usamos plantas.png + variante procedural sin errores 404
-          urls: [
-            `${REPO_RAW_BASE}assets/plantas.png`,
-            'assets/plantas.png'
-          ],
-          aspectWidth: 2.45,
-          aspectHeight: 2.30
+          aspectHeight: 2.12
         }
       ],
-      portalSparkleCount: 320,
+      portalSparkleCount: 350,
       particleCount: 220,
       burstParticleCount: 180,
       damping: 0.88,
@@ -550,33 +574,41 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
 
     const state = {
       foliagePlanes: [],
-      // Exactamente 4 capas interactivas (cada una aporta 25%)
+      // Exactamente 4 capas interactivas (cada una aporta 25% = 100%)
       totalInteractiveLayers: 4,
       clearedLayersMap: { 1: false, 2: false, 3: false, 4: false },
       clearedLayersCount: 0,
       discoveryCompleted: false,
       interactionEnabled: false,
       // Control del Portal Dimensional (Stencil automático al cruzar el umbral o manual)
-      portalStencilMode: 'auto', // 'auto' | 'forced_on' | 'forced_off'
+      portalStencilMode: 'auto', // 'auto' | 'forced_off'
       portalStencilActive: true,
       portalRimShaderUniforms: null,
       portalVortexUniforms: null,
       portalVortexMesh: null,
       portalSparkleData: [],
-      // Caminata WebAR hacia el interior del pasillo (0 = exterior en z=4.65, 1 = frente a la roca en z=-0.55)
+      // Iluminación museográfica (0: Museo Cálido, 1: Bioluminiscencia Xilitla, 2: Sol Dorado)
+      lightingPresetIndex: 0,
+      // Caminata WebAR hacia medio pasillo (0 = exterior en z=4.25, 1 = frente al altar a medio pasillo en z=-1.10)
       walkProgress: 0,
       targetWalkProgress: 0,
       lastStepTime: 0,
       pinchStartDist: null,
       pinchStartWalk: 0,
-      // Coreografía de apertura del portal con partículas de brillo (2.4s)
+      // Coreografía de apertura del portal y despliegue del pasillo (2.5s)
       materializing: false,
       materializeStartTime: 0,
-      materializeDuration: 2.45,
+      materializeDuration: 2.5,
       lastMaterializeRustleStage: 0,
-      // Modelo y física táctil
-      modelBoundingBox: new THREE.Box3(),
-      modelSize: new THREE.Vector3(1.4, 2.0, 1.4),
+      // Nodos 3D y cota superior de rock.glb
+      rockTopY: -0.52,
+      corridorNode: null,
+      rockNode: null,
+      sculptureNode: null,
+      sculptureMeshes: [],
+      anchorRingGroup: null,
+      arShadowFloor: null,
+      // Interacción táctil
       activeDraggedLeaf: null,
       pointerDown: false,
       rotatingModel: false,
@@ -597,22 +629,16 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       soundEnabled: true,
       audioCtx: null,
       lastRustleTime: 0,
-      // Partículas y Nodos 3D
+      // Partículas y Destello de revelación
       particleData: [],
       burstData: [],
       burstActive: false,
       burstStartTime: 0,
-      sculptureMeshes: [],
-      sculptureNode: null,
-      corridorNode: null,
-      pedestalGroup: null,
-      anchorRingGroup: null,
-      arShadowFloor: null,
       revealFlashActive: false,
       revealFlashStartTime: 0,
       revealFlashDuration: 1.9,
-      baseExposure: 1.25,
-      baseCenterSpotIntensity: 3.6
+      baseExposure: 1.28,
+      baseCenterSpotIntensity: 4.2
     };
 
     const FLASH_COLOR_TARGET = new THREE.Color(0xfffef5);
@@ -640,20 +666,28 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
     const btnFullscreen = document.getElementById('btn-fullscreen');
     const iconExpand = document.getElementById('icon-expand');
     const iconCompress = document.getElementById('icon-compress');
-    const glbFileInput = document.getElementById('glb-file-input');
     const walkSlider = document.getElementById('walk-slider');
     const walkDepthLabel = document.getElementById('walk-depth-label');
     const walkZoneText = document.getElementById('walk-zone-text');
+    const curatorialCard = document.getElementById('curatorial-card');
 
     let scene, camera, renderer, raycaster, gltfLoader;
     let worldAnchorGroup, portalGroup, portalFrameGroup, portalStencilMask, portalInteriorGroup;
-    let portalSparkles, corridorGroup, jungleEnvironmentGroup, sculptureGroup, foliageRootGroup, bioParticles, burstParticles;
-    let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight, corridorTorchLight;
+    let portalSparkles, corridorGroup, midCorridorAltarGroup, rockHolderGroup, sculptureHolderGroup;
+    let jungleEnvironmentGroup, foliageRootGroup, bioParticles, burstParticles;
+    let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight, corridorEntryLight, corridorDeepLight;
     let cachedTexturesByKey = null;
     const clock = new THREE.Clock();
 
+    function markAssetBadgeLoaded(badgeId, labelText) {
+      const el = document.getElementById(badgeId);
+      if (!el) return;
+      el.className = 'px-2.5 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-400/50 text-emerald-200 flex items-center justify-center gap-1.5 shadow-sm';
+      el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>${labelText} ✓</span>`;
+    }
+
     /* =========================================================================
-       PANTALLA COMPLETA Y MODAL DE PROMPT PROFESIONAL
+       PANTALLA COMPLETA, CÉDULA MUSEOGRÁFICA Y MODAL DE PROMPT
        ========================================================================= */
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
@@ -670,6 +704,13 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
     });
 
     btnFullscreen.addEventListener('click', toggleFullscreen);
+
+    document.getElementById('btn-curatorial-card').addEventListener('click', () => {
+      curatorialCard.classList.toggle('hidden');
+    });
+    document.getElementById('btn-close-curatorial').addEventListener('click', () => {
+      curatorialCard.classList.add('hidden');
+    });
 
     const promptModal = document.getElementById('prompt-modal');
     document.getElementById('btn-open-prompt').addEventListener('click', () => {
@@ -856,10 +897,10 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
        2. INICIALIZACIÓN DE THREE.JS (CON STENCIL BUFFER Y GRUPOS DEL PORTAL)
        ========================================================================= */
     async function init() {
-      updateLoading(10, 'Inicializando motor espacial Three.js con Stencil Buffer...');
+      updateLoading(8, 'Inicializando motor espacial Three.js r160 con Stencil Buffer...');
 
       scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x041811, 0.042);
+      scene.fog = new THREE.FogExp2(0x041811, 0.032);
 
       camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.08, 80);
       updateCameraFramingForAspect();
@@ -891,35 +932,36 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       worldAnchorGroup.name = 'WorldSpatialAnchor';
       scene.add(worldAnchorGroup);
 
-      // Grupo maestro del Portal (contiene Marco + Partículas de Brillo + Máscara Stencil + Mundo Interior)
+      // Grupo maestro del Portal Dimensional
       portalGroup = new THREE.Group();
       portalGroup.name = 'DimensionalPortalRoot';
       worldAnchorGroup.add(portalGroup);
 
-      // Grupo exclusivo del interior del portal (Pasillo + 4 Capas de Vegetación + Roca + Escultura)
+      // Grupo exclusivo del interior del portal (Pasillo + Altar a Medio Pasillo [Roca + Escultura] + 4 Capas Botánicas)
       portalInteriorGroup = new THREE.Group();
       portalInteriorGroup.name = 'PortalInteriorWorld';
       portalGroup.add(portalInteriorGroup);
 
-      setupLighting();
+      setupMuseumLighting();
       createSpatialARFloorAndReticle();
 
-      updateLoading(26, 'Creando Portal Dimensional y 320 partículas de brillo...');
+      updateLoading(22, 'Construyendo Portal Dimensional y 350 partículas de brillo...');
       createPortalArchAndStencilMask();
       createPortalSparkleParticles();
 
-      updateLoading(45, 'Construyendo escenario del Pasillo de Xilitla desde GitHub...');
+      updateLoading(42, 'Cargando models/pasillo_optimizado.glb dentro del portal...');
       await createJungleSurrealBackground();
-      await loadAndFrameCorridorModel();
+      await loadAndDeployCorridorGLB();
+      markAssetBadgeLoaded('badge-pasillo', 'pasillo.glb');
 
-      updateLoading(68, 'Esculpiendo roca ceremonial y cargando escultura (3DModel.glb)...');
-      await loadAndFrameCentralModel();
+      updateLoading(66, 'Colocando models/rock.glb a medio pasillo y models/3DModel.glb sobre la roca...');
+      await loadMidCorridorRockAndSculpture();
 
-      updateLoading(84, 'Instalando las 4 capas de vegetación (25% de avance c/u)...');
+      updateLoading(86, 'Instalando las 4 capas de vegetación (arbustotropical.png + plantas.png)...');
       cachedTexturesByKey = await loadBaseVegetationTextures();
       buildLayeredJungle(cachedTexturesByKey);
 
-      updateLoading(95, 'Sincronizando Stencil Buffer y sensores de caminata WebAR...');
+      updateLoading(96, 'Activando Stencil Buffer y recorrido museográfico WebAR...');
       createLuminescentParticles();
       createRevealBurstParticles();
       applyPortalStencilState(true);
@@ -928,7 +970,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       setupInteractionEvents();
       window.addEventListener('resize', onWindowResize);
 
-      updateLoading(100, '¡Portal, Pasillo, Roca y Escultura listos!');
+      updateLoading(100, '¡Instalación museográfica lista para desplegarse!');
       loadingProgressWrap.classList.add('hidden');
       arStartPortal.classList.remove('hidden');
       arStartPortal.classList.add('flex');
@@ -944,7 +986,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
 
     function getCameraBaseZ() {
       const aspect = window.innerWidth / window.innerHeight;
-      const startZ = aspect >= 1.0 ? 4.35 : 4.85;
+      const startZ = aspect >= 1.0 ? 3.95 : 4.35;
       return THREE.MathUtils.lerp(startZ, CONFIG.cameraMinWalkZ, state.walkProgress);
     }
 
@@ -954,6 +996,89 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         camera.aspect = aspect;
         camera.position.z = getCameraBaseZ();
         camera.updateProjectionMatrix();
+      }
+    }
+
+    /* Iluminación de Galería de Museo a lo largo del Pasillo y sobre el Altar a Medio Pasillo */
+    function setupMuseumLighting() {
+      hemiLight = new THREE.HemisphereLight(0xd1fae5, 0x062016, 1.55);
+      scene.add(hemiLight);
+
+      sunClearLight = new THREE.DirectionalLight(0xfffbeb, 2.65);
+      sunClearLight.position.set(1.8, 5.8, 2.6);
+      sunClearLight.castShadow = true;
+      sunClearLight.shadow.mapSize.width = 1024;
+      sunClearLight.shadow.mapSize.height = 1024;
+      sunClearLight.shadow.bias = -0.001;
+      scene.add(sunClearLight);
+
+      // Luz de bienvenida en el primer tramo del pasillo (z = -0.5)
+      corridorEntryLight = new THREE.PointLight(0xa7f3d0, 2.8, 9);
+      corridorEntryLight.position.set(0, 1.75, -0.50);
+      portalInteriorGroup.add(corridorEntryLight);
+
+      // Luces laterales de recorte sobre el altar a medio pasillo (z = -2.80)
+      rimTealLight = new THREE.PointLight(0x2dd4bf, 4.0, 12);
+      rimTealLight.position.set(-1.55, 1.35, CONFIG.midCorridorAltarZ + 0.35);
+      portalInteriorGroup.add(rimTealLight);
+
+      rimGoldLight = new THREE.PointLight(0xfbbf24, 3.8, 12);
+      rimGoldLight.position.set(1.55, 1.25, CONFIG.midCorridorAltarZ + 0.55);
+      portalInteriorGroup.add(rimGoldLight);
+
+      // Luz de profundidad en la segunda mitad del pasillo (detrás de la roca y la escultura, z = -5.2)
+      corridorDeepLight = new THREE.PointLight(0x34d399, 3.2, 12);
+      corridorDeepLight.position.set(0, 1.65, -5.20);
+      portalInteriorGroup.add(corridorDeepLight);
+
+      // SpotLight cenital museográfico apuntando directamente a la escultura sobre la roca a medio pasillo
+      centerSpotLight = new THREE.SpotLight(0xfffef0, state.baseCenterSpotIntensity);
+      centerSpotLight.position.set(0, 3.45, CONFIG.midCorridorAltarZ + 1.45);
+      centerSpotLight.target.position.set(0, 0.15, CONFIG.midCorridorAltarZ);
+      centerSpotLight.angle = Math.PI / 3.8;
+      centerSpotLight.penumbra = 0.85;
+      centerSpotLight.castShadow = true;
+      portalInteriorGroup.add(centerSpotLight);
+      portalInteriorGroup.add(centerSpotLight.target);
+    }
+
+    function cycleLightingPreset() {
+      state.lightingPresetIndex = (state.lightingPresetIndex + 1) % 3;
+      const labelEl = document.getElementById('lighting-mode-text');
+
+      if (state.lightingPresetIndex === 0) {
+        // 1. Luz de Museo (Cenital Cálida y Conservación)
+        hemiLight.color.setHex(0xd1fae5);
+        hemiLight.intensity = 1.55;
+        centerSpotLight.color.setHex(0xfffef0);
+        state.baseCenterSpotIntensity = 4.2;
+        centerSpotLight.intensity = 4.2;
+        rimTealLight.color.setHex(0x2dd4bf);
+        rimGoldLight.color.setHex(0xfbbf24);
+        if (labelEl) labelEl.textContent = 'Luz: Museo';
+        showToast('Iluminación: Luz Cenital de Museo');
+      } else if (state.lightingPresetIndex === 1) {
+        // 2. Bioluminiscencia Nocturna de Xilitla
+        hemiLight.color.setHex(0x34d399);
+        hemiLight.intensity = 1.15;
+        centerSpotLight.color.setHex(0x5eead4);
+        state.baseCenterSpotIntensity = 5.0;
+        centerSpotLight.intensity = 5.0;
+        rimTealLight.color.setHex(0x10b981);
+        rimGoldLight.color.setHex(0xa7f3d0);
+        if (labelEl) labelEl.textContent = 'Luz: Bioluminiscencia';
+        showToast('Iluminación: Bioluminiscencia Nocturna de Xilitla');
+      } else {
+        // 3. Sol Dorado de la Huasteca
+        hemiLight.color.setHex(0xfef08a);
+        hemiLight.intensity = 1.75;
+        centerSpotLight.color.setHex(0xfde047);
+        state.baseCenterSpotIntensity = 4.8;
+        centerSpotLight.intensity = 4.8;
+        rimTealLight.color.setHex(0xf59e0b);
+        rimGoldLight.color.setHex(0xfef08a);
+        if (labelEl) labelEl.textContent = 'Luz: Sol Huasteco';
+        showToast('Iluminación: Sol Dorado de la Huasteca');
       }
     }
 
@@ -1319,7 +1444,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
     }
 
     /* =========================================================================
-       4. ESCENARIO DEL PASILLO DE GITHUB (pasillo_optimizado.glb + Assets Reales)
+       4. DESPLIEGUE DEL PASILLO OPTIMIZADO (models/pasillo_optimizado.glb)
        ========================================================================= */
     async function loadTextureWithFallback(urls, fallbackGenerator) {
       const texLoader = new THREE.TextureLoader();
@@ -1338,7 +1463,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       return fallbackGenerator();
     }
 
-    async function loadAndFrameCorridorModel(customBlobUrl = null, customFileName = '') {
+    async function loadAndDeployCorridorGLB() {
       if (!corridorGroup) {
         corridorGroup = new THREE.Group();
         corridorGroup.name = 'OptimizedCorridorContainer';
@@ -1350,43 +1475,24 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       }
 
       let loadedGLTF = null;
-      let loadedSourcePath = '';
-
-      if (customBlobUrl) {
+      for (const path of CONFIG.corridorModelPaths) {
         try {
           loadedGLTF = await new Promise((resolve, reject) => {
-            gltfLoader.load(customBlobUrl, resolve, undefined, reject);
+            gltfLoader.load(path, resolve, undefined, reject);
           });
-          loadedSourcePath = customFileName || 'Archivo Local .GLB';
+          if (loadedGLTF && loadedGLTF.scene) {
+            console.log(`Pasillo optimizado cargado desde: ${path}`);
+            break;
+          }
         } catch (err) {
-          console.warn('Error al cargar el GLB local:', err);
-        }
-      } else {
-        for (const path of CONFIG.corridorModelPaths) {
-          try {
-            loadedGLTF = await new Promise((resolve, reject) => {
-              gltfLoader.load(path, resolve, undefined, reject);
-            });
-            if (loadedGLTF) {
-              loadedSourcePath = path;
-              console.log(`Pasillo GLB cargado desde: ${path}`);
-              break;
-            }
-          } catch (err) {}
+          console.warn(`Intento de ruta de pasillo no disponible: ${path}`);
         }
       }
 
       if (loadedGLTF && loadedGLTF.scene) {
         mountOptimizedCorridorGLB(loadedGLTF.scene);
-        if (corridorSourceBadge) {
-          corridorSourceBadge.textContent = `Escenario activo: ${loadedSourcePath.split('/').pop()}`;
-        }
       } else {
-        // Construye el escenario 3D del Pasillo de Xilitla utilizando directamente assets/pasillo_xilitla.jpg e image_c64162.jpg del repositorio GitHub
         await buildXilitlaCorridorFallback();
-        if (corridorSourceBadge) {
-          corridorSourceBadge.textContent = 'Escenario: Pasillo Xilitla GitHub (assets/pasillo_xilitla.jpg + image_c64162.jpg)';
-        }
       }
 
       applyPortalStencilState(state.portalStencilActive);
@@ -1397,37 +1503,63 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       const rawBox = new THREE.Box3().setFromObject(corridorScene);
       const rawSize = rawBox.getSize(new THREE.Vector3());
 
-      // Auto-escalar para que el pasillo abarque desde el portal (z = 1.45) hasta detrás de la roca (z = -3.8)
-      const targetCorridorHeight = 3.45;
-      const targetCorridorDepth = 5.4;
-      const scaleByH = rawSize.y > 0.01 ? targetCorridorHeight / rawSize.y : 1;
-      const scaleByD = Math.max(rawSize.z, rawSize.x) > 0.01 ? targetCorridorDepth / Math.max(rawSize.z, rawSize.x) : 1;
-      const scale = Math.max(scaleByH, scaleByD * 0.9);
-
-      if (rawSize.x > rawSize.z * 1.45) {
+      // Si el eje largo del pasillo viene en X, lo rotamos 90° para que el túnel corra a lo largo del eje -Z (hacia dentro del portal)
+      if (rawSize.x > rawSize.z * 1.25) {
         corridorScene.rotation.y = Math.PI * 0.5;
         corridorScene.updateMatrixWorld(true);
       }
 
       const orientedBox = new THREE.Box3().setFromObject(corridorScene);
+      const orientedSize = orientedBox.getSize(new THREE.Vector3());
       const orientedCenter = orientedBox.getCenter(new THREE.Vector3());
 
-      corridorScene.scale.setScalar(scale);
-      corridorScene.position.x = -orientedCenter.x * scale;
-      corridorScene.position.y = -1.24 - (orientedBox.min.y * scale);
-      corridorScene.position.z = CONFIG.portalZ - (orientedBox.max.z * scale);
+      // Escalar el pasillo para que su altura encaje con el portal (~3.55m) y su profundidad abarque desde z = 1.20 hasta z = -7.60 (~8.8m)
+      const targetHeight = 3.55;
+      const targetDepth = CONFIG.corridorFrontZ - CONFIG.corridorBackZ; // 8.80m
+      const scaleY = orientedSize.y > 0.01 ? targetHeight / orientedSize.y : 1;
+      const scaleZ = orientedSize.z > 0.01 ? targetDepth / orientedSize.z : scaleY;
+      // Usamos un escalado uniforme armónico que garantice amplitud interior para la roca y la escultura a medio pasillo
+      const uniformScale = Math.max(scaleY, scaleZ * 0.85);
+
+      corridorScene.scale.setScalar(uniformScale);
+      corridorScene.position.x = -orientedCenter.x * uniformScale;
+      corridorScene.position.y = CONFIG.floorY - (orientedBox.min.y * uniformScale);
+      // Alinear el inicio del pasillo exactamente con el umbral del portal (z = 1.20) proyectándose hacia -Z
+      corridorScene.position.z = CONFIG.portalZ - (orientedBox.max.z * uniformScale);
 
       corridorScene.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
+            const cloneMat = (m) => {
+              const cm = m.clone();
+              cm.side = THREE.DoubleSide;
+              if (cm.roughness !== undefined) cm.roughness = Math.min(cm.roughness, 0.85);
+              return cm;
+            };
             child.material = Array.isArray(child.material)
-              ? child.material.map((m) => m.clone())
-              : child.material.clone();
+              ? child.material.map(cloneMat)
+              : cloneMat(child.material);
           }
         }
       });
+
+      // Alfombra/sendero sutil de luz museográfica en el suelo hacia medio pasillo
+      const guideRunner = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.15, targetDepth),
+        new THREE.MeshStandardMaterial({
+          color: 0x0f3828,
+          roughness: 0.35,
+          metalness: 0.25,
+          transparent: true,
+          opacity: 0.45
+        })
+      );
+      guideRunner.rotation.x = -Math.PI / 2;
+      guideRunner.position.set(0, CONFIG.floorY + 0.01, (CONFIG.corridorFrontZ + CONFIG.corridorBackZ) * 0.5);
+      guideRunner.receiveShadow = true;
+      corridorGroup.add(guideRunner);
 
       corridorGroup.add(corridorScene);
       state.corridorNode = corridorScene;
@@ -1435,67 +1567,36 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
 
     async function buildXilitlaCorridorFallback() {
       const xilitlaPhotoTex = await loadTextureWithFallback(
-        CONFIG.corridorTexturePaths.pasilloXilitla,
+        CONFIG.backdropTexturePaths,
         createJunglePanoramaTexture
       );
-      const stoneDetailTex = await loadTextureWithFallback(
-        CONFIG.corridorTexturePaths.stoneDetail,
-        createStoneProceduralTexture
-      );
-
+      const stoneDetailTex = createStoneProceduralTexture();
       stoneDetailTex.wrapS = THREE.RepeatWrapping;
       stoneDetailTex.wrapT = THREE.RepeatWrapping;
-      stoneDetailTex.repeat.set(3, 3);
+      stoneDetailTex.repeat.set(4, 4);
 
       const proceduralCorridor = new THREE.Group();
-      proceduralCorridor.name = 'XilitlaArchitecturalCorridor';
-
       const concreteMat = new THREE.MeshStandardMaterial({
         map: stoneDetailTex,
-        color: 0x457d63,
-        roughness: 0.80,
-        metalness: 0.14
+        color: 0x3b6e57,
+        roughness: 0.78,
+        metalness: 0.14,
+        side: THREE.DoubleSide
       });
 
-      const darkMossMat = new THREE.MeshStandardMaterial({
-        map: stoneDetailTex,
-        color: 0x1d4735,
-        roughness: 0.65,
-        metalness: 0.12,
-        emissive: 0x062016,
-        emissiveIntensity: 0.25
-      });
+      const corridorLength = CONFIG.corridorFrontZ - CONFIG.corridorBackZ;
+      const corridorCenterZ = (CONFIG.corridorFrontZ + CONFIG.corridorBackZ) * 0.5;
 
-      // Suelo del pasillo desde el umbral del portal (z = 1.45) hasta el fondo (z = -4.2)
-      const corridorLength = 5.8;
-      const corridorCenterZ = (CONFIG.portalZ - 4.15) * 0.5;
       const corridorFloor = new THREE.Mesh(
         new THREE.BoxGeometry(3.2, 0.12, corridorLength),
         concreteMat
       );
-      corridorFloor.position.set(0, -1.26, corridorCenterZ);
+      corridorFloor.position.set(0, CONFIG.floorY - 0.06, corridorCenterZ);
       corridorFloor.receiveShadow = true;
       proceduralCorridor.add(corridorFloor);
 
-      // Sendero central ceremonial de piedra pulida que guía la caminata hacia la roca
-      const walkwayRunner = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.4, corridorLength - 0.2),
-        new THREE.MeshStandardMaterial({
-          map: stoneDetailTex,
-          color: 0x346b52,
-          roughness: 0.38,
-          metalness: 0.26
-        })
-      );
-      walkwayRunner.rotation.x = -Math.PI / 2;
-      walkwayRunner.position.set(0, -1.19, corridorCenterZ);
-      walkwayRunner.receiveShadow = true;
-      proceduralCorridor.add(walkwayRunner);
-
-      // Sucesión de 5 arcos surrealistas estilo Las Pozas (Xilitla) a lo largo del pasillo
-      const archCount = 5;
-      const archOuterShape = createArchShape(3.05, 3.50, 1.525);
-      archOuterShape.holes.push(createArchShape(2.48, 3.22, 1.24));
+      const archOuterShape = createArchShape(3.10, 3.55, 1.55);
+      archOuterShape.holes.push(createArchShape(2.55, 3.25, 1.275));
       const archRibGeo = new THREE.ExtrudeGeometry(archOuterShape, {
         depth: 0.24,
         bevelEnabled: true,
@@ -1505,28 +1606,15 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         bevelThickness: 0.03
       });
 
-      for (let i = 0; i < archCount; i++) {
-        const zPos = 0.85 - i * 1.15;
-        const ribMesh = new THREE.Mesh(archRibGeo, i % 2 === 0 ? concreteMat : darkMossMat);
+      for (let i = 0; i < 6; i++) {
+        const zPos = 0.65 - i * 1.45;
+        const ribMesh = new THREE.Mesh(archRibGeo, concreteMat);
         ribMesh.position.set(0, 0, zPos);
         ribMesh.castShadow = true;
         ribMesh.receiveShadow = true;
         proceduralCorridor.add(ribMesh);
-
-        // Columnas laterales con textura de piedra de Xilitla
-        [-1.34, 1.34].forEach((xCol) => {
-          const pillar = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.11, 0.14, 2.6, 16),
-            concreteMat
-          );
-          pillar.position.set(xCol, 0.04, zPos - 0.35);
-          pillar.castShadow = true;
-          pillar.receiveShadow = true;
-          proceduralCorridor.add(pillar);
-        });
       }
 
-      // Paredes laterales texturizadas con `assets/pasillo_xilitla.jpg`
       const wallMat = new THREE.MeshStandardMaterial({
         map: xilitlaPhotoTex,
         color: 0x99f6e4,
@@ -1536,24 +1624,13 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
 
       const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(corridorLength, 3.55), wallMat);
       leftWall.rotation.y = Math.PI * 0.5;
-      leftWall.position.set(-1.52, 0.48, corridorCenterZ);
+      leftWall.position.set(-1.55, 0.48, corridorCenterZ);
       proceduralCorridor.add(leftWall);
 
       const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(corridorLength, 3.55), wallMat);
       rightWall.rotation.y = -Math.PI * 0.5;
-      rightWall.position.set(1.52, 0.48, corridorCenterZ);
+      rightWall.position.set(1.55, 0.48, corridorCenterZ);
       proceduralCorridor.add(rightWall);
-
-      // Mural de fondo del pasillo con `assets/pasillo_xilitla.jpg` detrás de la escultura y la roca
-      const backPortalBackdrop = new THREE.Mesh(
-        new THREE.PlaneGeometry(3.4, 3.7),
-        new THREE.MeshBasicMaterial({
-          map: xilitlaPhotoTex,
-          color: 0xd1fae5
-        })
-      );
-      backPortalBackdrop.position.set(0, 0.50, -3.95);
-      proceduralCorridor.add(backPortalBackdrop);
 
       corridorGroup.add(proceduralCorridor);
       state.corridorNode = proceduralCorridor;
@@ -1564,10 +1641,10 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       canvas.width = 512;
       canvas.height = 512;
       const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#1f3f31';
+      ctx.fillStyle = '#244737';
       ctx.fillRect(0, 0, 512, 512);
       for (let i = 0; i < 900; i++) {
-        ctx.fillStyle = i % 2 === 0 ? 'rgba(16, 48, 34, 0.35)' : 'rgba(110, 231, 183, 0.08)';
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(12, 38, 27, 0.35)' : 'rgba(110, 231, 183, 0.08)';
         ctx.beginPath();
         ctx.arc(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 14, 0, Math.PI * 2);
         ctx.fill();
@@ -1579,35 +1656,36 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
 
     /* Receptor de sombras y anillo holográfico de anclaje en el suelo real */
     function createSpatialARFloorAndReticle() {
-      const shadowFloorGeo = new THREE.PlaneGeometry(14, 14);
+      const shadowFloorGeo = new THREE.PlaneGeometry(16, 16);
       const shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0.44 });
       const shadowFloor = new THREE.Mesh(shadowFloorGeo, shadowFloorMat);
       shadowFloor.rotation.x = -Math.PI / 2;
-      shadowFloor.position.y = -1.24;
+      shadowFloor.position.y = CONFIG.floorY;
       shadowFloor.receiveShadow = true;
       shadowFloor.visible = false;
       worldAnchorGroup.add(shadowFloor);
       state.arShadowFloor = shadowFloor;
 
       const reticleGroup = new THREE.Group();
-      reticleGroup.position.set(0, -1.23, CONFIG.portalZ);
+      // Situado exactamente bajo el altar a medio pasillo (z = -2.80)
+      reticleGroup.position.set(0, CONFIG.floorY + 0.02, CONFIG.midCorridorAltarZ);
 
       const outerRing = new THREE.Mesh(
-        new THREE.RingGeometry(1.38, 1.46, 64),
-        new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.65, side: THREE.DoubleSide })
+        new THREE.RingGeometry(0.92, 0.99, 64),
+        new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.72, side: THREE.DoubleSide })
       );
       outerRing.rotation.x = -Math.PI / 2;
       reticleGroup.add(outerRing);
 
       const innerGlowRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.82, 1.35, 64),
-        new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.20, side: THREE.DoubleSide })
+        new THREE.RingGeometry(0.55, 0.88, 64),
+        new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
       );
       innerGlowRing.rotation.x = -Math.PI / 2;
       reticleGroup.add(innerGlowRing);
 
       reticleGroup.scale.setScalar(0.001);
-      worldAnchorGroup.add(reticleGroup);
+      portalInteriorGroup.add(reticleGroup);
       state.anchorRingGroup = reticleGroup;
     }
 
@@ -1618,11 +1696,11 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       portalInteriorGroup.add(jungleEnvironmentGroup);
 
       const muralTex = await loadTextureWithFallback(
-        CONFIG.corridorTexturePaths.pasilloXilitla,
+        CONFIG.backdropTexturePaths,
         createJunglePanoramaTexture
       );
 
-      const muralGeo = new THREE.PlaneGeometry(12.5, 7.8, 24, 1);
+      const muralGeo = new THREE.PlaneGeometry(11.5, 7.2, 24, 1);
       const pos = muralGeo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         const vx = pos.getX(i);
@@ -1637,7 +1715,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         fog: false
       });
       const muralMesh = new THREE.Mesh(muralGeo, muralMat);
-      muralMesh.position.set(0, 0.65, -4.8);
+      muralMesh.position.set(0, 0.65, CONFIG.corridorBackZ - 0.35);
       jungleEnvironmentGroup.add(muralMesh);
     }
 
@@ -1670,124 +1748,111 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
     }
 
     /* =========================================================================
-       5. ESCULTURA (models/3DModel.glb) POSADA SOBRE LA ROCA AL FONDO DEL PASILLO
+       5. ENSAMBLAJE A MEDIO PASILLO (z = -2.80): models/rock.glb + models/3DModel.glb
        ========================================================================= */
-    function createSculptedRockPedestal(stoneTex) {
-      const rockGroup = new THREE.Group();
-      rockGroup.name = 'SculptedRockPedestal';
+    async function loadMidCorridorRockAndSculpture() {
+      if (midCorridorAltarGroup) portalInteriorGroup.remove(midCorridorAltarGroup);
 
-      // Geometría de roca orgánica tallada mediante desplazamiento determinista de vértices
-      const rockGeo = new THREE.IcosahedronGeometry(0.68, 3);
-      const pos = rockGeo.attributes.position;
-      const vertex = new THREE.Vector3();
+      // Grupo maestro del Altar situado exactamente A MEDIO PASILLO (z = -2.80)
+      midCorridorAltarGroup = new THREE.Group();
+      midCorridorAltarGroup.name = 'MidCorridorAltar_RockAndSculpture';
+      midCorridorAltarGroup.position.set(0, 0, CONFIG.midCorridorAltarZ);
+      portalInteriorGroup.add(midCorridorAltarGroup);
 
-      for (let i = 0; i < pos.count; i++) {
-        vertex.fromBufferAttribute(pos, i);
-        // Achatar en Y para formar un peñasco/roca de altar con cumbre plana donde descansa la escultura
-        vertex.y *= 0.58;
-        if (vertex.y > 0.16) {
-          vertex.y = 0.16 + (vertex.y - 0.16) * 0.22;
-        }
-        // Rugosidad natural de roca caliza/volcánica
-        const noise =
-          Math.sin(vertex.x * 5.2 + vertex.z * 4.7) * 0.06 +
-          Math.cos(vertex.y * 7.5 - vertex.x * 3.8) * 0.04;
-        vertex.x *= 1.12 + noise;
-        vertex.z *= 1.08 + noise;
-        pos.setXYZ(i, vertex.x, vertex.y, vertex.z);
-      }
-      rockGeo.computeVertexNormals();
+      rockHolderGroup = new THREE.Group();
+      rockHolderGroup.name = 'RockModelHolder';
+      midCorridorAltarGroup.add(rockHolderGroup);
 
-      const rockMat = new THREE.MeshStandardMaterial({
-        map: stoneTex,
-        color: 0x3b5e4c,
-        roughness: 0.88,
-        metalness: 0.08
-      });
+      sculptureHolderGroup = new THREE.Group();
+      sculptureHolderGroup.name = 'SculptureModelHolder';
+      midCorridorAltarGroup.add(sculptureHolderGroup);
 
-      const mainBoulder = new THREE.Mesh(rockGeo, rockMat);
-      mainBoulder.position.y = -0.92;
-      mainBoulder.castShadow = true;
-      mainBoulder.receiveShadow = true;
-      rockGroup.add(mainBoulder);
-
-      // Rocas secundarias y musgo bioluminiscente en la base de la roca
-      const mossMat = new THREE.MeshStandardMaterial({
-        color: 0x10b981,
-        roughness: 0.55,
-        metalness: 0.15,
-        emissive: 0x065f46,
-        emissiveIntensity: 0.45
-      });
-
-      const mossCrown = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.48, 0.56, 0.06, 24),
-        mossMat
-      );
-      mossCrown.position.y = -0.74;
-      mossCrown.receiveShadow = true;
-      rockGroup.add(mossCrown);
-
-      const sideStones = [
-        { x: -0.52, y: -1.12, z: 0.26, s: 0.24 },
-        { x:  0.54, y: -1.14, z: 0.22, s: 0.21 },
-        { x:  0.18, y: -1.15, z: 0.48, s: 0.18 }
-      ];
-      sideStones.forEach((st) => {
-        const pebble = new THREE.Mesh(new THREE.DodecahedronGeometry(st.s, 1), rockMat);
-        pebble.position.set(st.x, st.y, st.z);
-        pebble.scale.y = 0.65;
-        pebble.castShadow = true;
-        pebble.receiveShadow = true;
-        rockGroup.add(pebble);
-      });
-
-      return rockGroup;
-    }
-
-    async function loadAndFrameCentralModel() {
-      sculptureGroup = new THREE.Group();
-      // Ubicada al fondo del pasillo sobre la roca (z = -2.25)
-      sculptureGroup.position.set(0, 0, CONFIG.sculptureZ);
-      portalInteriorGroup.add(sculptureGroup);
-
-      const stoneTex = await loadTextureWithFallback(
-        CONFIG.corridorTexturePaths.stoneDetail,
-        createStoneProceduralTexture
-      );
-
-      const rockPedestalGroup = createSculptedRockPedestal(stoneTex);
-      sculptureGroup.add(rockPedestalGroup);
-      state.pedestalGroup = rockPedestalGroup;
-
-      let loadedGLTF = null;
-      for (const path of CONFIG.modelPaths) {
+      // PASO A: Cargar `models/rock.glb` desde el repositorio GitHub
+      let loadedRockGLTF = null;
+      for (const path of CONFIG.rockModelPaths) {
         try {
-          loadedGLTF = await new Promise((resolve, reject) => {
+          loadedRockGLTF = await new Promise((resolve, reject) => {
             gltfLoader.load(path, resolve, undefined, reject);
           });
-          if (loadedGLTF) {
-            console.log(`Escultura 3D cargada desde: ${path}`);
+          if (loadedRockGLTF && loadedRockGLTF.scene) {
+            console.log(`Roca 3D (rock.glb) cargada desde: ${path}`);
             break;
           }
         } catch (err) {
-          console.warn(`Ruta de escultura no disponible: ${path}`);
+          console.warn(`Ruta de rock.glb no disponible: ${path}`);
         }
       }
 
-      if (loadedGLTF) {
-        mountAndComputeBoundingBox(loadedGLTF.scene);
-      } else {
-        const fallbackModel = createSurrealSculptureFallback();
-        mountAndComputeBoundingBox(fallbackModel);
+      const rockNode = (loadedRockGLTF && loadedRockGLTF.scene)
+        ? loadedRockGLTF.scene
+        : createSculptedRockFallback();
+
+      mountRockAtMidCorridor(rockNode);
+      markAssetBadgeLoaded('badge-rock', 'rock.glb');
+
+      // PASO B: Cargar `models/3DModel.glb` y posarla exactamente SOBRE `rock.glb`
+      let loadedSculptureGLTF = null;
+      for (const path of CONFIG.sculptureModelPaths) {
+        try {
+          loadedSculptureGLTF = await new Promise((resolve, reject) => {
+            gltfLoader.load(path, resolve, undefined, reject);
+          });
+          if (loadedSculptureGLTF && loadedSculptureGLTF.scene) {
+            console.log(`Escultura 3D (3DModel.glb) cargada desde: ${path}`);
+            break;
+          }
+        } catch (err) {
+          console.warn(`Ruta de 3DModel.glb no disponible: ${path}`);
+        }
       }
+
+      const sculptureNode = (loadedSculptureGLTF && loadedSculptureGLTF.scene)
+        ? loadedSculptureGLTF.scene
+        : createSurrealSculptureFallback();
+
+      mountSculptureOnTopOfRock(sculptureNode);
+      markAssetBadgeLoaded('badge-sculpture', '3DModel.glb');
     }
 
-    function mountAndComputeBoundingBox(modelNode) {
-      while (sculptureGroup.children.length > 1) {
-        sculptureGroup.remove(sculptureGroup.children[1]);
-      }
+    function mountRockAtMidCorridor(rockScene) {
+      rockScene.updateMatrixWorld(true);
+      const rawBox = new THREE.Box3().setFromObject(rockScene);
+      const rawSize = rawBox.getSize(new THREE.Vector3());
+      const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
+      // Escalar rock.glb para que forme un pedestal de roca monumental a medio pasillo (~1.25m de ancho, ~0.76m de alto)
+      const maxHorizontal = Math.max(rawSize.x, rawSize.z) || 1;
+      const targetRockWidth = 1.26;
+      const scale = targetRockWidth / maxHorizontal;
+
+      rockScene.scale.setScalar(scale);
+      rockScene.position.x = -rawCenter.x * scale;
+      rockScene.position.z = -rawCenter.z * scale;
+      // Apoyar la base de rock.glb exactamente sobre el piso del pasillo (y = -1.25)
+      rockScene.position.y = CONFIG.floorY - (rawBox.min.y * scale);
+
+      rockScene.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material = Array.isArray(child.material)
+              ? child.material.map((m) => m.clone())
+              : child.material.clone();
+          }
+        }
+      });
+
+      rockHolderGroup.add(rockScene);
+      rockHolderGroup.updateMatrixWorld(true);
+
+      // Calcular la cota superior real (`rockTopY`) de `rock.glb` ya montada para apoyar la escultura encima
+      const mountedRockBox = new THREE.Box3().setFromObject(rockHolderGroup);
+      state.rockTopY = mountedRockBox.max.y;
+      state.rockNode = rockScene;
+    }
+
+    function mountSculptureOnTopOfRock(modelNode) {
       state.sculptureMeshes = [];
       state.revealFlashActive = false;
 
@@ -1803,14 +1868,15 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
       const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z) || 1;
-      const targetFullBodyHeight = 1.68;
-      const scale = targetFullBodyHeight / maxDim;
+      const targetSculptureHeight = 1.52;
+      const scale = targetSculptureHeight / maxDim;
 
       modelNode.scale.setScalar(scale);
       modelNode.position.x = -rawCenter.x * scale;
       modelNode.position.z = -rawCenter.z * scale;
-      // Posicionar exactamente sobre la cumbre de la roca (-0.71)
-      modelNode.position.y = -0.71 - (rawBox.min.y * scale);
+      // Posicionar los pies/base de 3DModel.glb directamente sobre la cumbre de rock.glb (con -0.04m de encastre orgánico)
+      const rockSurfaceY = state.rockTopY - 0.04;
+      modelNode.position.y = rockSurfaceY - (rawBox.min.y * scale);
 
       modelNode.userData.baseScale = scale;
       modelNode.userData.baseY = modelNode.position.y;
@@ -1839,12 +1905,37 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         }
       });
 
-      sculptureGroup.add(modelNode);
-      sculptureGroup.updateMatrixWorld(true);
-
-      state.modelBoundingBox.setFromObject(sculptureGroup);
-      state.modelSize = state.modelBoundingBox.getSize(new THREE.Vector3());
+      sculptureHolderGroup.add(modelNode);
+      midCorridorAltarGroup.updateMatrixWorld(true);
       applyPortalStencilState(state.portalStencilActive);
+    }
+
+    function createSculptedRockFallback() {
+      const rockGroup = new THREE.Group();
+      const rockGeo = new THREE.IcosahedronGeometry(0.65, 3);
+      const pos = rockGeo.attributes.position;
+      const vertex = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        vertex.fromBufferAttribute(pos, i);
+        vertex.y *= 0.58;
+        if (vertex.y > 0.16) vertex.y = 0.16 + (vertex.y - 0.16) * 0.22;
+        const noise = Math.sin(vertex.x * 5.2 + vertex.z * 4.7) * 0.06;
+        vertex.x *= 1.12 + noise;
+        vertex.z *= 1.08 + noise;
+        pos.setXYZ(i, vertex.x, vertex.y, vertex.z);
+      }
+      rockGeo.computeVertexNormals();
+      const rockMat = new THREE.MeshStandardMaterial({
+        map: createStoneProceduralTexture(),
+        color: 0x3b5e4c,
+        roughness: 0.88,
+        metalness: 0.08
+      });
+      const boulder = new THREE.Mesh(rockGeo, rockMat);
+      boulder.castShadow = true;
+      boulder.receiveShadow = true;
+      rockGroup.add(boulder);
+      return rockGroup;
     }
 
     function restoreSculptureOriginalMaterials() {
@@ -1875,13 +1966,12 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
     }
 
     /* =========================================================================
-       6. EXACTAMENTE 4 CAPAS DE VEGETACIÓN INTERACTIVAS (25% POR CAPA = 100%)
+       6. EXACTAMENTE 4 CAPAS DE VEGETACIÓN (25% POR CAPA = 100%) ANTES DE MEDIO PASILLO
        ========================================================================= */
     function buildLayeredJungle(baseTextures) {
       if (foliageRootGroup) portalInteriorGroup.remove(foliageRootGroup);
       foliageRootGroup = new THREE.Group();
       foliageRootGroup.name = 'FourCorridorFoliageLayers';
-      // Todas las capas están dentro del pasillo para verse a través del portal y al caminar dentro
       portalInteriorGroup.add(foliageRootGroup);
 
       state.foliagePlanes = [];
@@ -1889,62 +1979,63 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       state.clearedLayersCount = 0;
       state.discoveryCompleted = false;
 
-      // Exactamente 4 capas interactivas escalonadas a lo largo del pasillo (entre el portal z=1.45 y la escultura z=-2.25)
+      // 4 cortinas botánicas situadas entre la entrada del portal (z = 1.20) y la roca + escultura a medio pasillo (z = -2.80)
+      // Usan EXCLUSIVAMENTE `arbustotropical.png` y `plantas.png`
       const layerBlueprints = [
         {
           layerIndex: 1,
-          label: 'Capa 1 (Umbral Frontal · +25%)',
-          zDepth: 0.65,
-          windAmp: 0.048,
+          label: 'Capa 1 · Umbral del Portal (+25%)',
+          zDepth: 0.25,
+          windAmp: 0.046,
           interactive: true,
           colorTint: '#6ee7b7',
           emissiveTint: '#062016',
           slots: [
-            { key: 'arbusto', x: -0.58, y: -0.26, scale: 1.28, rotZ:  0.08, flipX: false },
-            { key: 'arbusto', x:  0.58, y: -0.26, scale: 1.28, rotZ: -0.08, flipX: true  },
-            { key: 'plantas', x:  0.00, y:  0.34, scale: 1.26, rotZ:  0.03, flipX: false }
+            { key: 'arbusto', x: -0.56, y: -0.26, scale: 1.26, rotZ:  0.08, flipX: false },
+            { key: 'arbusto', x:  0.56, y: -0.26, scale: 1.26, rotZ: -0.08, flipX: true  },
+            { key: 'plantas', x:  0.00, y:  0.32, scale: 1.25, rotZ:  0.03, flipX: false }
           ]
         },
         {
           layerIndex: 2,
-          label: 'Capa 2 (Arco Medio · +25%)',
-          zDepth: -0.05,
-          windAmp: 0.042,
+          label: 'Capa 2 · Bóveda de Helechos (+50%)',
+          zDepth: -0.55,
+          windAmp: 0.040,
           interactive: true,
           colorTint: '#52b788',
           emissiveTint: '#072419',
           slots: [
-            { key: 'plantas',     x: -0.62, y:  0.12, scale: 1.28, rotZ: -0.12, flipX: true  },
-            { key: 'plantas',     x:  0.62, y:  0.12, scale: 1.28, rotZ:  0.12, flipX: false },
-            { key: 'dosel_selva', x:  0.00, y: -0.34, scale: 1.22, rotZ:  0.00, flipX: false }
+            { key: 'plantas', x: -0.60, y:  0.10, scale: 1.28, rotZ: -0.12, flipX: true  },
+            { key: 'plantas', x:  0.60, y:  0.10, scale: 1.28, rotZ:  0.12, flipX: false },
+            { key: 'arbusto', x:  0.00, y: -0.32, scale: 1.30, rotZ:  0.00, flipX: false }
           ]
         },
         {
           layerIndex: 3,
-          label: 'Capa 3 (Bóveda Profunda · +25%)',
-          zDepth: -0.75,
-          windAmp: 0.036,
+          label: 'Capa 3 · Sotobosque de Xilitla (+75%)',
+          zDepth: -1.35,
+          windAmp: 0.035,
           interactive: true,
           colorTint: '#34d399',
           emissiveTint: '#0a2e20',
           slots: [
-            { key: 'arbusto', x: -0.54, y: -0.18, scale: 1.26, rotZ:  0.10, flipX: false },
-            { key: 'arbusto', x:  0.54, y: -0.18, scale: 1.26, rotZ: -0.10, flipX: true  },
-            { key: 'plantas', x:  0.00, y:  0.28, scale: 1.24, rotZ: -0.06, flipX: true  }
+            { key: 'arbusto', x: -0.52, y: -0.18, scale: 1.26, rotZ:  0.10, flipX: false },
+            { key: 'arbusto', x:  0.52, y: -0.18, scale: 1.26, rotZ: -0.10, flipX: true  },
+            { key: 'plantas', x:  0.00, y:  0.26, scale: 1.26, rotZ: -0.06, flipX: true  }
           ]
         },
         {
           layerIndex: 4,
-          label: 'Capa 4 (Santuario de la Roca · +25%)',
-          zDepth: -1.45,
+          label: 'Capa 4 · Velo del Altar a Medio Pasillo (+100%)',
+          zDepth: -2.05,
           windAmp: 0.030,
           interactive: true,
           colorTint: '#a7f3d0',
           emissiveTint: '#0f3828',
           slots: [
-            { key: 'dosel_selva', x:  0.00, y: -0.22, scale: 1.24, rotZ: -0.04, flipX: true  },
-            { key: 'arbusto',     x: -0.56, y:  0.22, scale: 1.22, rotZ: -0.18, flipX: false },
-            { key: 'arbusto',     x:  0.56, y:  0.22, scale: 1.22, rotZ:  0.18, flipX: true  }
+            { key: 'plantas', x:  0.00, y: -0.18, scale: 1.32, rotZ: -0.04, flipX: true  },
+            { key: 'arbusto', x: -0.54, y:  0.18, scale: 1.24, rotZ: -0.16, flipX: false },
+            { key: 'arbusto', x:  0.54, y:  0.18, scale: 1.24, rotZ:  0.16, flipX: true  }
           ]
         }
       ];
@@ -2059,6 +2150,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       state.revealFlashActive = false;
       restoreSculptureOriginalMaterials();
       updateLayerBadgesUI();
+      if (curatorialCard) curatorialCard.classList.add('hidden');
 
       discoveryCount.textContent = '0%';
       discoveryBar.style.width = '0%';
@@ -2074,7 +2166,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       }
 
       if (state.anchorRingGroup) state.anchorRingGroup.scale.setScalar(0.001);
-      if (state.pedestalGroup) state.pedestalGroup.scale.setScalar(0.001);
+      if (rockHolderGroup) rockHolderGroup.scale.setScalar(0.001);
       if (state.sculptureNode) {
         state.sculptureNode.scale.setScalar(0.0001);
       }
@@ -2099,7 +2191,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       state.materializeStartTime = clock.getElapsedTime();
       state.lastMaterializeRustleStage = 0;
       playPortalOpeningSound();
-      showToast('Materializando Portal con partículas de brillo y Pasillo de Xilitla...');
+      showToast('Desplegando pasillo_optimizado.glb, roca y escultura dentro del portal...');
     }
 
     function updateMaterialization(elapsedTime) {
@@ -2119,22 +2211,21 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         state.portalVortexUniforms.uOpenProgress.value = THREE.MathUtils.clamp((t - 0.30) / 1.35, 0, 1);
       }
       if (portalSparkles) {
-        // Durante la apertura, las partículas de brillo resplandecen con mayor intensidad
         portalSparkles.material.uniforms.uSparkleBoost.value = 2.4 - THREE.MathUtils.clamp(t / 2.2, 0, 1) * 1.15;
       }
 
-      // Etapa 2: Roca ceremonial y Escultura emergen al fondo del pasillo
-      const pedP = THREE.MathUtils.clamp((t - 0.35) / 0.55, 0, 1);
-      const pedEase = easeOutBack(pedP);
-      if (state.anchorRingGroup) state.anchorRingGroup.scale.setScalar(Math.max(0.001, pedEase));
-      if (state.pedestalGroup) state.pedestalGroup.scale.setScalar(Math.max(0.001, pedEase));
+      // Etapa 2: `rock.glb` emerge a medio pasillo y `3DModel.glb` se posa sobre su cumbre
+      const rockP = THREE.MathUtils.clamp((t - 0.35) / 0.55, 0, 1);
+      const rockEase = easeOutBack(rockP);
+      if (state.anchorRingGroup) state.anchorRingGroup.scale.setScalar(Math.max(0.001, rockEase));
+      if (rockHolderGroup) rockHolderGroup.scale.setScalar(Math.max(0.001, rockEase));
 
       if (state.sculptureNode) {
         const sculpP = THREE.MathUtils.clamp((t - 0.65) / 0.68, 0, 1);
         const sculpEase = easeOutBack(sculpP);
         const targetS = state.sculptureNode.userData.baseScale * Math.max(0.0001, sculpEase);
         state.sculptureNode.scale.setScalar(targetS);
-        state.sculptureNode.position.y = state.sculptureNode.userData.baseY - (1 - sculpP) * 0.35;
+        state.sculptureNode.position.y = state.sculptureNode.userData.baseY - (1 - sculpP) * 0.32;
       }
 
       // Etapa 3: Las 4 capas de vegetación brotan dentro del pasillo
@@ -2163,10 +2254,10 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         if (portalGroup) portalGroup.scale.set(1, 1, 1);
         if (portalSparkles) portalSparkles.material.uniforms.uSparkleBoost.value = 1.25;
         if (bioParticles) bioParticles.visible = true;
-        discoveryLabel.textContent = 'Remueve 4 capas (25% c/u)';
+        discoveryLabel.textContent = 'Despeja 4 capas (25% c/u)';
         statusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-300 animate-ping shrink-0';
         onboardingHint.classList.remove('opacity-0');
-        showToast('¡Portal abierto! Remueve las 4 capas de vegetación (25% c/u) y camina por el pasillo');
+        showToast('¡Pasillo desplegado! Remueve las 4 capas de vegetación hacia el altar a medio pasillo');
 
         setTimeout(() => {
           if (!state.hasInteracted) onboardingHint.classList.add('opacity-0');
@@ -2440,7 +2531,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
 
       const posAttr = burstParticles.geometry.attributes.position;
       for (let i = 0; i < CONFIG.burstParticleCount; i++) {
-        posAttr.setXYZ(i, 0, 0.15, CONFIG.sculptureZ);
+        posAttr.setXYZ(i, 0, 0.15, CONFIG.midCorridorAltarZ);
       }
       posAttr.needsUpdate = true;
     }
@@ -2452,13 +2543,13 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       state.targetWalkProgress = THREE.MathUtils.clamp(newProgress, 0, 1);
       const pct = Math.round(state.targetWalkProgress * 100);
       if (walkSlider) walkSlider.value = String(pct);
-      if (walkDepthLabel) walkDepthLabel.textContent = `Caminar al Pasillo (${pct}%)`;
+      if (walkDepthLabel) walkDepthLabel.textContent = `Recorrido Pasillo (${pct}%)`;
 
       let zoneDesc = 'Posición: Exterior del Portal';
-      if (pct >= 80) {
-        zoneDesc = 'Posición: Santuario de la Roca y Escultura';
-      } else if (pct >= 32) {
-        zoneDesc = 'Posición: Caminando Dentro del Pasillo';
+      if (pct >= 75) {
+        zoneDesc = 'Posición: Medio Pasillo (Frente a Roca y Escultura)';
+      } else if (pct >= 35) {
+        zoneDesc = 'Posición: Caminando Dentro de pasillo_optimizado.glb';
       } else if (pct >= 18) {
         zoneDesc = 'Posición: Cruzando el Umbral del Portal';
       }
@@ -2466,7 +2557,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
 
       const stepBtnText = document.getElementById('step-inside-text');
       if (stepBtnText) {
-        stepBtnText.textContent = pct >= 45 ? 'Salir al Exterior' : 'Entrar al Pasillo';
+        stepBtnText.textContent = pct >= 55 ? 'Volver al Exterior' : 'Ir a Medio Pasillo';
       }
 
       if (announce) {
@@ -2597,6 +2688,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       document.getElementById('btn-launch-virtual').addEventListener('click', () => launchExperience(false));
       document.getElementById('btn-reanchor').addEventListener('click', recenterSpatialAnchor);
       document.getElementById('btn-toggle-camera').addEventListener('click', toggleARCamera);
+      document.getElementById('btn-lighting-mode').addEventListener('click', cycleLightingPreset);
 
       // Alternar modo de Stencil del Portal
       document.getElementById('btn-portal-mask').addEventListener('click', () => {
@@ -2608,11 +2700,11 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         } else {
           state.portalStencilMode = 'auto';
           document.getElementById('portal-mask-text').textContent = 'Portal: Auto';
-          showToast('Modo Portal Automático (Stencil fuera / Inmersivo al entrar)');
+          showToast('Modo Portal Automático (Ventana fuera / 360° al entrar)');
         }
       });
 
-      // Controles de caminata hacia dentro del pasillo (Slider, botones +/- y botón Entrar)
+      // Controles de caminata hacia medio pasillo (Slider, botones +/- y botón Ir a Medio Pasillo)
       if (walkSlider) {
         walkSlider.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value) / 100;
@@ -2621,16 +2713,16 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       }
 
       document.getElementById('btn-walk-forward').addEventListener('click', () => {
-        setWalkProgressTarget(state.targetWalkProgress + 0.20, true);
+        setWalkProgressTarget(state.targetWalkProgress + 0.22, true);
       });
 
       document.getElementById('btn-walk-back').addEventListener('click', () => {
-        setWalkProgressTarget(state.targetWalkProgress - 0.20, true);
+        setWalkProgressTarget(state.targetWalkProgress - 0.22, true);
       });
 
       document.getElementById('btn-step-inside').addEventListener('click', () => {
-        if (state.targetWalkProgress < 0.55) {
-          setWalkProgressTarget(0.75, true);
+        if (state.targetWalkProgress < 0.60) {
+          setWalkProgressTarget(0.85, true);
         } else {
           setWalkProgressTarget(0.0, true);
         }
@@ -2643,7 +2735,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         setWalkProgressTarget(state.targetWalkProgress + delta, false);
       }, { passive: true });
 
-      // Gesto de pellizco con 2 dedos en pantallas táctiles para caminar hacia dentro del pasillo
+      // Gesto de pellizco con 2 dedos en pantallas táctiles para caminar hacia medio pasillo
       dom.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
           const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -2666,20 +2758,6 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       dom.addEventListener('touchend', () => {
         state.pinchStartDist = null;
       }, { passive: true });
-
-      // Subir un archivo .glb local desde el dispositivo
-      const triggerFileSelect = () => glbFileInput.click();
-      document.getElementById('btn-upload-corridor').addEventListener('click', triggerFileSelect);
-      document.getElementById('btn-upload-corridor-start').addEventListener('click', triggerFileSelect);
-
-      glbFileInput.addEventListener('change', async (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
-        const blobUrl = URL.createObjectURL(file);
-        showToast(`Cargando modelo GLB: ${file.name}...`);
-        await loadAndFrameCorridorModel(blobUrl, file.name);
-        showToast(`¡Modelo ${file.name} integrado dentro del portal!`);
-      });
 
       document.getElementById('btn-reset').addEventListener('click', () => {
         state.modelTargetRotX = 0;
@@ -2863,7 +2941,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       state.discoveryCompleted = true;
       discoveryCount.textContent = '100%';
       discoveryBar.style.width = '100%';
-      discoveryLabel.textContent = '¡Escultura en Roca Revelada!';
+      discoveryLabel.textContent = '¡Altar a Medio Pasillo Revelado!';
       statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
 
       state.foliagePlanes.forEach((leaf) => {
@@ -2877,11 +2955,14 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
       state.revealFlashStartTime = clock.getElapsedTime();
       triggerBurstWave();
 
-      // Acercar suavemente al usuario hacia la escultura sobre la roca dentro del pasillo
-      setWalkProgressTarget(0.82, false);
+      // Acercar suavemente al visitante hacia medio pasillo frente a rock.glb y 3DModel.glb
+      setWalkProgressTarget(0.86, false);
+
+      // Mostrar la Cédula Museográfica automáticamente
+      if (curatorialCard) curatorialCard.classList.remove('hidden');
 
       playRevealChime();
-      showToast('¡100% Descubierto! Camina por el pasillo o gira la escultura sobre la roca 360°');
+      showToast('¡Obra descubierta a medio pasillo! Arrastra para girar la escultura y la roca 360°');
     }
 
     /* =========================================================================
@@ -2890,7 +2971,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
     function animate() {
       const elapsedTime = clock.getElapsedTime();
 
-      // Actualizar shaders del portal y sus 320 partículas de brillo
+      // Actualizar shaders del portal y sus 350 partículas de brillo
       if (state.portalRimShaderUniforms) {
         state.portalRimShaderUniforms.uTime.value = elapsedTime;
       }
@@ -2911,33 +2992,32 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         spAttr.needsUpdate = true;
       }
 
-      // Interpolación suave de la caminata WebAR hacia dentro del pasillo
+      // Interpolación suave de la caminata WebAR hacia medio pasillo
       state.walkProgress = THREE.MathUtils.lerp(state.walkProgress, state.targetWalkProgress, 0.065);
 
       // Seguimiento espacial: giroscopio 3DoF + paralaje + posición Z de caminata
       state.smoothedGyro.x = THREE.MathUtils.lerp(state.smoothedGyro.x, state.gyroOffset.x, 0.07);
       state.smoothedGyro.y = THREE.MathUtils.lerp(state.smoothedGyro.y, state.gyroOffset.y, 0.07);
-      state.smoothedParallax.x = THREE.MathUtils.lerp(state.smoothedParallax.x, state.pointerNDC.x * 0.24, 0.05);
+      state.smoothedParallax.x = THREE.MathUtils.lerp(state.smoothedParallax.x, state.pointerNDC.x * 0.22, 0.05);
       state.smoothedParallax.y = THREE.MathUtils.lerp(state.smoothedParallax.y, state.pointerNDC.y * 0.14, 0.05);
 
       const currentCamZ = getCameraBaseZ();
-      // Ligero balanceo orgánico al caminar
-      const walkBobY = Math.sin(state.walkProgress * Math.PI * 10.0) * 0.025 * (Math.abs(state.targetWalkProgress - state.walkProgress) * 12.0);
+      const walkBobY = Math.sin(state.walkProgress * Math.PI * 10.0) * 0.022 * (Math.abs(state.targetWalkProgress - state.walkProgress) * 12.0);
 
-      camera.position.x = state.smoothedParallax.x + state.smoothedGyro.x * 0.65;
-      camera.position.y = 0.16 + state.smoothedParallax.y + state.smoothedGyro.y * 0.55 + walkBobY;
+      camera.position.x = state.smoothedParallax.x + state.smoothedGyro.x * 0.60;
+      camera.position.y = 0.18 + state.smoothedParallax.y + state.smoothedGyro.y * 0.50 + walkBobY;
       camera.position.z = currentCamZ;
       camera.lookAt(
-        state.smoothedGyro.x * 0.35,
-        0.02 + state.smoothedGyro.y * 0.35,
-        CONFIG.sculptureZ
+        state.smoothedGyro.x * 0.32,
+        0.04 + state.smoothedGyro.y * 0.30,
+        CONFIG.midCorridorAltarZ
       );
 
       // Gestión automática del Stencil del Portal:
-      // Si la cámara está fuera del umbral (currentCamZ > CONFIG.portalZ + 0.18), recorta por Stencil.
-      // Si el usuario ya caminó y cruzó el umbral del portal hacia dentro del pasillo, desactiva Stencil para inmersión 360°.
+      // Fuera del portal (currentCamZ > CONFIG.portalZ + 0.15) recorta el pasillo dentro de la ventana del portal.
+      // Al cruzar el umbral hacia medio pasillo, libera el Stencil para inmersión 360° dentro de pasillo_optimizado.glb.
       if (state.portalStencilMode === 'auto') {
-        const shouldClipByPortal = currentCamZ > CONFIG.portalZ + 0.18;
+        const shouldClipByPortal = currentCamZ > CONFIG.portalZ + 0.15;
         if (shouldClipByPortal !== state.portalStencilActive) {
           applyPortalStencilState(shouldClipByPortal);
         }
@@ -2992,7 +3072,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         }
       }
 
-      // Onda expansiva de partículas alrededor de la roca y la escultura
+      // Onda expansiva de partículas alrededor del altar a medio pasillo
       if (state.burstActive && burstParticles) {
         const burstElapsed = elapsedTime - state.burstStartTime;
         const duration = 1.65;
@@ -3006,7 +3086,7 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
               i,
               bd.vx * easeOut * 1.4,
               0.15 + bd.vy * easeOut * 1.4,
-              CONFIG.sculptureZ + bd.vz * easeOut * 1.4
+              CONFIG.midCorridorAltarZ + bd.vz * easeOut * 1.4
             );
           }
           posAttr.needsUpdate = true;
@@ -3059,12 +3139,13 @@ FLUJO DE TRABAJO Y ARQUITECTURA TÉCNICA:
         });
       }
 
-      if (sculptureGroup && state.interactionEnabled) {
+      // Rotación curatorial 360° del conjunto de Roca (rock.glb) + Escultura (3DModel.glb) a medio pasillo
+      if (midCorridorAltarGroup && state.interactionEnabled) {
         if (!state.rotatingModel) {
-          state.modelTargetRotY += 0.004;
+          state.modelTargetRotY += 0.0038;
         }
-        sculptureGroup.rotation.y = THREE.MathUtils.lerp(sculptureGroup.rotation.y, state.modelTargetRotY, 0.08);
-        sculptureGroup.rotation.x = THREE.MathUtils.lerp(sculptureGroup.rotation.x, state.modelTargetRotX, 0.08);
+        midCorridorAltarGroup.rotation.y = THREE.MathUtils.lerp(midCorridorAltarGroup.rotation.y, state.modelTargetRotY, 0.08);
+        midCorridorAltarGroup.rotation.x = THREE.MathUtils.lerp(midCorridorAltarGroup.rotation.x, state.modelTargetRotX, 0.08);
       }
 
       if (bioParticles && bioParticles.visible && state.particleData.length > 0) {
