@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>WebAR Selva Tropical · Descubrimiento de Escultura</title>
+  <title>WebAR Portal Dimensional · Pasillo Xilitla y Escultura</title>
   
   <!-- Tailwind CSS para la interfaz de usuario (UI/UX) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Importmap para Three.js r160 y GLTFLoader -->
+  <!-- Importmap para Three.js r160, GLTFLoader y DRACOLoader -->
   <script type="importmap">
     {
       "imports": {
@@ -37,7 +37,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #04120c;
+      background-color: #030f0a;
       font-family: 'Inter', sans-serif;
       touch-action: none;
     }
@@ -52,8 +52,8 @@
       inset: 0;
       z-index: 0;
       background:
-        radial-gradient(circle at 50% 34%, rgba(167, 243, 208, 0.25) 0%, rgba(20, 184, 166, 0.15) 30%, rgba(6, 46, 34, 0.95) 68%, #020c08 100%),
-        linear-gradient(180deg, #0d362b 0%, #07221a 52%, #030d09 100%);
+        radial-gradient(circle at 50% 36%, rgba(167, 243, 208, 0.22) 0%, rgba(20, 184, 166, 0.14) 32%, rgba(5, 38, 28, 0.96) 68%, #020a07 100%),
+        linear-gradient(180deg, #0b2e24 0%, #061c15 54%, #020906 100%);
       pointer-events: none;
       transition: opacity 0.6s ease;
     }
@@ -67,7 +67,7 @@
       background: conic-gradient(
         from 160deg at 50% -15%,
         transparent 0deg,
-        rgba(167, 243, 208, 0.10) 14deg,
+        rgba(167, 243, 208, 0.09) 14deg,
         transparent 28deg,
         rgba(253, 230, 138, 0.12) 40deg,
         transparent 56deg
@@ -116,7 +116,7 @@
       inset: 0;
       z-index: 3;
       pointer-events: none;
-      background: radial-gradient(circle at 50% 50%, transparent 58%, rgba(1, 10, 6, 0.55) 100%);
+      background: radial-gradient(circle at 50% 50%, transparent 56%, rgba(1, 10, 6, 0.62) 100%);
     }
 
     /* Capa HUD minimalista */
@@ -157,7 +157,7 @@
       border-radius: 9999px;
       pointer-events: none;
       z-index: 9;
-      background: radial-gradient(circle, rgba(253, 224, 71, 0.45) 0%, rgba(52, 211, 153, 0.2) 55%, transparent 75%);
+      background: radial-gradient(circle, rgba(253, 224, 71, 0.48) 0%, rgba(52, 211, 153, 0.22) 55%, transparent 75%);
       box-shadow: 0 0 20px rgba(110, 231, 183, 0.55);
       transform: translate(-50%, -50%) scale(0.4);
       opacity: 0;
@@ -167,6 +167,18 @@
     #touch-ripple.active {
       opacity: 1;
       transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* Scrollbar estilizada para el modal de Prompt */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(12, 25, 20, 0.6);
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(52, 211, 153, 0.4);
+      border-radius: 9999px;
     }
   </style>
 </head>
@@ -179,25 +191,29 @@
   <!-- 2. VIDEO DE CÁMARA TRASERA PARA WEBAR ESPACIAL -->
   <video id="ar-video" autoplay playsinline muted></video>
 
-  <!-- 3. CONTENEDOR WEBGL (THREE.JS) -->
+  <!-- 3. CONTENEDOR WEBGL (THREE.JS CON STENCIL BUFFER) -->
   <div id="webgl-container"></div>
 
   <!-- 4. VIÑETA Y FEEDBACK TÁCTIL -->
   <div class="jungle-vignette"></div>
   <div id="touch-ripple"></div>
 
+  <!-- INPUT OCULTO PARA CARGAR .GLB PERSONALIZADO (PASILLO O ESCULTURA) -->
+  <input id="glb-file-input" type="file" accept=".glb,.gltf" class="hidden" />
+
   <!-- 5. PANTALLA DE PRECARGA Y PORTAL DE INICIO AR -->
   <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950/95 backdrop-blur-xl transition-opacity duration-700 px-6 text-center">
-    <div class="w-16 h-16 mb-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center shadow-lg shadow-emerald-950/70">
+    <div class="w-16 h-16 mb-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-center shadow-lg shadow-emerald-950/70 relative">
+      <div class="absolute inset-1 rounded-xl border border-amber-300/30 animate-ping opacity-30"></div>
       <svg class="w-9 h-9 text-emerald-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3m8-18h3a2 2 0 012 2v14a2 2 0 01-2 2h-3M12 3v18m0-18l-3 3m3-3l3 3" />
       </svg>
     </div>
 
-    <span class="text-[10px] uppercase tracking-[0.25em] text-emerald-400/90 font-semibold mb-1">Instalación Espacial WebAR</span>
-    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-2">SELVA TROPICAL · DESCUBRIMIENTO</h1>
+    <span class="text-[10px] uppercase tracking-[0.25em] text-amber-300/90 font-semibold mb-1">Portal Dimensional WebAR · Stencil Buffer</span>
+    <h1 class="font-serif-art text-xl sm:text-2xl text-emerald-50 tracking-widest mb-2">UMBRAL DE XILITLA · PASILLO Y ESCULTURA</h1>
     <p id="loading-status" class="text-xs sm:text-sm text-emerald-200/75 mb-5 max-w-xs leading-relaxed">
-      Preparando modelo 3D y capas botánicas...
+      Preparando portal dimensional, pasillo optimizado GLB y capas botánicas...
     </p>
 
     <!-- Barra de progreso de carga -->
@@ -209,34 +225,49 @@
     </div>
 
     <!-- Portal de Despliegue AR (Aparece al llegar al 100% de carga) -->
-    <div id="ar-start-portal" class="hidden flex-col items-center gap-3 mt-2 max-w-xs w-full animate-fade-in">
-      <button id="btn-launch-ar" class="w-full py-3 px-6 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 text-stone-950 font-bold text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-950/80 border border-emerald-200/50 flex items-center justify-center gap-2 transition-all">
+    <div id="ar-start-portal" class="hidden flex-col items-center gap-2.5 mt-2 max-w-xs w-full animate-fade-in">
+      <button id="btn-launch-ar" class="w-full py-3 px-6 rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-300 hover:from-emerald-400 hover:to-amber-200 active:scale-95 text-stone-950 font-bold text-xs sm:text-sm tracking-wide shadow-xl shadow-emerald-950/80 border border-emerald-100/60 flex items-center justify-center gap-2 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        <span>Iniciar Experiencia AR</span>
+        <span>Abrir Portal en Cámara AR</span>
       </button>
 
-      <button id="btn-launch-virtual" class="w-full py-2 px-4 rounded-full bg-stone-900/80 hover:bg-stone-800 active:scale-95 text-emerald-200/90 font-medium text-xs border border-white/10 transition-all">
-        Explorar en Entorno Virtual 3D
+      <button id="btn-launch-virtual" class="w-full py-2.5 px-4 rounded-full bg-stone-900/85 hover:bg-stone-800 active:scale-95 text-emerald-200/95 font-medium text-xs border border-emerald-400/25 transition-all">
+        Abrir Portal en Entorno Virtual 3D
       </button>
 
-      <p class="text-[11px] text-stone-400 mt-1 leading-snug">
-        Apunta hacia el espacio frente a ti para desplegar y materializar la vegetación y la escultura en tu entorno.
+      <div class="flex items-center justify-center gap-2 w-full mt-1">
+        <button id="btn-open-prompt-start" class="flex-1 py-1.5 px-3 rounded-full bg-stone-900/70 hover:bg-stone-800 text-amber-200/90 text-[11px] border border-amber-400/25 transition-all flex items-center justify-center gap-1">
+          <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Ver Prompt Profesional</span>
+        </button>
+        <button id="btn-upload-corridor-start" class="flex-1 py-1.5 px-3 rounded-full bg-stone-900/70 hover:bg-stone-800 text-teal-200/90 text-[11px] border border-teal-400/25 transition-all flex items-center justify-center gap-1">
+          <svg class="w-3.5 h-3.5 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span>Cargar Pasillo .GLB</span>
+        </button>
+      </div>
+
+      <p id="corridor-source-badge" class="text-[10px] text-emerald-300/70 font-mono mt-1">
+        Estado: Listo para abrir umbral dimensional
       </p>
     </div>
   </div>
 
   <!-- 6. INTERFAZ HUD DURANTE LA EXPERIENCIA -->
   <div id="ui-layer" class="p-3 sm:p-4">
-    <header class="w-full flex items-center justify-between gap-2">
-      <!-- Píldora de Progreso de Descubrimiento -->
-      <div id="discovery-pill" class="flex items-center gap-3 bg-stone-950/65 backdrop-blur-md border border-emerald-400/25 rounded-full pl-3.5 pr-4 py-1.5 shadow-xl transition-all duration-500">
+    <header class="w-full flex flex-wrap items-center justify-between gap-2">
+      <!-- Píldora de Progreso de Descubrimiento dentro del Portal -->
+      <div id="discovery-pill" class="flex items-center gap-3 bg-stone-950/70 backdrop-blur-md border border-emerald-400/30 rounded-full pl-3.5 pr-4 py-1.5 shadow-xl transition-all duration-500">
         <span id="status-dot" class="w-2 h-2 rounded-full bg-amber-300 animate-ping shrink-0"></span>
         <div class="flex flex-col">
           <div class="flex items-center gap-2">
-            <span id="discovery-label" class="text-[11px] sm:text-xs font-medium text-emerald-50 tracking-wide">Materializando...</span>
+            <span id="discovery-label" class="text-[11px] sm:text-xs font-medium text-emerald-50 tracking-wide">Abriendo portal...</span>
             <span id="discovery-count" class="text-[11px] font-mono font-semibold text-amber-300">0%</span>
           </div>
           <div class="w-28 sm:w-36 h-1 bg-stone-800/90 rounded-full overflow-hidden mt-0.5">
@@ -245,26 +276,49 @@
         </div>
       </div>
 
-      <!-- Controles Flotantes -->
-      <div class="flex items-center gap-1.5 interactive-ui">
+      <!-- Controles Flotantes Superiores -->
+      <div class="flex items-center gap-1.5 interactive-ui flex-wrap">
+        <!-- Alternar Recorte de Portal (Stencil) vs Inmersión Completa -->
+        <button id="btn-portal-mask" title="Alternar ventana de Portal o Pasillo Completo" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/70 hover:bg-stone-900/90 active:scale-95 text-teal-200 border border-teal-400/30 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3m8-18h3a2 2 0 012 2v14a2 2 0 01-2 2h-3" />
+          </svg>
+          <span id="portal-mask-text" class="hidden sm:inline">Portal: Activo</span>
+        </button>
+
+        <!-- Cargar GLB de pasillo local en tiempo real -->
+        <button id="btn-upload-corridor" title="Cargar archivo pasillo_optimizado.glb local" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/70 hover:bg-stone-900/90 active:scale-95 text-emerald-200 border border-emerald-400/25 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span class="hidden md:inline">Pasillo .GLB</span>
+        </button>
+
         <!-- Re-anclar en el espacio frente al usuario -->
-        <button id="btn-reanchor" title="Anclar escena frente a mí" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-amber-200 border border-amber-300/25 backdrop-blur-md shadow-lg transition-all">
+        <button id="btn-reanchor" title="Anclar portal frente a mí" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/70 hover:bg-stone-900/90 active:scale-95 text-amber-200 border border-amber-300/25 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v4m0 12v4M2 12h4m12 0h4m-5.657-5.657l-2.828 2.828m-5.03 5.03l-2.828 2.828m0-10.686l2.828 2.828m5.03 5.03l2.828 2.828" />
           </svg>
           <span class="hidden sm:inline">Re-anclar</span>
         </button>
 
-        <!-- Reiniciar y Re-materializar -->
-        <button id="btn-reset" title="Re-desplegar experiencia" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+        <!-- Reiniciar y Re-abrir Portal -->
+        <button id="btn-reset" title="Re-abrir portal dimensional" class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-stone-950/70 hover:bg-stone-900/90 active:scale-95 text-emerald-200 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span class="hidden md:inline">Reiniciar</span>
+          <span class="hidden lg:inline">Reiniciar</span>
+        </button>
+
+        <!-- Botón Ver Prompt Profesional -->
+        <button id="btn-open-prompt" title="Ver Prompt Técnico Profesional" class="p-2 rounded-full bg-stone-950/70 hover:bg-stone-900/90 active:scale-95 text-amber-300 border border-amber-400/25 backdrop-blur-md shadow-lg transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
         </button>
 
         <!-- Pantalla Completa -->
-        <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+        <button id="btn-fullscreen" title="Alternar Pantalla Completa" class="p-2 rounded-full bg-stone-950/70 hover:bg-stone-900/90 active:scale-95 text-emerald-100 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg id="icon-expand" class="w-4 h-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
           </svg>
@@ -274,7 +328,7 @@
         </button>
 
         <!-- Sonido -->
-        <button id="btn-sound" title="Sonido interactivo" class="p-2 rounded-full bg-stone-950/65 hover:bg-stone-900/85 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
+        <button id="btn-sound" title="Sonido interactivo" class="p-2 rounded-full bg-stone-950/70 hover:bg-stone-900/90 active:scale-95 text-emerald-300 border border-white/15 backdrop-blur-md shadow-lg transition-all">
           <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
@@ -284,42 +338,101 @@
 
     <!-- Guía Gestual Central -->
     <div id="onboarding-hint" class="self-center flex flex-col items-center text-center pointer-events-none opacity-0 transition-opacity duration-700">
-      <div class="w-11 h-11 rounded-full bg-stone-950/60 border border-amber-300/40 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
+      <div class="w-11 h-11 rounded-full bg-stone-950/65 border border-amber-300/45 backdrop-blur-md flex items-center justify-center mb-2 shadow-lg">
         <svg class="w-6 h-6 text-amber-300 animate-swipe-hand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
         </svg>
       </div>
-      <p id="hint-text" class="px-3.5 py-1 rounded-full bg-stone-950/70 backdrop-blur-md border border-white/10 text-emerald-50 text-xs font-medium shadow-xl">
-        Aparta las plantas una por una (20% por planta) para descubrir la escultura
+      <p id="hint-text" class="px-4 py-1.5 rounded-full bg-stone-950/75 backdrop-blur-md border border-emerald-400/25 text-emerald-50 text-xs font-medium shadow-xl max-w-xs sm:max-w-md">
+        Aparta las plantas del umbral (20% por planta) para adentrarte en el pasillo y revelar la escultura
       </p>
     </div>
 
     <!-- Pie de Página -->
     <footer class="w-full flex items-end justify-between gap-2">
-      <div id="toast-message" class="bg-stone-950/80 backdrop-blur-md border border-emerald-400/30 text-emerald-100 px-3.5 py-1.5 rounded-full text-xs shadow-xl transition-all duration-300 opacity-0 pointer-events-none transform translate-y-2">
-        Selva lista
+      <div id="toast-message" class="bg-stone-950/85 backdrop-blur-md border border-emerald-400/35 text-emerald-100 px-3.5 py-1.5 rounded-full text-xs shadow-xl transition-all duration-300 opacity-0 pointer-events-none transform translate-y-2">
+        Portal dimensional activo
       </div>
 
-      <button id="btn-toggle-camera" class="interactive-ui flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-emerald-600/80 hover:bg-emerald-500 active:scale-95 text-white border border-emerald-300/40 backdrop-blur-md shadow-xl transition-all">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        <span id="camera-btn-text">Cámara AR</span>
-      </button>
+      <div class="flex items-center gap-2 interactive-ui">
+        <!-- Control de cercanía/profundidad hacia dentro del portal -->
+        <button id="btn-step-inside" class="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold bg-stone-950/75 hover:bg-stone-900 active:scale-95 text-amber-200 border border-amber-300/35 backdrop-blur-md shadow-xl transition-all">
+          <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          <span id="step-inside-text">Entrar al Pasillo</span>
+        </button>
+
+        <button id="btn-toggle-camera" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-emerald-600/85 hover:bg-emerald-500 active:scale-95 text-white border border-emerald-300/40 backdrop-blur-md shadow-xl transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span id="camera-btn-text">Cámara AR</span>
+        </button>
+      </div>
     </footer>
+  </div>
+
+  <!-- 7. MODAL DEL PROMPT PROFESIONAL PARA EL USUARIO -->
+  <div id="prompt-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
+    <div class="bg-stone-950 border border-emerald-500/35 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-stone-800 bg-stone-900/60">
+        <div>
+          <span class="text-[10px] uppercase tracking-widest text-amber-300 font-semibold">Ingeniería WebAR · Three.js r160</span>
+          <h2 class="font-serif-art text-sm sm:text-base text-emerald-50">Prompt Profesional Generado y Ejecutado</h2>
+        </div>
+        <button id="btn-close-prompt" class="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto custom-scroll text-xs text-stone-200 space-y-3 leading-relaxed font-mono select-text" id="prompt-content-text">
+Actúa como un Ingeniero Senior de Gráficos 3D y Desarrollador Creative Technologist especialista en WebAR y Three.js (r160).
+
+OBJETIVO:
+Refactorizar y expandir la experiencia "WebAR Selva Tropical · Descubrimiento de Escultura" para incorporar un Portal Dimensional Arquitectónico (mediante WebGL Stencil Buffer) que se abre en el entorno físico del usuario, conteniendo en su interior el modelo 3D del pasillo optimizado (`pasillo_optimizado.glb`) alineado con la escultura central (`models/3DModel.glb`) y las capas de vegetación interactiva.
+
+ESPECIFICACIONES TÉCNICAS:
+1. Arquitectura de Portal con WebGL Stencil Buffer:
+   - Configurar `THREE.WebGLRenderer` con `stencil: true` y `alpha: true`.
+   - Construir un umbral arqueado surrealista (`portalFrameGroup`) inspirado en Las Pozas, Xilitla, con un shader GLSL bioluminiscente (esmeralda/dorado) en el borde y una máscara de recorte (`portalStencilMask`) con `stencilWrite: true`, `stencilRef: 1`, `stencilFunc: THREE.AlwaysStencilFunc` y `stencilZPass: THREE.ReplaceStencilOp`.
+   - Asignar a todos los materiales internos del portal (el modelo GLB del pasillo, el mural surrealista de fondo, el pedestal y la escultura) la condición `stencilFunc: THREE.EqualStencilFunc` (`stencilRef: 1`), logrando que el pasillo exista únicamente mirando a través del umbral abierto en el espacio real.
+
+2. Integración y Auto-Encuadre del Pasillo Optimizado (`pasillo_optimizado.glb`):
+   - Cargar asíncronamente con `GLTFLoader` y `DRACOLoader` desde las rutas del repositorio (`models/pasillo_optimizado.glb`, `models/pasillo.glb`, `models/pasillo_xilitla.glb`) con soporte para subir un `.glb` local en caliente desde el HUD.
+   - Calcular la caja delimitadora (`THREE.Box3`) del pasillo para auto-escalarlo y posicionarlo desde el plano del portal (`z = 0.45`) proyectándose en profundidad (`z = -6.2`), alojando en su bóveda central el pedestal y la escultura `3DModel.glb`.
+   - Incluir un generador procedural de respaldo con arcos surrealistas de Xilitla texturizados con `assets/pasillo_xilitla.jpg` y `assets/image_c64162.jpg`.
+
+3. Coreografía de Apertura y Descubrimiento Botánico:
+   - Ejecutar una secuencia de 2.4s donde el portal se rasga verticalmente como una grieta lumínica, se expande formando el arco arquitectónico, despliega el pasillo en profundidad y hace brotar las capas botánicas interactivas.
+   - Mantener la física táctil de despeje de hojas (20% por planta, 5 plantas = 100%), audio granular Web Audio API, giroscopio 3DoF, botón para adentrarse en el pasillo ("Entrar al Pasillo") y rotación 360° de la escultura al revelarla.</div>
+
+      <div class="px-5 py-3 border-t border-stone-800 bg-stone-900/60 flex items-center justify-between">
+        <span id="copy-feedback" class="text-[11px] text-emerald-400 opacity-0 transition-opacity">¡Prompt copiado al portapapeles!</span>
+        <button id="btn-copy-prompt" class="px-4 py-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs transition-all">
+          Copiar Prompt Profesional
+        </button>
+      </div>
+    </div>
   </div>
 
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
     const REPO_RAW_BASE = 'https://raw.githubusercontent.com/blenderingforconservation-maker/recorridovirtual_Leonora/main/';
 
     const CONFIG = {
-      cameraDistance: 5.2,
+      cameraDistance: 5.35,
+      portalZ: 0.42,
+      portalWidth: 2.65,
+      portalHeight: 3.35,
       modelRotation: { x: 0, y: 0, z: 0 },
-      // Rutas con '3DModel.glb' exacto como está en la carpeta models/ de GitHub
+      // Rutas para la escultura central (3DModel.glb)
       modelPaths: [
         'models/3DModel.glb',
         `${REPO_RAW_BASE}models/3DModel.glb`,
@@ -328,6 +441,32 @@
         '3DModel.glb',
         `${REPO_RAW_BASE}3DModel.glb`
       ],
+      // Rutas para el modelo GLB de pasillo optimizado
+      corridorModelPaths: [
+        'models/pasillo_optimizado.glb',
+        `${REPO_RAW_BASE}models/pasillo_optimizado.glb`,
+        'models/pasillo.glb',
+        `${REPO_RAW_BASE}models/pasillo.glb`,
+        'models/pasillo_xilitla.glb',
+        `${REPO_RAW_BASE}models/pasillo_xilitla.glb`,
+        'models/corredor.glb',
+        `${REPO_RAW_BASE}models/corredor.glb`,
+        'pasillo_optimizado.glb',
+        `${REPO_RAW_BASE}pasillo_optimizado.glb`,
+        'pasillo.glb',
+        `${REPO_RAW_BASE}pasillo.glb`
+      ],
+      // Texturas arquitectónicas del repositorio para el pasillo y mural interior
+      corridorTexturePaths: {
+        pasilloXilitla: [
+          'assets/pasillo_xilitla.jpg',
+          `${REPO_RAW_BASE}assets/pasillo_xilitla.jpg`
+        ],
+        stoneDetail: [
+          'assets/image_c64162.jpg',
+          `${REPO_RAW_BASE}assets/image_c64162.jpg`
+        ]
+      },
       vegetationAssets: [
         {
           key: 'plantas_rocas',
@@ -366,10 +505,18 @@
       clearedLeavesCount: 0,
       discoveryCompleted: false,
       interactionEnabled: false,
-      // Control de la coreografía de materialización (2.2s)
+      // Control del Portal Dimensional (Stencil y Profundidad)
+      portalStencilEnabled: true,
+      steppingInsidePortal: false,
+      cameraZoomOffsetZ: 0,
+      targetCameraZoomOffsetZ: 0,
+      portalRimShaderUniforms: null,
+      portalVortexUniforms: null,
+      portalVortexMesh: null,
+      // Coreografía de apertura del portal y materialización (2.4s)
       materializing: false,
       materializeStartTime: 0,
-      materializeDuration: 2.25,
+      materializeDuration: 2.45,
       lastMaterializeRustleStage: 0,
       // Modelo y física táctil
       modelBoundingBox: new THREE.Box3(),
@@ -384,7 +531,7 @@
       lastInspectClient: { x: 0, y: 0 },
       modelTargetRotY: 0,
       modelTargetRotX: 0,
-      // Sensores espaciales 3DoF (Giroscopio para evitar efecto filtro pegado)
+      // Sensores espaciales 3DoF
       cameraActive: false,
       gyroAvailable: false,
       gyroBaseline: { alpha: null, beta: null, gamma: null },
@@ -394,13 +541,14 @@
       soundEnabled: true,
       audioCtx: null,
       lastRustleTime: 0,
-      // Partículas y Destello
+      // Partículas y Nodos 3D
       particleData: [],
       burstData: [],
       burstActive: false,
       burstStartTime: 0,
       sculptureMeshes: [],
-       sculptureNode: null,
+      sculptureNode: null,
+      corridorNode: null,
       pedestalGroup: null,
       anchorRingGroup: null,
       arShadowFloor: null,
@@ -408,7 +556,7 @@
       revealFlashStartTime: 0,
       revealFlashDuration: 1.85,
       baseExposure: 1.25,
-      baseCenterSpotIntensity: 3.1
+      baseCenterSpotIntensity: 3.4
     };
 
     const FLASH_COLOR_TARGET = new THREE.Color(0xfffef5);
@@ -424,27 +572,29 @@
     const loadingBar = document.getElementById('loading-bar');
     const loadingPercent = document.getElementById('loading-percent');
     const loadingStatus = document.getElementById('loading-status');
+    const corridorSourceBadge = document.getElementById('corridor-source-badge');
     const uiLayer = document.getElementById('ui-layer');
     const discoveryLabel = document.getElementById('discovery-label');
     const discoveryCount = document.getElementById('discovery-count');
     const discoveryBar = document.getElementById('discovery-bar');
     const statusDot = document.getElementById('status-dot');
     const onboardingHint = document.getElementById('onboarding-hint');
-    const hintText = document.getElementById('hint-text');
     const toastMessage = document.getElementById('toast-message');
     const touchRipple = document.getElementById('touch-ripple');
     const btnFullscreen = document.getElementById('btn-fullscreen');
     const iconExpand = document.getElementById('icon-expand');
     const iconCompress = document.getElementById('icon-compress');
+    const glbFileInput = document.getElementById('glb-file-input');
 
-    let scene, camera, renderer, raycaster;
-    let worldAnchorGroup, jungleEnvironmentGroup, sculptureGroup, foliageRootGroup, bioParticles, burstParticles;
-    let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight;
+    let scene, camera, renderer, raycaster, gltfLoader;
+    let worldAnchorGroup, portalGroup, portalFrameGroup, portalStencilMask, portalInteriorGroup;
+    let corridorGroup, jungleEnvironmentGroup, sculptureGroup, foliageRootGroup, bioParticles, burstParticles;
+    let hemiLight, sunClearLight, rimTealLight, rimGoldLight, centerSpotLight, corridorTorchLight;
     let cachedTexturesByKey = null;
     const clock = new THREE.Clock();
 
     /* =========================================================================
-       PANTALLA COMPLETA
+       PANTALLA COMPLETA Y MODAL DE PROMPT PROFESIONAL
        ========================================================================= */
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
@@ -462,8 +612,36 @@
 
     btnFullscreen.addEventListener('click', toggleFullscreen);
 
+    const promptModal = document.getElementById('prompt-modal');
+    document.getElementById('btn-open-prompt').addEventListener('click', () => {
+      promptModal.classList.remove('hidden');
+      promptModal.classList.add('flex');
+    });
+    document.getElementById('btn-open-prompt-start').addEventListener('click', () => {
+      promptModal.classList.remove('hidden');
+      promptModal.classList.add('flex');
+    });
+    document.getElementById('btn-close-prompt').addEventListener('click', () => {
+      promptModal.classList.add('hidden');
+      promptModal.classList.remove('flex');
+    });
+    document.getElementById('btn-copy-prompt').addEventListener('click', () => {
+      const text = document.getElementById('prompt-content-text').innerText;
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        const feedback = document.getElementById('copy-feedback');
+        feedback.classList.remove('opacity-0');
+        setTimeout(() => feedback.classList.add('opacity-0'), 2500);
+      } catch (err) {}
+      document.body.removeChild(textarea);
+    });
+
     /* =========================================================================
-       1. AUDIO PROCEDURAL (ROCE GRANULAR DE HOJAS Y DESTELLO SUAVE)
+       1. AUDIO PROCEDURAL (APERTURA DE PORTAL, ROCE DE HOJAS Y REVELACIÓN)
        ========================================================================= */
     function initAudio() {
       if (!state.audioCtx && state.soundEnabled) {
@@ -473,6 +651,44 @@
       if (state.audioCtx && state.audioCtx.state === 'suspended') {
         state.audioCtx.resume();
       }
+    }
+
+    function playPortalOpeningSound() {
+      if (!state.soundEnabled || !state.audioCtx) return;
+      try {
+        const ctx = state.audioCtx;
+        const now = ctx.currentTime;
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+
+        osc1.type = 'sawtooth';
+        osc2.type = 'triangle';
+        osc1.frequency.setValueAtTime(98, now);
+        osc1.frequency.exponentialRampToValueAtTime(220, now + 1.6);
+        osc2.frequency.setValueAtTime(146.83, now);
+        osc2.frequency.exponentialRampToValueAtTime(329.63, now + 1.6);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(180, now);
+        filter.frequency.exponentialRampToValueAtTime(1400, now + 1.1);
+        filter.frequency.exponentialRampToValueAtTime(320, now + 2.1);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.055, now + 0.45);
+        gain.gain.exponentialRampToValueAtTime(0.0008, now + 2.1);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 2.15);
+        osc2.stop(now + 2.15);
+      } catch (e) {}
     }
 
     function playFoliageRustle(intensity = 0.55) {
@@ -563,24 +779,26 @@
       showToast.timer = setTimeout(() => {
         toastMessage.classList.remove('opacity-100', 'translate-y-0');
         toastMessage.classList.add('opacity-0', 'translate-y-2');
-      }, 3200);
+      }, 3400);
     }
 
     /* =========================================================================
-       2. INICIALIZACIÓN Y ANCLA ESPACIAL (WORLD ANCHOR)
+       2. INICIALIZACIÓN DE THREE.JS (CON STENCIL BUFFER HABILITADO)
        ========================================================================= */
     async function init() {
-      updateLoading(15, 'Inicializando motor espacial Three.js...');
+      updateLoading(10, 'Inicializando motor espacial Three.js con Stencil Buffer...');
 
       scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x062118, 0.062);
+      scene.fog = new THREE.FogExp2(0x051c14, 0.048);
 
-      camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 60);
+      camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 75);
       updateCameraFramingForAspect();
 
+      // CRÍTICO: stencil: true habilitado para el Portal Dimensional
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
+        stencil: true,
         powerPreference: 'high-performance'
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -593,33 +811,55 @@
 
       raycaster = new THREE.Raycaster();
 
+      // Configurar GLTFLoader con soporte DRACO por si el pasillo_optimizado.glb usa compresión Draco
+      gltfLoader = new GLTFLoader();
+      gltfLoader.setCrossOrigin('anonymous');
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+      gltfLoader.setDRACOLoader(dracoLoader);
+
       // Nodo raíz de anclaje espacial en el mundo real
       worldAnchorGroup = new THREE.Group();
       worldAnchorGroup.name = 'WorldSpatialAnchor';
       scene.add(worldAnchorGroup);
 
+      // Grupo maestro del Portal (contiene Marco + Máscara Stencil + Mundo Interior)
+      portalGroup = new THREE.Group();
+      portalGroup.name = 'DimensionalPortalRoot';
+      worldAnchorGroup.add(portalGroup);
+
+      // Grupo exclusivo del interior del portal (Pasillo GLB + Mural + Escultura)
+      portalInteriorGroup = new THREE.Group();
+      portalInteriorGroup.name = 'PortalInteriorWorld';
+      portalGroup.add(portalInteriorGroup);
+
       setupLighting();
-      createJungleSurrealBackground();
       createSpatialARFloorAndReticle();
 
-      updateLoading(45, 'Cargando escultura 3D (models/3DModel.glb)...');
+      updateLoading(28, 'Construyendo Umbral del Portal Dimensional...');
+      createPortalArchAndStencilMask();
+
+      updateLoading(45, 'Cargando Pasillo Optimizado GLB y arquitectura Xilitla...');
+      await createJungleSurrealBackground();
+      await loadAndFrameCorridorModel();
+
+      updateLoading(68, 'Cargando escultura central (models/3DModel.glb) dentro del pasillo...');
       await loadAndFrameCentralModel();
 
-      updateLoading(75, 'Preparando capas botánicas para materialización...');
+      updateLoading(84, 'Preparando capas botánicas en el umbral del portal...');
       cachedTexturesByKey = await loadBaseVegetationTextures();
       buildLayeredJungle(cachedTexturesByKey);
 
-      updateLoading(92, 'Preparando esporas y onda expansiva...');
+      updateLoading(94, 'Sincronizando Stencil Buffer y partículas bioluminiscentes...');
       createLuminescentParticles();
       createRevealBurstParticles();
+      applyPortalStencilState(state.portalStencilEnabled);
 
-      // Ocultar inicialmente los elementos hasta que el usuario pulse "Iniciar Experiencia AR"
       prepareForMaterialization();
-
       setupInteractionEvents();
       window.addEventListener('resize', onWindowResize);
 
-      updateLoading(100, '¡Instalación AR lista para desplegarse en tu espacio!');
+      updateLoading(100, '¡Portal Dimensional y Pasillo listos para abrirse!');
       loadingProgressWrap.classList.add('hidden');
       arStartPortal.classList.remove('hidden');
       arStartPortal.classList.add('flex');
@@ -635,19 +875,19 @@
 
     function updateCameraFramingForAspect() {
       const aspect = window.innerWidth / window.innerHeight;
-      CONFIG.cameraDistance = aspect >= 1.0 ? 4.95 : 5.65;
+      CONFIG.cameraDistance = aspect >= 1.0 ? 5.05 : 5.85;
       if (camera) {
         camera.aspect = aspect;
-        camera.position.z = CONFIG.cameraDistance;
+        camera.position.z = CONFIG.cameraDistance + state.cameraZoomOffsetZ;
         camera.updateProjectionMatrix();
       }
     }
 
     function setupLighting() {
-      hemiLight = new THREE.HemisphereLight(0xa7f3d0, 0x041a12, 1.25);
+      hemiLight = new THREE.HemisphereLight(0xa7f3d0, 0x041a12, 1.35);
       scene.add(hemiLight);
 
-      sunClearLight = new THREE.DirectionalLight(0xfef08a, 2.35);
+      sunClearLight = new THREE.DirectionalLight(0xfef08a, 2.45);
       sunClearLight.position.set(1.6, 5.4, 2.8);
       sunClearLight.castShadow = true;
       sunClearLight.shadow.mapSize.width = 1024;
@@ -655,25 +895,500 @@
       sunClearLight.shadow.bias = -0.001;
       scene.add(sunClearLight);
 
-      rimTealLight = new THREE.PointLight(0x2dd4bf, 3.4, 11);
-      rimTealLight.position.set(-2.5, 1.5, -0.6);
-      worldAnchorGroup.add(rimTealLight);
+      rimTealLight = new THREE.PointLight(0x2dd4bf, 3.6, 14);
+      rimTealLight.position.set(-2.2, 1.6, -1.2);
+      portalInteriorGroup.add(rimTealLight);
 
-      rimGoldLight = new THREE.PointLight(0xfbbf24, 2.6, 10);
-      rimGoldLight.position.set(2.4, 1.1, 1.4);
-      worldAnchorGroup.add(rimGoldLight);
+      rimGoldLight = new THREE.PointLight(0xfbbf24, 3.1, 14);
+      rimGoldLight.position.set(2.2, 1.4, 0.8);
+      portalInteriorGroup.add(rimGoldLight);
+
+      // Luz cálida profunda dentro del pasillo arquitectónico
+      corridorTorchLight = new THREE.PointLight(0xfde047, 3.8, 16);
+      corridorTorchLight.position.set(0, 1.8, -3.4);
+      portalInteriorGroup.add(corridorTorchLight);
 
       centerSpotLight = new THREE.SpotLight(0xfffbeb, state.baseCenterSpotIntensity);
-      centerSpotLight.position.set(0, 3.6, 3.2);
-      centerSpotLight.angle = Math.PI / 5.2;
+      centerSpotLight.position.set(0, 3.6, 2.8);
+      centerSpotLight.angle = Math.PI / 4.8;
       centerSpotLight.penumbra = 0.85;
-      worldAnchorGroup.add(centerSpotLight);
+      portalInteriorGroup.add(centerSpotLight);
+    }
+
+    /* =========================================================================
+       3. GEOMETRÍA DEL PORTAL ARQUEADO + MÁSCARA STENCIL BUFFER
+       ========================================================================= */
+    function createArchShape(width, height, radiusTop) {
+      const halfW = width * 0.5;
+      const bottomY = -1.25;
+      const archCenterY = bottomY + (height - radiusTop);
+      const shape = new THREE.Shape();
+      shape.moveTo(-halfW, bottomY);
+      shape.lineTo(halfW, bottomY);
+      shape.lineTo(halfW, archCenterY);
+      shape.absarc(0, archCenterY, halfW, 0, Math.PI, false);
+      shape.lineTo(-halfW, bottomY);
+      return shape;
+    }
+
+    function createPortalArchAndStencilMask() {
+      const pW = CONFIG.portalWidth;
+      const pH = CONFIG.portalHeight;
+      const pZ = CONFIG.portalZ;
+
+      // 1. MÁSCARA STENCIL (Define la ventana dimensional hacia el pasillo y la escultura)
+      const innerArchShape = createArchShape(pW, pH, pW * 0.5);
+      const maskGeo = new THREE.ShapeGeometry(innerArchShape, 48);
+
+      const stencilMat = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        colorWrite: false,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        stencilWrite: true,
+        stencilRef: 1,
+        stencilFunc: THREE.AlwaysStencilFunc,
+        stencilFail: THREE.KeepStencilOp,
+        stencilZFail: THREE.KeepStencilOp,
+        stencilZPass: THREE.ReplaceStencilOp
+      });
+
+      portalStencilMask = new THREE.Mesh(maskGeo, stencilMat);
+      portalStencilMask.position.set(0, 0, pZ);
+      portalStencilMask.renderOrder = 1;
+      portalGroup.add(portalStencilMask);
+
+      // 2. VELO ENERGÉTICO DEL UMBRAL (Brillo sutil en la abertura del portal)
+      state.portalVortexUniforms = {
+        uTime: { value: 0 },
+        uOpenProgress: { value: 0 }
+      };
+
+      const vortexMat = new THREE.ShaderMaterial({
+        uniforms: state.portalVortexUniforms,
+        vertexShader: `
+          varying vec2 vUv;
+          varying vec3 vPos;
+          void main() {
+            vUv = uv;
+            vPos = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vPos;
+          uniform float uTime;
+          uniform float uOpenProgress;
+          void main() {
+            vec2 normP = vec2(vPos.x / 1.32, (vPos.y - 0.42) / 1.68);
+            float distEdge = length(normP);
+            float rimWave = sin(distEdge * 14.0 - uTime * 3.5) * 0.5 + 0.5;
+            float edgeGlow = smoothstep(0.62, 1.02, distEdge);
+            vec3 emerald = vec3(0.18, 0.85, 0.65);
+            vec3 gold = vec3(0.99, 0.88, 0.35);
+            vec3 col = mix(emerald, gold, rimWave);
+            // Al terminar de abrirse, el centro es transparente para ver el pasillo nítido
+            float centerFlash = (1.0 - uOpenProgress) * 0.55;
+            float alpha = edgeGlow * 0.32 + centerFlash;
+            gl_FragColor = vec4(col, clamp(alpha, 0.0, 0.65));
+          }
+        `,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide
+      });
+
+      const vortexMesh = new THREE.Mesh(maskGeo.clone(), vortexMat);
+      vortexMesh.position.set(0, 0, pZ + 0.005);
+      vortexMesh.renderOrder = 2;
+      portalGroup.add(vortexMesh);
+      state.portalVortexMesh = vortexMesh;
+
+      // 3. MARCO ARQUITECTÓNICO SURREALISTA DE PIEDRA Y ENERGÍA (Xilitla Arch Frame)
+      portalFrameGroup = new THREE.Group();
+      portalFrameGroup.position.set(0, 0, pZ);
+
+      const outerW = pW + 0.36;
+      const outerH = pH + 0.20;
+      const frameShape = createArchShape(outerW, outerH, outerW * 0.5);
+      const holePath = createArchShape(pW, pH, pW * 0.5);
+      frameShape.holes.push(holePath);
+
+      const extrudeSettings = {
+        depth: 0.24,
+        bevelEnabled: true,
+        bevelSegments: 4,
+        steps: 1,
+        bevelSize: 0.04,
+        bevelThickness: 0.04
+      };
+
+      const archFrameGeo = new THREE.ExtrudeGeometry(frameShape, extrudeSettings);
+      archFrameGeo.translate(0, 0, -0.12);
+
+      const archStoneMat = new THREE.MeshStandardMaterial({
+        color: 0x1b3b2e,
+        roughness: 0.78,
+        metalness: 0.14,
+        emissive: 0x052419,
+        emissiveIntensity: 0.35
+      });
+
+      const archStoneMesh = new THREE.Mesh(archFrameGeo, archStoneMat);
+      archStoneMesh.castShadow = true;
+      archStoneMesh.receiveShadow = true;
+      archStoneMesh.renderOrder = 2;
+      portalFrameGroup.add(archStoneMesh);
+
+      // Anillo interior bioluminiscente animado alrededor del umbral
+      const rimShape = createArchShape(pW + 0.08, pH + 0.04, (pW + 0.08) * 0.5);
+      rimShape.holes.push(createArchShape(pW - 0.02, pH - 0.01, (pW - 0.02) * 0.5));
+      const rimGeo = new THREE.ShapeGeometry(rimShape, 64);
+
+      state.portalRimShaderUniforms = {
+        uTime: { value: 0 }
+      };
+
+      const rimShaderMat = new THREE.ShaderMaterial({
+        uniforms: state.portalRimShaderUniforms,
+        vertexShader: `
+          varying vec3 vPosition;
+          void main() {
+            vPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vPosition;
+          uniform float uTime;
+          void main() {
+            float angle = atan(vPosition.y - 0.3, vPosition.x);
+            float pulse = 0.5 + 0.5 * sin(angle * 6.0 - uTime * 4.2);
+            floatpulse2 = 0.5 + 0.5 * cos(vPosition.y * 4.5 + uTime * 2.8);
+            vec3 c1 = vec3(0.20, 0.92, 0.68);
+            vec3 c2 = vec3(1.0, 0.88, 0.32);
+            vec3 finalCol = mix(c1, c2, pulse * 0.7 + floatpulse2 * 0.3);
+            gl_FragColor = vec4(finalCol * 1.45, 0.92);
+          }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      });
+
+      const rimGlowMesh = new THREE.Mesh(rimGeo, rimShaderMat);
+      rimGlowMesh.position.z = 0.13;
+      rimGlowMesh.renderOrder = 2;
+      portalFrameGroup.add(rimGlowMesh);
+
+      // Escalón monolítico en la base del portal
+      const thresholdStep = new THREE.Mesh(
+        new THREE.BoxGeometry(outerW + 0.32, 0.12, 0.48),
+        archStoneMat
+      );
+      thresholdStep.position.set(0, -1.22, 0);
+      thresholdStep.renderOrder = 2;
+      portalFrameGroup.add(thresholdStep);
+
+      portalGroup.add(portalFrameGroup);
+    }
+
+    // Configura recursivamente el Stencil Buffer para todos los objetos dentro del portal
+    function applyPortalStencilState(enabled) {
+      state.portalStencilEnabled = enabled;
+      if (portalStencilMask) {
+        portalStencilMask.visible = enabled;
+      }
+
+      portalInteriorGroup.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.renderOrder = 3;
+          const materials = Array.isArray(child.material) ? child.material : [child.material];
+          materials.forEach((mat) => {
+            mat.stencilWrite = enabled;
+            mat.stencilRef = 1;
+            mat.stencilFunc = enabled ? THREE.EqualStencilFunc : THREE.AlwaysStencilFunc;
+            mat.stencilFail = THREE.KeepStencilOp;
+            mat.stencilZFail = THREE.KeepStencilOp;
+            mat.stencilZPass = THREE.KeepStencilOp;
+            mat.needsUpdate = true;
+          });
+        }
+      });
+
+      const maskBtnText = document.getElementById('portal-mask-text');
+      if (maskBtnText) {
+        maskBtnText.textContent = enabled ? 'Portal: Activo' : 'Portal: Abierto 360°';
+      }
+    }
+
+    /* =========================================================================
+       4. CARGA DEL PASILLO OPTIMIZADO GLB + ARQUITECTURA XILITLA DE RESPALDO
+       ========================================================================= */
+    async function loadTextureWithFallback(urls, fallbackGenerator) {
+      const texLoader = new THREE.TextureLoader();
+      texLoader.setCrossOrigin('anonymous');
+      for (const url of urls) {
+        try {
+          const tex = await new Promise((resolve, reject) => {
+            texLoader.load(url, resolve, undefined, reject);
+          });
+          if (tex) {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+          }
+        } catch (e) {}
+      }
+      return fallbackGenerator();
+    }
+
+    async function loadAndFrameCorridorModel(customBlobUrl = null, customFileName = '') {
+      if (!corridorGroup) {
+        corridorGroup = new THREE.Group();
+        corridorGroup.name = 'OptimizedCorridorContainer';
+        portalInteriorGroup.add(corridorGroup);
+      }
+
+      while (corridorGroup.children.length > 0) {
+        corridorGroup.remove(corridorGroup.children[0]);
+      }
+
+      let loadedGLTF = null;
+      let loadedSourcePath = '';
+
+      if (customBlobUrl) {
+        try {
+          loadedGLTF = await new Promise((resolve, reject) => {
+            gltfLoader.load(customBlobUrl, resolve, undefined, reject);
+          });
+          loadedSourcePath = customFileName || 'Archivo Local .GLB';
+        } catch (err) {
+          console.warn('Error al cargar el GLB local:', err);
+        }
+      } else {
+        for (const path of CONFIG.corridorModelPaths) {
+          try {
+            loadedGLTF = await new Promise((resolve, reject) => {
+              gltfLoader.load(path, resolve, undefined, reject);
+            });
+            if (loadedGLTF) {
+              loadedSourcePath = path;
+              console.log(`Pasillo GLB cargado exitosamente desde: ${path}`);
+              break;
+            }
+          } catch (err) {
+            // Continúa probando la siguiente ruta candidata
+          }
+        }
+      }
+
+      if (loadedGLTF && loadedGLTF.scene) {
+        mountOptimizedCorridorGLB(loadedGLTF.scene);
+        if (corridorSourceBadge) {
+          corridorSourceBadge.textContent = `Pasillo 3D activo: ${loadedSourcePath.split('/').pop()}`;
+        }
+      } else {
+        // Si el archivo pasillo_optimizado.glb aún no está en el repo o usa otro nombre,
+        // construimos el Pasillo Arquitectónico Surrealista 3D con las texturas pasillo_xilitla.jpg e image_c64162.jpg del repo
+        await buildXilitlaCorridorFallback();
+        if (corridorSourceBadge) {
+          corridorSourceBadge.textContent = 'Pasillo Xilitla 3D activo (Puedes cargar tu .GLB local arriba)';
+        }
+      }
+
+      applyPortalStencilState(state.portalStencilEnabled);
+    }
+
+    function mountOptimizedCorridorGLB(corridorScene) {
+      corridorScene.updateMatrixWorld(true);
+      const rawBox = new THREE.Box3().setFromObject(corridorScene);
+      const rawSize = rawBox.getSize(new THREE.Vector3());
+      const rawCenter = rawBox.getCenter(new THREE.Vector3());
+
+      // Auto-escalar el pasillo para que encaje con la altura y anchura del portal y se extienda hacia el fondo
+      const targetCorridorHeight = 3.35;
+      const targetCorridorDepth = 6.2;
+      const scaleByH = rawSize.y > 0.01 ? targetCorridorHeight / rawSize.y : 1;
+      const scaleByD = Math.max(rawSize.z, rawSize.x) > 0.01 ? targetCorridorDepth / Math.max(rawSize.z, rawSize.x) : 1;
+      const scale = Math.max(scaleByH, scaleByD * 0.85);
+
+      // Si el pasillo viene orientado a lo largo del eje X en vez de Z, rotarlo automáticamente hacia el eje Z del portal
+      if (rawSize.x > rawSize.z * 1.45) {
+        corridorScene.rotation.y = Math.PI * 0.5;
+        corridorScene.updateMatrixWorld(true);
+      }
+
+      const orientedBox = new THREE.Box3().setFromObject(corridorScene);
+      const orientedCenter = orientedBox.getCenter(new THREE.Vector3());
+
+      corridorScene.scale.setScalar(scale);
+      // Centrar en X, alinear el suelo con el pedestal (-1.24) y extender desde el umbral del portal (z = 0.42) hacia -Z
+      corridorScene.position.x = -orientedCenter.x * scale;
+      corridorScene.position.y = -1.24 - (orientedBox.min.y * scale);
+      corridorScene.position.z = CONFIG.portalZ - (orientedBox.max.z * scale);
+
+      corridorScene.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material = Array.isArray(child.material)
+              ? child.material.map((m) => m.clone())
+              : child.material.clone();
+          }
+        }
+      });
+
+      corridorGroup.add(corridorScene);
+      state.corridorNode = corridorScene;
+    }
+
+    async function buildXilitlaCorridorFallback() {
+      const xilitlaPhotoTex = await loadTextureWithFallback(
+        CONFIG.corridorTexturePaths.pasilloXilitla,
+        createJunglePanoramaTexture
+      );
+      const stoneDetailTex = await loadTextureWithFallback(
+        CONFIG.corridorTexturePaths.stoneDetail,
+        createStoneProceduralTexture
+      );
+
+      stoneDetailTex.wrapS = THREE.RepeatWrapping;
+      stoneDetailTex.wrapT = THREE.RepeatWrapping;
+      stoneDetailTex.repeat.set(2, 2);
+
+      const proceduralCorridor = new THREE.Group();
+      proceduralCorridor.name = 'XilitlaArchitecturalCorridor';
+
+      const concreteMat = new THREE.MeshStandardMaterial({
+        map: stoneDetailTex,
+        color: 0x3b6e57,
+        roughness: 0.82,
+        metalness: 0.12
+      });
+
+      const darkMossMat = new THREE.MeshStandardMaterial({
+        color: 0x163829,
+        roughness: 0.65,
+        metalness: 0.1,
+        emissive: 0x062016,
+        emissiveIntensity: 0.25
+      });
+
+      // Suelo del pasillo con losas de piedra musgosa desde z = 0.42 hasta z = -6.5
+      const corridorFloor = new THREE.Mesh(
+        new THREE.BoxGeometry(3.2, 0.12, 7.2),
+        concreteMat
+      );
+      corridorFloor.position.set(0, -1.26, -3.1);
+      corridorFloor.receiveShadow = true;
+      proceduralCorridor.add(corridorFloor);
+
+      // Camino central iluminado hacia el pedestal de la escultura
+      const walkwayRunner = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.35, 6.8),
+        new THREE.MeshStandardMaterial({
+          color: 0x285e48,
+          roughness: 0.35,
+          metalness: 0.25
+        })
+      );
+      walkwayRunner.rotation.x = -Math.PI / 2;
+      walkwayRunner.position.set(0, -1.19, -2.95);
+      walkwayRunner.receiveShadow = true;
+      proceduralCorridor.add(walkwayRunner);
+
+      // Sucesión de 5 arcos gótico-surrealistas estilo Las Pozas (Xilitla) en perspectiva
+      const archCount = 5;
+      const archOuterShape = createArchShape(3.05, 3.45, 1.525);
+      archOuterShape.holes.push(createArchShape(2.42, 3.15, 1.21));
+      const archRibGeo = new THREE.ExtrudeGeometry(archOuterShape, {
+        depth: 0.28,
+        bevelEnabled: true,
+        bevelSegments: 2,
+        steps: 1,
+        bevelSize: 0.03,
+        bevelThickness: 0.03
+      });
+
+      for (let i = 0; i < archCount; i++) {
+        const zPos = -0.35 - i * 1.28;
+        const ribMesh = new THREE.Mesh(archRibGeo, i % 2 === 0 ? concreteMat : darkMossMat);
+        ribMesh.position.set(0, 0, zPos);
+        ribMesh.castShadow = true;
+        ribMesh.receiveShadow = true;
+        proceduralCorridor.add(ribMesh);
+
+        // Columnas laterales esbeltas con capiteles surrealistas
+        [-1.32, 1.32].forEach((xCol) => {
+          const pillar = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.11, 0.14, 2.55, 16),
+            concreteMat
+          );
+          pillar.position.set(xCol, 0.02, zPos - 0.45);
+          pillar.castShadow = true;
+          pillar.receiveShadow = true;
+          proceduralCorridor.add(pillar);
+        });
+      }
+
+      // Paredes laterales semi-abiertas con textura fotográfica de Xilitla
+      const wallMat = new THREE.MeshStandardMaterial({
+        map: xilitlaPhotoTex,
+        color: 0x86efac,
+        roughness: 0.75,
+        side: THREE.DoubleSide
+      });
+
+      const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(6.8, 3.5), wallMat);
+      leftWall.rotation.y = Math.PI * 0.5;
+      leftWall.position.set(-1.52, 0.45, -3.0);
+      proceduralCorridor.add(leftWall);
+
+      const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(6.8, 3.5), wallMat);
+      rightWall.rotation.y = -Math.PI * 0.5;
+      rightWall.position.set(1.52, 0.45, -3.0);
+      proceduralCorridor.add(rightWall);
+
+      // Fondo arquitectónico del pasillo con la fotografía real de `assets/pasillo_xilitla.jpg`
+      const backPortalBackdrop = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.4, 3.7),
+        new THREE.MeshBasicMaterial({
+          map: xilitlaPhotoTex,
+          color: 0xd1fae5
+        })
+      );
+      backPortalBackdrop.position.set(0, 0.48, -6.15);
+      proceduralCorridor.add(backPortalBackdrop);
+
+      corridorGroup.add(proceduralCorridor);
+      state.corridorNode = proceduralCorridor;
+    }
+
+    function createStoneProceduralTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#1f3f31';
+      ctx.fillRect(0, 0, 512, 512);
+      for (let i = 0; i < 900; i++) {
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(16, 48, 34, 0.35)' : 'rgba(110, 231, 183, 0.08)';
+        ctx.beginPath();
+        ctx.arc(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
     }
 
     /* Receptor de sombras y anillo holográfico de anclaje en el suelo real */
     function createSpatialARFloorAndReticle() {
       const shadowFloorGeo = new THREE.PlaneGeometry(14, 14);
-      const shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0.42 });
+      const shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0.44 });
       const shadowFloor = new THREE.Mesh(shadowFloorGeo, shadowFloorMat);
       shadowFloor.rotation.x = -Math.PI / 2;
       shadowFloor.position.y = -1.24;
@@ -683,18 +1398,18 @@
       state.arShadowFloor = shadowFloor;
 
       const reticleGroup = new THREE.Group();
-      reticleGroup.position.y = -1.23;
+      reticleGroup.position.set(0, -1.23, 0.1);
 
       const outerRing = new THREE.Mesh(
-        new THREE.RingGeometry(1.15, 1.22, 64),
-        new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+        new THREE.RingGeometry(1.38, 1.46, 64),
+        new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.6, side: THREE.DoubleSide })
       );
       outerRing.rotation.x = -Math.PI / 2;
       reticleGroup.add(outerRing);
 
       const innerGlowRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.65, 1.12, 64),
-        new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.16, side: THREE.DoubleSide })
+        new THREE.RingGeometry(0.82, 1.35, 64),
+        new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.18, side: THREE.DoubleSide })
       );
       innerGlowRing.rotation.x = -Math.PI / 2;
       reticleGroup.add(innerGlowRing);
@@ -704,14 +1419,18 @@
       state.anchorRingGroup = reticleGroup;
     }
 
-    function createJungleSurrealBackground() {
-      if (jungleEnvironmentGroup) worldAnchorGroup.remove(jungleEnvironmentGroup);
+    async function createJungleSurrealBackground() {
+      if (jungleEnvironmentGroup) portalInteriorGroup.remove(jungleEnvironmentGroup);
       jungleEnvironmentGroup = new THREE.Group();
       jungleEnvironmentGroup.name = 'JungleEnvironment';
-      worldAnchorGroup.add(jungleEnvironmentGroup);
+      portalInteriorGroup.add(jungleEnvironmentGroup);
 
-      const muralTex = createJunglePanoramaTexture();
-      const muralGeo = new THREE.PlaneGeometry(16.5, 9.2, 24, 1);
+      const muralTex = await loadTextureWithFallback(
+        CONFIG.corridorTexturePaths.pasilloXilitla,
+        createJunglePanoramaTexture
+      );
+
+      const muralGeo = new THREE.PlaneGeometry(14.5, 8.8, 24, 1);
       const pos = muralGeo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         const vx = pos.getX(i);
@@ -721,24 +1440,13 @@
 
       const muralMat = new THREE.MeshBasicMaterial({
         map: muralTex,
+        color: 0xa7f3d0,
         side: THREE.DoubleSide,
         fog: false
       });
       const muralMesh = new THREE.Mesh(muralGeo, muralMat);
-      muralMesh.position.set(0, 0.55, -4.6);
+      muralMesh.position.set(0, 0.65, -7.2);
       jungleEnvironmentGroup.add(muralMesh);
-
-      const floorGeo = new THREE.CircleGeometry(6.8, 48);
-      const floorMat = new THREE.MeshStandardMaterial({
-        color: 0x0b291e,
-        roughness: 0.45,
-        metalness: 0.15
-      });
-      const jungleFloor = new THREE.Mesh(floorGeo, floorMat);
-      jungleFloor.rotation.x = -Math.PI / 2;
-      jungleFloor.position.y = -1.25;
-      jungleFloor.receiveShadow = true;
-      jungleEnvironmentGroup.add(jungleFloor);
     }
 
     function createJunglePanoramaTexture() {
@@ -758,27 +1466,11 @@
       ctx.fillRect(0, 0, w, h);
 
       const sunGlow = ctx.createRadialGradient(w * 0.5, h * 0.26, 20, w * 0.5, h * 0.35, 580);
-      sunGlow.addColorStop(0, 'rgba(254, 240, 138, 0.25)');
-      sunGlow.addColorStop(0.45, 'rgba(52, 211, 153, 0.12)');
+      sunGlow.addColorStop(0, 'rgba(254, 240, 138, 0.28)');
+      sunGlow.addColorStop(0.45, 'rgba(52, 211, 153, 0.14)');
       sunGlow.addColorStop(1, 'rgba(4, 24, 17, 0)');
       ctx.fillStyle = sunGlow;
       ctx.fillRect(0, 0, w, h);
-
-      ctx.fillStyle = '#062419';
-      ctx.beginPath();
-      ctx.moveTo(0, h * 0.65);
-      ctx.bezierCurveTo(w * 0.2, h * 0.35, w * 0.35, h * 0.55, w * 0.5, h * 0.42);
-      ctx.bezierCurveTo(w * 0.68, h * 0.35, w * 0.85, h * 0.5, w, h * 0.38);
-      ctx.lineTo(w, h);
-      ctx.lineTo(0, h);
-      ctx.fill();
-
-      const mistGrad = ctx.createLinearGradient(0, h * 0.55, 0, h * 0.95);
-      mistGrad.addColorStop(0, 'rgba(52, 211, 153, 0)');
-      mistGrad.addColorStop(0.5, 'rgba(110, 231, 183, 0.22)');
-      mistGrad.addColorStop(1, 'rgba(4, 18, 12, 0.95)');
-      ctx.fillStyle = mistGrad;
-      ctx.fillRect(0, h * 0.55, w, h * 0.4);
 
       const texture = new THREE.CanvasTexture(canvas);
       texture.colorSpace = THREE.SRGBColorSpace;
@@ -786,12 +1478,13 @@
     }
 
     /* =========================================================================
-       3. CARGA DE models/3DModel.glb DESDE GITHUB
+       5. CARGA DE LA ESCULTURA CENTRAL (models/3DModel.glb) DENTRO DEL PASILLO
        ========================================================================= */
     async function loadAndFrameCentralModel() {
       sculptureGroup = new THREE.Group();
-      sculptureGroup.position.set(0, 0, 0);
-      worldAnchorGroup.add(sculptureGroup);
+      // Ubicada dentro del pasillo (detrás del plano del portal z = 0.42)
+      sculptureGroup.position.set(0, 0, -0.55);
+      portalInteriorGroup.add(sculptureGroup);
 
       const pedestalGroup = new THREE.Group();
       const stoneMat = new THREE.MeshStandardMaterial({
@@ -816,21 +1509,18 @@
       sculptureGroup.add(pedestalGroup);
       state.pedestalGroup = pedestalGroup;
 
-      const loader = new GLTFLoader();
-      loader.setCrossOrigin('anonymous');
-
       let loadedGLTF = null;
       for (const path of CONFIG.modelPaths) {
         try {
           loadedGLTF = await new Promise((resolve, reject) => {
-            loader.load(path, resolve, undefined, reject);
+            gltfLoader.load(path, resolve, undefined, reject);
           });
           if (loadedGLTF) {
-            console.log(`Modelo 3D cargado desde: ${path}`);
+            console.log(`Escultura 3D cargada desde: ${path}`);
             break;
           }
         } catch (err) {
-          console.warn(`Ruta no disponible: ${path}`);
+          console.warn(`Ruta de escultura no disponible: ${path}`);
         }
       }
 
@@ -902,6 +1592,7 @@
 
       state.modelBoundingBox.setFromObject(sculptureGroup);
       state.modelSize = state.modelBoundingBox.getSize(new THREE.Vector3());
+      applyPortalStencilState(state.portalStencilEnabled);
     }
 
     function restoreSculptureOriginalMaterials() {
@@ -932,7 +1623,7 @@
     }
 
     /* =========================================================================
-       4. CAPAS DE VEGETACIÓN GRANDES Y DESAGLOMERADAS
+       6. CAPAS DE VEGETACIÓN INTERACTIVA EN EL UMBRAL E INTERIOR DEL PORTAL
        ========================================================================= */
     function buildLayeredJungle(baseTextures) {
       if (foliageRootGroup) worldAnchorGroup.remove(foliageRootGroup);
@@ -945,82 +1636,86 @@
       state.clearedLeavesCount = 0;
       state.discoveryCompleted = false;
 
+      // Las capas 1-4 viven dentro del pasillo (recortadas por el Stencil del Portal)
+      // Las capas 5-8 cubren la entrada del umbral del portal para que el usuario las aparte físicamente
       const layerBlueprints = [
         {
-          layerIndex: 1, zDepth: -2.75, windAmp: 0.015, interactive: false, coversSculpture: false,
+          layerIndex: 1, zDepth: -3.25, windAmp: 0.015, interactive: false, coversSculpture: false, insidePortalStencil: true,
           colorTint: '#2b7a62', emissiveTint: '#07261d',
           slots: [
-            { key: 'plantas_rocas', x: -2.45, y: -0.08, scale: 1.95, rotZ: -0.06, flipX: false },
-            { key: 'plantas_rocas', x:  2.45, y: -0.08, scale: 1.95, rotZ:  0.06, flipX: true  },
-            { key: 'arbusto',       x:  0.00, y:  1.18, scale: 2.05, rotZ:  0.00, flipX: false }
+            { key: 'plantas_rocas', x: -1.15, y: -0.15, scale: 1.55, rotZ: -0.06, flipX: false },
+            { key: 'plantas_rocas', x:  1.15, y: -0.15, scale: 1.55, rotZ:  0.06, flipX: true  }
           ]
         },
         {
-          layerIndex: 2, zDepth: -1.75, windAmp: 0.020, interactive: false, coversSculpture: false,
+          layerIndex: 2, zDepth: -2.15, windAmp: 0.020, interactive: false, coversSculpture: false, insidePortalStencil: true,
           colorTint: '#52b793', emissiveTint: '#0c382a',
           slots: [
-            { key: 'plantas_rocas', x: -1.55, y: -0.22, scale: 1.75, rotZ: -0.08, flipX: true  },
-            { key: 'plantas_rocas', x:  1.55, y: -0.22, scale: 1.75, rotZ:  0.08, flipX: false }
+            { key: 'plantas_rocas', x: -1.10, y: -0.25, scale: 1.48, rotZ: -0.08, flipX: true  },
+            { key: 'plantas_rocas', x:  1.10, y: -0.25, scale: 1.48, rotZ:  0.08, flipX: false }
           ]
         },
         {
-          layerIndex: 3, zDepth: -0.92, windAmp: 0.025, interactive: false, coversSculpture: false,
+          layerIndex: 3, zDepth: -1.25, windAmp: 0.025, interactive: false, coversSculpture: false, insidePortalStencil: true,
           colorTint: '#a7f3d0', emissiveTint: '#114231',
           slots: [
-            { key: 'plantas_rocas', x:  0.00, y: -0.12, scale: 1.82, rotZ:  0.00, flipX: false },
-            { key: 'plantas',       x: -1.78, y: -0.38, scale: 1.52, rotZ: -0.18, flipX: false },
-            { key: 'plantas',       x:  1.78, y: -0.38, scale: 1.52, rotZ:  0.18, flipX: true  }
+            { key: 'plantas', x: -1.05, y: -0.35, scale: 1.38, rotZ: -0.14, flipX: false },
+            { key: 'plantas', x:  1.05, y: -0.35, scale: 1.38, rotZ:  0.14, flipX: true  }
           ]
         },
         {
-          layerIndex: 4, zDepth: -0.20, windAmp: 0.032, interactive: false, coversSculpture: false,
+          layerIndex: 4, zDepth: -0.15, windAmp: 0.032, interactive: false, coversSculpture: false, insidePortalStencil: true,
           colorTint: '#6ee7b7', emissiveTint: '#09261b',
           slots: [
-            { key: 'arbusto', x: -1.98, y: -0.62, scale: 1.54, rotZ:  0.14, flipX: false },
-            { key: 'arbusto', x:  1.98, y: -0.62, scale: 1.54, rotZ: -0.14, flipX: true  }
+            { key: 'arbusto', x: -1.18, y: -0.58, scale: 1.34, rotZ:  0.12, flipX: false },
+            { key: 'arbusto', x:  1.18, y: -0.58, scale: 1.34, rotZ: -0.12, flipX: true  }
           ]
         },
         {
-          layerIndex: 5, zDepth: 0.72, windAmp: 0.045, interactive: true, coversSculpture: true,
+          layerIndex: 5, zDepth: 0.58, windAmp: 0.045, interactive: true, coversSculpture: true, insidePortalStencil: false,
           colorTint: '#6ee7b7', emissiveTint: '#062016',
           slots: [
-            { key: 'arbusto', x: -0.78, y: -0.38, scale: 1.52, rotZ:  0.09, flipX: false },
-            { key: 'arbusto', x:  0.78, y: -0.38, scale: 1.52, rotZ: -0.09, flipX: true  },
-            { key: 'plantas', x:  0.00, y:  0.56, scale: 1.56, rotZ:  0.04, flipX: false }
+            { key: 'arbusto', x: -0.68, y: -0.38, scale: 1.35, rotZ:  0.09, flipX: false },
+            { key: 'arbusto', x:  0.68, y: -0.38, scale: 1.35, rotZ: -0.09, flipX: true  },
+            { key: 'plantas', x:  0.00, y:  0.48, scale: 1.38, rotZ:  0.04, flipX: false }
           ]
         },
         {
-          layerIndex: 6, zDepth: 1.25, windAmp: 0.055, interactive: true, coversSculpture: true,
+          layerIndex: 6, zDepth: 0.92, windAmp: 0.055, interactive: true, coversSculpture: true, insidePortalStencil: false,
           colorTint: '#52b788', emissiveTint: '#051b12',
           slots: [
-            { key: 'plantas',       x: -0.88, y:  0.22, scale: 1.55, rotZ: -0.15, flipX: true  },
-            { key: 'plantas',       x:  0.88, y:  0.22, scale: 1.55, rotZ:  0.15, flipX: false },
-            { key: 'plantas_rocas', x:  0.00, y: -0.58, scale: 1.46, rotZ:  0.00, flipX: false }
+            { key: 'plantas',       x: -0.72, y:  0.18, scale: 1.36, rotZ: -0.15, flipX: true  },
+            { key: 'plantas',       x:  0.72, y:  0.18, scale: 1.36, rotZ:  0.15, flipX: false },
+            { key: 'plantas_rocas', x:  0.00, y: -0.52, scale: 1.32, rotZ:  0.00, flipX: false }
           ]
         },
         {
-          layerIndex: 7, zDepth: 1.78, windAmp: 0.068, interactive: true, coversSculpture: true,
+          layerIndex: 7, zDepth: 1.28, windAmp: 0.068, interactive: true, coversSculpture: true, insidePortalStencil: false,
           colorTint: '#3b8764', emissiveTint: '#04140d',
           slots: [
-            { key: 'arbusto', x: -0.64, y: -0.14, scale: 1.58, rotZ:  0.12, flipX: false },
-            { key: 'arbusto', x:  0.64, y: -0.18, scale: 1.58, rotZ: -0.12, flipX: true  },
-            { key: 'plantas', x:  0.00, y:  0.42, scale: 1.50, rotZ:  0.16, flipX: false }
+            { key: 'arbusto', x: -0.56, y: -0.16, scale: 1.38, rotZ:  0.12, flipX: false },
+            { key: 'arbusto', x:  0.56, y: -0.18, scale: 1.38, rotZ: -0.12, flipX: true  },
+            { key: 'plantas', x:  0.00, y:  0.38, scale: 1.34, rotZ:  0.16, flipX: false }
           ]
         },
         {
-          layerIndex: 8, zDepth: 2.28, windAmp: 0.082, interactive: true, coversSculpture: true,
+          layerIndex: 8, zDepth: 1.62, windAmp: 0.082, interactive: true, coversSculpture: true, insidePortalStencil: false,
           colorTint: '#245940', emissiveTint: '#020c07',
           slots: [
-            { key: 'plantas_rocas', x:  0.00, y: -0.32, scale: 1.48, rotZ: -0.05, flipX: true  },
-            { key: 'arbusto',       x: -0.76, y:  0.36, scale: 1.50, rotZ: -0.22, flipX: false },
-            { key: 'arbusto',       x:  0.76, y:  0.36, scale: 1.50, rotZ:  0.22, flipX: true  }
+            { key: 'plantas_rocas', x:  0.00, y: -0.32, scale: 1.32, rotZ: -0.05, flipX: true  },
+            { key: 'arbusto',       x: -0.64, y:  0.32, scale: 1.32, rotZ: -0.22, flipX: false },
+            { key: 'arbusto',       x:  0.64, y:  0.32, scale: 1.32, rotZ:  0.22, flipX: true  }
           ]
         }
       ];
 
       layerBlueprints.forEach((layerSpec) => {
         const layerGroup = new THREE.Group();
-        foliageRootGroup.add(layerGroup);
+        if (layerSpec.insidePortalStencil) {
+          portalInteriorGroup.add(layerGroup);
+        } else {
+          foliageRootGroup.add(layerGroup);
+        }
 
         layerSpec.slots.forEach((slot, idx) => {
           const assetMeta = CONFIG.vegetationAssets.find((a) => a.key === slot.key);
@@ -1059,22 +1754,23 @@
           const microZ = layerSpec.zDepth + idx * 0.03;
           mesh.position.set(slot.x, slot.y, microZ);
           mesh.rotation.set(0, 0, slot.rotZ);
+          mesh.renderOrder = layerSpec.insidePortalStencil ? 3 : 4;
 
           const sideSign = slot.x === 0 ? (idx % 2 === 0 ? -1 : 1) : Math.sign(slot.x);
           const partedX = sideSign * (2.55 + (layerSpec.layerIndex - 5) * 0.28 + (idx % 2) * 0.24);
           const partedY = slot.y + (slot.y >= 0 ? 0.32 : -0.28);
           const partedRotZ = slot.rotZ + sideSign * -0.42;
 
-          // Tiempos escalonados de materialización por capa
           const isBackLayer = layerSpec.layerIndex <= 4;
           const matDelay = isBackLayer
-            ? 0.22 + (layerSpec.layerIndex - 1) * 0.14 + idx * 0.05
-            : 1.05 + (layerSpec.layerIndex - 5) * 0.15 + idx * 0.06;
+            ? 0.45 + (layerSpec.layerIndex - 1) * 0.14 + idx * 0.05
+            : 1.15 + (layerSpec.layerIndex - 5) * 0.15 + idx * 0.06;
 
           mesh.userData = {
             layerIndex: layerSpec.layerIndex,
             interactive: layerSpec.interactive,
             coversSculpture: layerSpec.coversSculpture,
+            insidePortalStencil: layerSpec.insidePortalStencil,
             isCleared: false,
             windAmplitude: layerSpec.windAmp,
             basePositions,
@@ -1102,7 +1798,7 @@
     }
 
     /* =========================================================================
-       5. SECUENCIA COREOGRAFIADA DE MATERIALIZACIÓN (2.2s)
+       7. COREOGRAFÍA DE APERTURA DEL PORTAL Y MATERIALIZACIÓN (2.45s)
        ========================================================================= */
     function easeOutBack(x) {
       const c1 = 1.70158;
@@ -1119,9 +1815,17 @@
 
       discoveryCount.textContent = '0%';
       discoveryBar.style.width = '0%';
-      discoveryLabel.textContent = 'Materializando...';
+      discoveryLabel.textContent = 'Abriendo portal...';
       statusDot.className = 'w-2 h-2 rounded-full bg-teal-300 animate-ping shrink-0';
       onboardingHint.classList.add('opacity-0');
+
+      // El portal inicia cerrado como una fina grieta vertical
+      if (portalGroup) {
+        portalGroup.scale.set(0.01, 0.01, 1);
+      }
+      if (state.portalVortexUniforms) {
+        state.portalVortexUniforms.uOpenProgress.value = 0;
+      }
 
       if (state.anchorRingGroup) state.anchorRingGroup.scale.setScalar(0.001);
       if (state.pedestalGroup) state.pedestalGroup.scale.setScalar(0.001);
@@ -1148,29 +1852,43 @@
       state.materializing = true;
       state.materializeStartTime = clock.getElapsedTime();
       state.lastMaterializeRustleStage = 0;
-      showToast('Materializando ecosistema y escultura en el espacio...');
+      playPortalOpeningSound();
+      showToast('Rasgando umbral dimensional hacia el pasillo de Xilitla...');
     }
 
     function updateMaterialization(elapsedTime) {
       if (!state.materializing) return;
       const t = elapsedTime - state.materializeStartTime;
 
-      // Etapa 1: Anillo de anclaje y Pedestal (0.0s - 0.55s)
-      const pedP = THREE.MathUtils.clamp(t / 0.52, 0, 1);
+      // Etapa 1: Grieta vertical se abre y luego se expande horizontalmente en arco (0.0s - 0.85s)
+      const verticalOpen = THREE.MathUtils.clamp(t / 0.42, 0.02, 1);
+      const horizontalOpen = THREE.MathUtils.clamp((t - 0.18) / 0.62, 0.03, 1);
+      const portalScaleY = easeOutBack(verticalOpen);
+      const portalScaleX = easeOutBack(horizontalOpen);
+
+      if (portalGroup) {
+        portalGroup.scale.set(Math.max(0.02, portalScaleX), Math.max(0.02, portalScaleY), 1);
+      }
+      if (state.portalVortexUniforms) {
+        state.portalVortexUniforms.uOpenProgress.value = THREE.MathUtils.clamp((t - 0.35) / 1.2, 0, 1);
+      }
+
+      // Anillo de anclaje y Pedestal dentro del pasillo
+      const pedP = THREE.MathUtils.clamp((t - 0.25) / 0.55, 0, 1);
       const pedEase = easeOutBack(pedP);
       if (state.anchorRingGroup) state.anchorRingGroup.scale.setScalar(Math.max(0.001, pedEase));
       if (state.pedestalGroup) state.pedestalGroup.scale.setScalar(Math.max(0.001, pedEase));
 
-      // Etapa 2: Escultura 3DModel.glb emerge sobre el pedestal (0.65s - 1.35s)
+      // Etapa 2: Escultura 3DModel.glb emerge dentro del pasillo (0.75s - 1.45s)
       if (state.sculptureNode) {
-        const sculpP = THREE.MathUtils.clamp((t - 0.65) / 0.68, 0, 1);
+        const sculpP = THREE.MathUtils.clamp((t - 0.75) / 0.68, 0, 1);
         const sculpEase = easeOutBack(sculpP);
         const targetS = state.sculptureNode.userData.baseScale * Math.max(0.0001, sculpEase);
         state.sculptureNode.scale.setScalar(targetS);
         state.sculptureNode.position.y = state.sculptureNode.userData.baseY - (1 - sculpP) * 0.45;
       }
 
-      // Etapa 3 y 4: Capas de vegetación brotan desde su raíz inferior
+      // Etapa 3 y 4: Capas de vegetación brotan dentro y frente al umbral del portal
       state.foliagePlanes.forEach((leaf) => {
         const d = leaf.userData;
         const leafP = THREE.MathUtils.clamp((t - d.matDelay) / d.matDuration, 0, 1);
@@ -1182,33 +1900,32 @@
         leaf.rotation.z = d.homeRotZ + (1 - leafP) * 0.18;
       });
 
-      // Sonidos sutiles de brote durante la materialización
-      if (t > 0.3 && state.lastMaterializeRustleStage < 1) {
+      if (t > 0.45 && state.lastMaterializeRustleStage < 1) {
         state.lastMaterializeRustleStage = 1;
         playFoliageRustle(0.5);
-      } else if (t > 1.15 && state.lastMaterializeRustleStage < 2) {
+      } else if (t > 1.25 && state.lastMaterializeRustleStage < 2) {
         state.lastMaterializeRustleStage = 2;
         playFoliageRustle(0.75);
       }
 
-      // Fin de materialización -> Activar dinámica interactiva
       if (t >= state.materializeDuration) {
         state.materializing = false;
         state.interactionEnabled = true;
+        if (portalGroup) portalGroup.scale.set(1, 1, 1);
         if (bioParticles) bioParticles.visible = true;
-        discoveryLabel.textContent = 'Despeja la selva';
+        discoveryLabel.textContent = 'Despeja el portal';
         statusDot.className = 'w-2 h-2 rounded-full bg-amber-300 animate-ping shrink-0';
         onboardingHint.classList.remove('opacity-0');
-        showToast('¡Escena anclada! Aparta 5 plantas para descubrir la escultura');
+        showToast('¡Portal abierto! Aparta 5 plantas para descubrir el pasillo y la escultura');
 
         setTimeout(() => {
           if (!state.hasInteracted) onboardingHint.classList.add('opacity-0');
-        }, 4000);
+        }, 4200);
       }
     }
 
     /* =========================================================================
-       6. TEXTURAS BOTÁNICAS Y PARTÍCULAS (AMBIENTE + ONDA EXPANSIVA)
+       8. TEXTURAS BOTÁNICAS Y PARTÍCULAS
        ========================================================================= */
     async function loadBaseVegetationTextures() {
       const texLoader = new THREE.TextureLoader();
@@ -1340,9 +2057,9 @@
       state.particleData = [];
 
       for (let i = 0; i < count; i++) {
-        const x = (Math.random() - 0.5) * 6.8;
-        const y = (Math.random() - 0.35) * 4.2;
-        const z = -2.6 + Math.random() * 5.2;
+        const x = (Math.random() - 0.5) * 4.8;
+        const y = (Math.random() - 0.35) * 3.8;
+        const z = -4.2 + Math.random() * 6.2;
 
         positions[i * 3] = x;
         positions[i * 3 + 1] = y;
@@ -1423,7 +2140,6 @@
       const geo = new THREE.BufferGeometry();
       const positions = new Float32Array(count * 3);
       const colors = new Float32Array(count * 3);
-      const sizes = new Float32Array(count);
 
       const palette = [
         new THREE.Color('#fffbeb'),
@@ -1448,7 +2164,6 @@
         colors[i * 3] = c.r;
         colors[i * 3 + 1] = c.g;
         colors[i * 3 + 2] = c.b;
-        sizes[i] = 1.4 + Math.random() * 2.2;
       }
 
       geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -1477,13 +2192,13 @@
 
       const posAttr = burstParticles.geometry.attributes.position;
       for (let i = 0; i < CONFIG.burstParticleCount; i++) {
-        posAttr.setXYZ(i, 0, 0.15, 0);
+        posAttr.setXYZ(i, 0, 0.15, -0.4);
       }
       posAttr.needsUpdate = true;
     }
 
     /* =========================================================================
-       7. DESPLIEGUE AR ESPACIAL, GIROSCOPIO 3DoF E INTERACCIÓN
+       9. DESPLIEGUE AR ESPACIAL, GIROSCOPIO 3DoF E INTERACCIÓN
        ========================================================================= */
     function setupSpatialGyroscope() {
       const attachListener = () => {
@@ -1521,7 +2236,7 @@
       state.smoothedGyro.set(0, 0);
       worldAnchorGroup.position.set(0, 0, 0);
       worldAnchorGroup.rotation.set(0, 0, 0);
-      showToast('Instalación AR re-anclada frente a ti');
+      showToast('Portal dimensional re-anclado frente a ti');
     }
 
     async function launchExperience(useARCamera) {
@@ -1548,15 +2263,14 @@
         await videoElement.play();
         videoElement.classList.add('active');
         backdropElement.style.opacity = '0';
-        godRaysElement.style.opacity = '0.35';
-        if (jungleEnvironmentGroup) jungleEnvironmentGroup.visible = false;
+        godRaysElement.style.opacity = '0.25';
         if (state.arShadowFloor) state.arShadowFloor.visible = true;
         scene.fog = null;
         state.cameraActive = true;
         btnText.textContent = 'Modo Virtual';
         recenterSpatialAnchor();
       } catch (err) {
-        showToast('Cámara no disponible; iniciando en entorno virtual 3D');
+        showToast('Cámara no disponible; abriendo portal en entorno virtual 3D');
       }
     }
 
@@ -1569,9 +2283,8 @@
         videoElement.classList.remove('active');
         backdropElement.style.opacity = '1';
         godRaysElement.style.opacity = '1';
-        if (jungleEnvironmentGroup) jungleEnvironmentGroup.visible = true;
         if (state.arShadowFloor) state.arShadowFloor.visible = false;
-        scene.fog = new THREE.FogExp2(0x062118, 0.062);
+        scene.fog = new THREE.FogExp2(0x051c14, 0.048);
         state.cameraActive = false;
         btnText.textContent = 'Cámara AR';
         showToast('Entorno virtual de selva activo');
@@ -1589,9 +2302,50 @@
       document.getElementById('btn-reanchor').addEventListener('click', recenterSpatialAnchor);
       document.getElementById('btn-toggle-camera').addEventListener('click', toggleARCamera);
 
+      // Alternar Stencil del Portal vs Vista Completa 360°
+      document.getElementById('btn-portal-mask').addEventListener('click', () => {
+        applyPortalStencilState(!state.portalStencilEnabled);
+        showToast(
+          state.portalStencilEnabled
+            ? 'Recorte de Portal Dimensional activado (Stencil)'
+            : 'Inmersión completa del pasillo activada'
+        );
+      });
+
+      // Botón para adentrarse físicamente al interior del pasillo ("Entrar al Pasillo")
+      document.getElementById('btn-step-inside').addEventListener('click', () => {
+        state.steppingInsidePortal = !state.steppingInsidePortal;
+        state.targetCameraZoomOffsetZ = state.steppingInsidePortal ? -2.25 : 0;
+        document.getElementById('step-inside-text').textContent = state.steppingInsidePortal
+          ? 'Salir al Umbral'
+          : 'Entrar al Pasillo';
+        showToast(
+          state.steppingInsidePortal
+            ? 'Adentrándote en el pasillo de Xilitla...'
+            : 'Regresando frente al umbral del portal'
+        );
+      });
+
+      // Subir un archivo .glb de pasillo optimizado desde el dispositivo del usuario
+      const triggerFileSelect = () => glbFileInput.click();
+      document.getElementById('btn-upload-corridor').addEventListener('click', triggerFileSelect);
+      document.getElementById('btn-upload-corridor-start').addEventListener('click', triggerFileSelect);
+
+      glbFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const blobUrl = URL.createObjectURL(file);
+        showToast(`Cargando modelo GLB: ${file.name}...`);
+        await loadAndFrameCorridorModel(blobUrl, file.name);
+        showToast(`¡Pasillo ${file.name} integrado dentro del portal!`);
+      });
+
       document.getElementById('btn-reset').addEventListener('click', () => {
         state.modelTargetRotX = 0;
         state.modelTargetRotY = 0;
+        state.steppingInsidePortal = false;
+        state.targetCameraZoomOffsetZ = 0;
+        document.getElementById('step-inside-text').textContent = 'Entrar al Pasillo';
         recenterSpatialAnchor();
         startMaterializationSequence();
       });
@@ -1713,7 +2467,7 @@
       if (!d.coversSculpture || d.isCleared) return;
 
       const distFromCenter = Math.hypot(d.restPos.x * 1.15, d.restPos.y * 0.85);
-      if (distFromCenter > 1.15) {
+      if (distFromCenter > 1.12) {
         d.isCleared = true;
         const side = d.restPos.x >= 0 ? 1 : -1;
         d.restPos.x = side * Math.max(Math.abs(d.partedPos.x), Math.abs(d.restPos.x) + 0.55);
@@ -1727,7 +2481,6 @@
     }
 
     function updateDiscoveryUI() {
-      // Exactamente 20% de avance por cada planta despejada (5 plantas = 100%)
       const percent = Math.min(100, state.clearedLeavesCount * 20);
 
       discoveryCount.textContent = `${percent}%`;
@@ -1736,7 +2489,7 @@
       if (percent >= 100 && !state.discoveryCompleted) {
         triggerFullSculptureReveal();
       } else if (!state.discoveryCompleted) {
-        discoveryLabel.textContent = 'Despeja la selva';
+        discoveryLabel.textContent = 'Despeja el portal';
         statusDot.className = 'w-2 h-2 rounded-full bg-amber-300 animate-ping shrink-0';
       }
     }
@@ -1745,7 +2498,7 @@
       state.discoveryCompleted = true;
       discoveryCount.textContent = '100%';
       discoveryBar.style.width = '100%';
-      discoveryLabel.textContent = '¡Escultura descubierta!';
+      discoveryLabel.textContent = '¡Pasillo y Escultura!';
       statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 shrink-0';
 
       state.foliagePlanes.forEach((leaf) => {
@@ -1762,37 +2515,53 @@
       triggerBurstWave();
 
       playRevealChime();
-      showToast('¡Escultura descubierta! Arrastra el centro para girarla 360°');
+      showToast('¡Portal despejado! Gira la escultura 360° o pulsa "Entrar al Pasillo"');
     }
 
     /* =========================================================================
-       8. BUCLE PRINCIPAL DE ANIMACIÓN Y RENDERIZADO ESPACIAL
+       10. BUCLE PRINCIPAL DE ANIMACIÓN Y RENDERIZADO ESPACIAL
        ========================================================================= */
     function animate() {
       const elapsedTime = clock.getElapsedTime();
 
-      // Seguimiento espacial: combina giroscopio 3DoF + paralaje para anclar la escena al espacio físico
+      // Actualizar shaders del borde energético y vórtice del portal
+      if (state.portalRimShaderUniforms) {
+        state.portalRimShaderUniforms.uTime.value = elapsedTime;
+      }
+      if (state.portalVortexUniforms) {
+        state.portalVortexUniforms.uTime.value = elapsedTime;
+      }
+
+      // Interpolación suave al entrar o salir del pasillo a través del portal
+      state.cameraZoomOffsetZ = THREE.MathUtils.lerp(
+        state.cameraZoomOffsetZ,
+        state.targetCameraZoomOffsetZ,
+        0.05
+      );
+
+      // Seguimiento espacial: giroscopio 3DoF + paralaje para observar la profundidad del pasillo a través del portal
       state.smoothedGyro.x = THREE.MathUtils.lerp(state.smoothedGyro.x, state.gyroOffset.x, 0.07);
       state.smoothedGyro.y = THREE.MathUtils.lerp(state.smoothedGyro.y, state.gyroOffset.y, 0.07);
-      state.smoothedParallax.x = THREE.MathUtils.lerp(state.smoothedParallax.x, state.pointerNDC.x * 0.20, 0.05);
-      state.smoothedParallax.y = THREE.MathUtils.lerp(state.smoothedParallax.y, state.pointerNDC.y * 0.12, 0.05);
+      state.smoothedParallax.x = THREE.MathUtils.lerp(state.smoothedParallax.x, state.pointerNDC.x * 0.28, 0.05);
+      state.smoothedParallax.y = THREE.MathUtils.lerp(state.smoothedParallax.y, state.pointerNDC.y * 0.14, 0.05);
 
       camera.position.x = state.smoothedParallax.x + state.smoothedGyro.x;
       camera.position.y = 0.18 + state.smoothedParallax.y + state.smoothedGyro.y;
-      camera.lookAt(state.smoothedGyro.x * 0.25, 0.08 + state.smoothedGyro.y * 0.2, 0);
+      camera.position.z = CONFIG.cameraDistance + state.cameraZoomOffsetZ;
+      camera.lookAt(state.smoothedGyro.x * 0.22, 0.05 + state.smoothedGyro.y * 0.18, -1.2);
 
-      // Coreografía de materialización inicial
+      // Coreografía de apertura del portal y materialización
       if (state.materializing) {
         updateMaterialization(elapsedTime);
       }
 
-      // Pulso sutil del anillo holográfico de anclaje en el suelo
+      // Pulso del anillo de anclaje en el suelo
       if (state.anchorRingGroup && !state.materializing) {
         const ringPulse = 1.0 + Math.sin(elapsedTime * 2.2) * 0.03;
         state.anchorRingGroup.scale.setScalar(ringPulse);
       }
 
-      // Destello brillante de la escultura y recuperación a su color normal
+      // Destello brillante de la escultura al completarse el descubrimiento
       if (state.revealFlashActive) {
         const flashElapsed = elapsedTime - state.revealFlashStartTime;
         const t = Math.min(1.0, Math.max(0.0, flashElapsed / state.revealFlashDuration));
@@ -1832,7 +2601,7 @@
         }
       }
 
-      // Animación de la onda expansiva de partículas al descubrir la escultura
+      // Onda expansiva de partículas al descubrir la escultura dentro del pasillo
       if (state.burstActive && burstParticles) {
         const burstElapsed = elapsedTime - state.burstStartTime;
         const duration = 1.65;
@@ -1846,7 +2615,7 @@
               i,
               bd.vx * easeOut * 1.4,
               0.15 + bd.vy * easeOut * 1.4,
-              bd.vz * easeOut * 1.4
+              -0.4 + bd.vz * easeOut * 1.4
             );
           }
           posAttr.needsUpdate = true;
@@ -1857,7 +2626,7 @@
         }
       }
 
-      // Física de hojas y viento cuando ya terminó la materialización
+      // Física de hojas y viento
       if (!state.materializing) {
         state.foliagePlanes.forEach((leaf) => {
           const d = leaf.userData;
