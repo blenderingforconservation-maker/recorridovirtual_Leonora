@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Sala WebAR · Museo Leonora Carrington</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tipografías Curatoriales -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Importmap Oficial Three.js r160 -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #070d0b;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .font-museum {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+
+    #webgl-viewport {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    /* WebXR DOM Overlay root - debe ser pointer-events: none, con hijos auto */
+    #ar-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: none; /* Se muestra al entrar en AR */
+      flex-direction: column;
+      justify-content: space-between;
+      padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 16px);
+    }
+    
+    #ar-overlay.active {
+      display: flex;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* Píldora Toast de Notificación */
+    #toast-banner {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 8px 24px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      color: #fff;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      text-align: center;
+      width: max-content;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Lienzo WebGL Three.js -->
+  <div id="webgl-viewport"></div>
+
+  <!-- PANTALLA DE CARGA Y ENTRADA -->
+  <div id="loading-modal" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950 px-6 text-center transition-opacity duration-500">
+    <div class="w-12 h-12 mb-4 rounded-full bg-emerald-500/10 border border-lime-300/30 flex items-center justify-center">
+      <div class="w-3 h-3 rounded-full bg-lime-300 animate-ping"></div>
+    </div>
+
+    <span class="text-[10px] uppercase tracking-[0.28em] text-lime-300/80 font-medium mb-1">
+      Sala de Exhibición Virtual WebAR
+    </span>
+    <h1 class="font-museum text-3xl sm:text-4xl text-stone-100 tracking-wide mb-2">
+      Pasillo Surreal
+    </h1>
+    <p id="loading-message" class="text-xs text-stone-400 max-w-xs mb-6 leading-relaxed">
+      Optimizando y cargando sala museográfica...
+    </p>
+
+    <!-- Progreso -->
+    <div id="progress-container" class="w-56 flex flex-col items-center mb-4">
+      <div class="w-full h-1 bg-stone-800 rounded-full overflow-hidden">
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-500 via-lime-400 to-yellow-300 w-0 transition-all duration-300"></div>
+      </div>
+      <span id="progress-text" class="text-[10px] font-mono text-stone-500 mt-2">0%</span>
+    </div>
+
+    <!-- Botón de Entrada (oculto hasta cargar) -->
+    <button id="btn-enter-ar" class="hidden w-full max-w-xs py-3.5 px-6 rounded-full bg-gradient-to-r from-emerald-400 via-lime-300 to-yellow-300 hover:opacity-95 text-stone-950 font-semibold text-xs uppercase tracking-widest shadow-xl items-center justify-center gap-2 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+      <span>Iniciar Cámara AR</span>
+    </button>
+  </div>
+
+  <!-- WEBXR DOM OVERLAY (UI AR) -->
+  <div id="ar-overlay">
+    <div id="toast-banner">Iniciando realidad aumentada...</div>
+    
+    <header class="w-full flex items-center justify-between gap-2 mt-2">
+      <div id="reticle-status" class="flex items-center gap-2.5 bg-black/65 backdrop-blur-xl border border-lime-300/30 rounded-full px-4 py-2 shadow-lg">
+        <span class="w-2 h-2 rounded-full bg-lime-400 animate-ping"></span>
+        <span class="text-xs font-medium text-stone-100">Apunta al suelo y toca para anclar la sala</span>
+      </div>
+
+      <!-- Botón para reubicar en el suelo en cualquier momento -->
+      <button id="btn-reset-portal" class="interactive hidden px-3.5 py-2 rounded-full bg-black/65 border border-white/20 text-lime-200 text-[11px] font-medium backdrop-blur-xl shadow-lg active:scale-95 transition-transform">
+        Reubicar Sala
+      </button>
+    </header>
+
+    <footer class="w-full flex flex-col items-center gap-3 mb-4">
+      <!-- Botón para fijar la sala (Fase Detección Instantánea) -->
+      <button id="btn-place-portal" class="interactive hidden px-8 py-4 rounded-full bg-gradient-to-r from-emerald-400 via-lime-300 to-yellow-300 hover:opacity-95 text-stone-950 font-bold text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all">
+        Anclar Sala en el Piso Aquí
+      </button>
+
+      <!-- Controles de exploración y ajuste de nivel de piso -->
+      <div id="walk-controls" class="hidden interactive w-full max-w-md bg-black/65 backdrop-blur-xl border border-white/15 rounded-2xl px-4 py-2.5 flex flex-col gap-2 shadow-xl">
+        <div class="flex items-center justify-between text-[11px] text-stone-300">
+          <span class="uppercase tracking-wider text-lime-200/90 font-medium">Camina por la sala o desliza</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] text-stone-400">Nivel Piso:</span>
+            <button id="btn-floor-down" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white font-mono text-xs">-15cm</button>
+            <button id="btn-floor-up" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white font-mono text-xs">+15cm</button>
+          </div>
+        </div>
+        <input id="walk-slider" type="range" min="-2.5" max="11.5" step="0.05" value="0" class="w-full accent-lime-300 h-1.5 bg-stone-700 rounded-lg cursor-pointer" />
+      </div>
+
+      <!-- Controles de medios (Fase Exploración) -->
+      <div id="media-controls" class="hidden interactive flex items-center gap-5">
+        <button id="btn-capture-photo" class="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-black/65 border border-white/25 text-white text-xs font-medium backdrop-blur-xl shadow-lg active:scale-95 transition-transform">
+          <span class="w-6 h-6 rounded-full bg-white flex items-center justify-center"><svg class="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg></span>
+          <span>Foto HD</span>
+        </button>
+        <button id="btn-capture-video" class="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-black/65 border border-white/25 text-white text-xs font-medium backdrop-blur-xl shadow-lg active:scale-95 transition-transform">
+          <span id="video-dot" class="w-3 h-3 rounded-full bg-red-500"></span>
+          <span id="video-label">Video HD</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+    import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+    // Rutas Oficiales del Repositorio
+    const REPO_RAW_BASE = 'https://raw.githubusercontent.com/blenderingforconservation-maker/recorridovirtual_Leonora/main/';
+    const MODELS = {
+      corridor: `${REPO_RAW_BASE}models/pasillo_optimizado.glb`,
+      rock: `${REPO_RAW_BASE}models/rock.glb`,
+      sculpture: `${REPO_RAW_BASE}models/3DModel.glb`
+    };
+
+    // Variables Globales
+    let scene, camera, renderer, gltfLoader;
+    let hitTestSource = null;
+    let hitTestSourceRequested = false;
+    let xrFloorY = -1.45;
+    
+    // Grupos y Elementos 3D (Sin Portal ni Stencil para máxima estabilidad en móvil)
+    let reticle, hallGroup, interiorGroup;
+    let clippingPlane, leafParticles, leafMaterial;
+    
+    // Estados Espaciales y de Animación
+    let hallPlaced = false;
+    let materializationT = 0;
+    let isMaterializing = false;
+    let lastFrameTime = performance.now();
+
+    // Caminata y Giroscopio (para modo AR cámara y ajuste fino)
+    let fallbackMode = false;
+    let fallbackVideo = null;
+    let userRig = null;
+    let walkForwardOffset = 0;
+    let floorOffsetY = 0;
+    let hasGyro = false;
+    const deviceEuler = new THREE.Euler();
+    const deviceQuat = new THREE.Quaternion();
+    const screenTransform = new THREE.Quaternion();
+    const worldTransform = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+
+    // Vectores pre-alocados para evitar Garbage Collection y crashes en el bucle de render
+    const _rayOrigin = new THREE.Vector3();
+    const _rayDir = new THREE.Vector3();
+    const _horizDir = new THREE.Vector3();
+    const _camWorldPos = new THREE.Vector3();
+    const _lookTarget = new THREE.Vector3();
+    const _hallForward = new THREE.Vector3();
+    const _zAxis = new THREE.Vector3(0, 0, 1);
+
+    // Grabación Multimedia (Compositor Cámara + 3D)
+    let isRecording = false;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let compositeCanvas = null;
+    let compositeCtx = null;
+
+    // UI Elements
+    const domOverlay = document.getElementById('ar-overlay');
+    const btnEnterAR = document.getElementById('btn-enter-ar');
+    const loadingModal = document.getElementById('loading-modal');
+    const btnPlacePortal = document.getElementById('btn-place-portal');
+    const btnResetPortal = document.getElementById('btn-reset-portal');
+    const reticleStatus = document.getElementById('reticle-status');
+    const walkControls = document.getElementById('walk-controls');
+    const walkSlider = document.getElementById('walk-slider');
+    const btnFloorDown = document.getElementById('btn-floor-down');
+    const btnFloorUp = document.getElementById('btn-floor-up');
+    const mediaControls = document.getElementById('media-controls');
+    const toastBanner = document.getElementById('toast-banner');
+
+    function showToast(msg) {
+      toastBanner.textContent = msg;
+      toastBanner.style.opacity = '1';
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => { toastBanner.style.opacity = '0'; }, 3000);
+    }
+
+    init();
+
+    async function init() {
+      const container = document.getElementById('webgl-viewport');
+      scene = new THREE.Scene();
+
+      // Rig del usuario para caminar en el espacio 3D manteniendo el piso en Y = 0
+      userRig = new THREE.Group();
+      userRig.position.set(0, 0, 0);
+      scene.add(userRig);
+
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.08, 75);
+      camera.position.set(0, 1.55, 0); // Altura humana promedio sobre el piso Y = 0
+      userRig.add(camera);
+
+      // Configuración WebGL optimizada para no saturar la VRAM del teléfono
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        stencil: false,
+        powerPreference: 'high-performance',
+        preserveDrawingBuffer: false
+      });
+      // Limitar pixelRatio a 1.5 evita sobrecalentamiento y cierres por memoria en pantallas QHD/Retina
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.xr.enabled = true;
+      renderer.localClippingEnabled = false;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      container.appendChild(renderer.domElement);
+
+      // Manejo preventivo de pérdida de contexto WebGL
+      renderer.domElement.addEventListener('webglcontextlost', (e) => {
+        e.preventDefault();
+        showToast('Recuperando memoria gráfica...');
+      }, false);
+
+      setupLighting();
+      setupReticle();
+
+      // Crear Jerarquía de la Sala de Exhibición
+      hallGroup = new THREE.Group();
+      hallGroup.visible = false;
+      scene.add(hallGroup);
+
+      interiorGroup = new THREE.Group();
+      hallGroup.add(interiorGroup);
+
+      setupLeafMaterialization();
+
+      // Cargar los 3 modelos en paralelo
+      await loadModelsParallel();
+
+      // Eventos de Interfaz
+      btnEnterAR.addEventListener('click', startARExperience);
+      btnPlacePortal.addEventListener('click', placeHallAtReticle);
+      btnResetPortal.addEventListener('click', resetHallPlacement);
+
+      // Permitir tocar directamente el suelo en pantalla para fijar la sala
+      renderer.domElement.addEventListener('click', () => {
+        if (!hallPlaced && reticle.visible) {
+          placeHallAtReticle();
+        }
+      });
+
+      // Controles de caminata y ajuste rápido de nivel de suelo
+      walkSlider.addEventListener('input', (e) => {
+        walkForwardOffset = parseFloat(e.target.value) || 0;
+      });
+      btnFloorDown.addEventListener('click', () => adjustFloorHeight(-0.15));
+      btnFloorUp.addEventListener('click', () => adjustFloorHeight(0.15));
+
+      setupMediaCapture();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    function setupLighting() {
+      const hemiLight = new THREE.HemisphereLight(0xfef9c3, 0x14532d, 1.45);
+      hemiLight.position.set(0, 8, 0);
+      scene.add(hemiLight);
+
+      const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.75);
+      dirLight.position.set(3, 9, 4);
+      scene.add(dirLight);
+    }
+
+    // -- RETÍCULA LIGERA DE DETECCIÓN DE PISO --
+    function setupReticle() {
+      reticle = new THREE.Group();
+
+      const outerRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.22, 0.26, 32).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0x84cc16, side: THREE.DoubleSide })
+      );
+      const innerRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.07, 0.10, 24).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
+      );
+      const centerDisc = new THREE.Mesh(
+        new THREE.CircleGeometry(0.22, 24).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
+      );
+
+      reticle.add(centerDisc, outerRing, innerRing);
+      reticle.visible = false;
+      scene.add(reticle);
+    }
+
+    // -- TEXTURA PROCEDURAL DE HOJA BOTÁNICA --
+    function createLeafTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+
+      ctx.save();
+      ctx.translate(64, 64);
+
+      // Silueta orgánica de hoja de árbol
+      ctx.beginPath();
+      ctx.moveTo(0, -52);
+      ctx.bezierCurveTo(36, -34, 44, 14, 0, 48);
+      ctx.bezierCurveTo(-44, 14, -36, -34, 0, -52);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, -52, 0, 52);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+      grad.addColorStop(0.6, 'rgba(240, 255, 240, 0.96)');
+      grad.addColorStop(1, 'rgba(215, 245, 215, 0.88)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Nervadura central y pecíolo
+      ctx.strokeStyle = 'rgba(170, 210, 160, 0.85)';
+      ctx.lineWidth = 2.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, -46);
+      ctx.lineTo(0, 56);
+      ctx.stroke();
+
+      // Nervaduras secundarias
+      ctx.lineWidth = 1.5;
+      const veins = [
+        [-18, -16, -2, -26],
+        [18, -16, 2, -26],
+        [-22, 2, -2, -10],
+        [22, 2, 2, -10],
+        [-16, 20, -2, 8],
+        [16, 20, 2, 8]
+      ];
+      veins.forEach(([x1, y1, x2, y2]) => {
+        ctx.beginPath();
+        ctx.moveTo(0, y1 + 8);
+        ctx.quadraticCurveTo((x1 + x2) * 0.5, (y1 + y2) * 0.5, x1, y2);
+        ctx.stroke();
+      });
+
+      ctx.restore();
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    // -- SISTEMA GPU DE MATERIALIZACIÓN CON HOJAS DE ÁRBOLES (VERDE A AMARILLO) --
+    function setupLeafMaterialization() {
+      // Plano de corte horizontal (se activa únicamente durante los ~2.6s de materialización)
+      clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 100);
+
+      const leafTexture = createLeafTexture();
+
+      // Paleta botánica del verde selva al amarillo solar
+      const palette = [
+        new THREE.Color('#15803d'), // Verde bosque profundo
+        new THREE.Color('#16a34a'), // Verde hoja esmeralda
+        new THREE.Color('#22c55e'), // Verde selva vivo
+        new THREE.Color('#65a30d'), // Verde musgo cálido
+        new THREE.Color('#84cc16'), // Verde lima fresco
+        new THREE.Color('#a3e635'), // Lima amarillento
+        new THREE.Color('#eab308'), // Amarillo ocre dorado
+        new THREE.Color('#facc15'), // Amarillo brillante
+        new THREE.Color('#fde047')  // Amarillo luz cálido
+      ];
+
+      // 420 hojas animadas 100% en GPU (1 solo draw call, 0 actualizaciones de CPU por frame)
+      const leafCount = 420;
+      const geo = new THREE.BufferGeometry();
+      const positions = new Float32Array(leafCount * 3);
+      const colors = new Float32Array(leafCount * 3);
+      const seeds = new Float32Array(leafCount * 3); // [phase, scale, rotSpeed]
+
+      for (let i = 0; i < leafCount; i++) {
+        // Distribuir a lo largo de las paredes, piso y bóveda del pasillo
+        const side = Math.random() < 0.75 ? (Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 1.1) : (Math.random() - 0.5) * 2.2;
+        const x = side;
+        const y = Math.random() * 4.2;
+        const z = -Math.random() * 13.4;
+
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+
+        const c = palette[Math.floor(Math.random() * palette.length)];
+        colors[i * 3] = c.r;
+        colors[i * 3 + 1] = c.g;
+        colors[i * 3 + 2] = c.b;
+
+        seeds[i * 3] = Math.random() * Math.PI * 2;       // Fase aleatoria
+        seeds[i * 3 + 1] = 0.65 + Math.random() * 0.75;   // Tamaño relativo de hoja
+        seeds[i * 3 + 2] = (Math.random() - 0.5) * 3.8;   // Velocidad de giro
+      }
+
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('aColor', new THREE.BufferAttribute(colors, 3));
+      geo.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 3));
+
+      leafMaterial = new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        uniforms: {
+          uMap: { value: leafTexture },
+          uTime: { value: 0 },
+          uProgress: { value: 0 },
+          uOpacity: { value: 1.0 },
+          uPixelRatio: { value: renderer.getPixelRatio() }
+        },
+        vertexShader: `
+          attribute vec3 aColor;
+          attribute vec3 aSeed;
+          varying vec3 vColor;
+          varying float vAngle;
+          varying float vAlpha;
+
+          uniform float uTime;
+          uniform float uProgress;
+          uniform float uPixelRatio;
+
+          void main() {
+            vColor = aColor;
+            float phase = aSeed.x;
+            float leafScale = aSeed.y;
+            float rotSpeed = aSeed.z;
+
+            vec3 pos = position;
+
+            // Durante la materialización las hojas emergen en remolino acompañando el frente de aparición
+            float bandY = uProgress * 4.6;
+            float swirl = sin(uTime * 2.4 + phase) * 0.22;
+            float flutterZ = cos(uTime * 1.9 + phase) * 0.16;
+
+            pos.x += swirl;
+            pos.z += flutterZ;
+            pos.y = mod(pos.y + uTime * 0.45, 4.4) * clamp(uProgress * 1.25, 0.15, 1.0);
+
+            // Mayor concentración y brillo justo en la franja donde se materializa el pasillo
+            float distToWave = abs(pos.y - bandY);
+            float waveBoost = smoothstep(1.6, 0.0, distToWave);
+
+            vAngle = phase + uTime * rotSpeed;
+            vAlpha = clamp(0.45 + waveBoost * 0.55, 0.0, 1.0);
+
+            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+
+            float baseSize = 72.0 * leafScale * (1.0 + waveBoost * 0.35);
+            gl_PointSize = clamp((baseSize * uPixelRatio) / max(-mvPosition.z, 0.4), 6.0, 96.0);
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D uMap;
+          uniform float uOpacity;
+          varying vec3 vColor;
+          varying float vAngle;
+          varying float vAlpha;
+
+          void main() {
+            vec2 centered = gl_PointCoord - vec2(0.5);
+            float c = cos(vAngle);
+            float s = sin(vAngle);
+            vec2 rotatedUV = vec2(
+              centered.x * c - centered.y * s,
+              centered.x * s + centered.y * c
+            ) + vec2(0.5);
+
+            if (rotatedUV.x < 0.0 || rotatedUV.x > 1.0 || rotatedUV.y < 0.0 || rotatedUV.y > 1.0) discard;
+
+            vec4 texColor = texture2D(uMap, rotatedUV);
+            if (texColor.a < 0.15) discard;
+
+            gl_FragColor = vec4(vColor * texColor.rgb, texColor.a * vAlpha * uOpacity);
+          }
+        `
+      });
+
+      leafParticles = new THREE.Points(geo, leafMaterial);
+      leafParticles.frustumCulled = false;
+      leafParticles.visible = false;
+      hallGroup.add(leafParticles);
+    }
+
+    // -- OPTIMIZACIÓN Y CORRECCIÓN DE MATERIALES PBR DEL PASILLO --
+    function fixCorridorMaterial(mat, maxAnisotropy) {
+      if (!mat) return;
+      const name = (mat.name || '').toLowerCase();
+      const cutoutNames = ['alexandrapalm', 'wild bush', 'plantas', 'plant.leaf', 'rejapared', 'leaves', 'orchid', 'sepal'];
+      const isCutout = cutoutNames.some(k => name.includes(k));
+
+      if (isCutout) {
+        mat.transparent = false;
+        mat.alphaTest = 0.42;
+        mat.depthWrite = true;
+        mat.side = THREE.DoubleSide;
+      } else {
+        mat.transparent = false;
+        mat.alphaTest = 0;
+        mat.depthWrite = true;
+        mat.side = THREE.FrontSide;
+      }
+
+      // Limitar anisotropía a 2 para ahorrar ancho de banda de GPU móvil sin perder nitidez
+      ['map', 'normalMap', 'roughnessMap', 'metalnessMap'].forEach((mapKey) => {
+        if (mat[mapKey]) {
+          mat[mapKey].anisotropy = maxAnisotropy;
+        }
+      });
+    }
+
+    // -- CARGA PARALELA, CONGELADO DE MATRICES Y NIVELACIÓN AL PISO (Y = 0) --
+    async function loadModelsParallel() {
+      await MeshoptDecoder.ready;
+
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+      gltfLoader = new GLTFLoader();
+      gltfLoader.setDRACOLoader(dracoLoader);
+      gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+
+      const progressMap = { corridor: 0, rock: 0, sculpture: 0 };
+      const updateUIProgress = () => {
+        const total = Math.min(99, Math.round((progressMap.corridor * 0.65) + (progressMap.rock * 0.15) + (progressMap.sculpture * 0.20)));
+        document.getElementById('progress-bar').style.width = total + '%';
+        document.getElementById('progress-text').textContent = total + '%';
+      };
+
+      const loadWithProgress = (url, key) =>
+        new Promise((resolve, reject) => {
+          gltfLoader.load(
+            url,
+            (gltf) => {
+              progressMap[key] = 100;
+              updateUIProgress();
+              resolve(gltf);
+            },
+            (xhr) => {
+              if (xhr.total > 0) {
+                progressMap[key] = (xhr.loaded / xhr.total) * 100;
+                updateUIProgress();
+              }
+            },
+            reject
+          );
+        });
+
+      try {
+        const [gltfCorridor, gltfRock, gltfSculpture] = await Promise.all([
+          loadWithProgress(MODELS.corridor, 'corridor'),
+          loadWithProgress(MODELS.rock, 'rock'),
+          loadWithProgress(MODELS.sculpture, 'sculpture')
+        ]);
+
+        const corridor = gltfCorridor.scene;
+        corridor.scale.setScalar(5.2);
+        corridor.updateMatrixWorld(true);
+
+        // Detectar las losas de piso (pisoceart1 / stones) y muros (murocear) para nivelar a Y = 0
+        const floorBox = new THREE.Box3();
+        const wallBox = new THREE.Box3();
+        let hasFloorMesh = false;
+        let hasWallMesh = false;
+
+        corridor.traverse((node) => {
+          if (node.isMesh) {
+            const mName = (node.name || '').toLowerCase();
+            const matName = (node.material?.name || '').toLowerCase();
+            if (mName.includes('piso') || matName.includes('pisoceart') || matName.includes('stones')) {
+              floorBox.expandByObject(node);
+              hasFloorMesh = true;
+            }
+            if (mName.includes('muro') || matName.includes('murocear')) {
+              wallBox.expandByObject(node);
+              hasWallMesh = true;
+            }
+          }
+        });
+
+        const fullCorrBox = new THREE.Box3().setFromObject(corridor);
+        const refCenter = hasWallMesh ? wallBox.getCenter(new THREE.Vector3()) : fullCorrBox.getCenter(new THREE.Vector3());
+        const walkableFloorY = hasFloorMesh ? floorBox.max.y : fullCorrBox.min.y;
+        const entranceZ = hasWallMesh ? wallBox.max.z : fullCorrBox.max.z;
+        const backZ = hasWallMesh ? wallBox.min.z : fullCorrBox.min.z;
+
+        corridor.position.set(
+          -refCenter.x,
+          -walkableFloorY,
+          -entranceZ
+        );
+        corridor.updateMatrixWorld(true);
+
+        const corridorLength = Math.abs(entranceZ - backZ);
+        const midCorridorZ = -(corridorLength * 0.48);
+
+        // Posicionar roca en el piso (Y = 0) a mitad del pasillo
+        const rock = gltfRock.scene;
+        rock.scale.setScalar(1.15);
+        rock.updateMatrixWorld(true);
+        const rockBox = new THREE.Box3().setFromObject(rock);
+        const rockCenter = rockBox.getCenter(new THREE.Vector3());
+        rock.position.set(-rockCenter.x, -rockBox.min.y, midCorridorZ - rockCenter.z);
+        rock.updateMatrixWorld(true);
+        const rockHeight = rockBox.max.y - rockBox.min.y;
+
+        // Posicionar escultura sobre la cumbre de la roca
+        const sculpture = gltfSculpture.scene;
+        sculpture.scale.setScalar(1.75);
+        sculpture.updateMatrixWorld(true);
+        const sculpBox = new THREE.Box3().setFromObject(sculpture);
+        const sculpCenter = sculpBox.getCenter(new THREE.Vector3());
+        sculpture.position.set(
+          -sculpCenter.x,
+          rockHeight - sculpBox.min.y - 0.04,
+          midCorridorZ - sculpCenter.z
+        );
+        sculpture.updateMatrixWorld(true);
+
+        interiorGroup.add(corridor, rock, sculpture);
+
+        const maxAniso = Math.min(2, renderer.capabilities.getMaxAnisotropy());
+        const processedMaterials = new Set();
+
+        // Optimizar materiales y congelar matrices de todos los nodos estáticos
+        interiorGroup.traverse((node) => {
+          node.matrixAutoUpdate = false;
+          node.updateMatrix();
+          if (node.isMesh && node.material) {
+            const mats = Array.isArray(node.material) ? node.material : [node.material];
+            mats.forEach((mat) => {
+              if (!processedMaterials.has(mat)) {
+                fixCorridorMaterial(mat, maxAniso);
+                mat.clippingPlanes = [clippingPlane];
+                mat.needsUpdate = true;
+                processedMaterials.add(mat);
+              }
+            });
+          }
+        });
+
+        dracoLoader.dispose();
+
+        document.getElementById('progress-bar').style.width = '100%';
+        document.getElementById('progress-text').textContent = '100%';
+        document.getElementById('progress-container').classList.add('hidden');
+        document.getElementById('loading-message').textContent = 'Sala de exhibición lista para explorar a nivel de piso.';
+        btnEnterAR.classList.remove('hidden');
+        btnEnterAR.classList.add('flex');
+      } catch (e) {
+        console.error('Error cargando modelos:', e);
+        document.getElementById('loading-message').textContent = 'Error al cargar modelos: ' + (e.message || 'Recarga la página.');
+      }
+    }
+
+    // -- INICIO DE CÁMARA AR --
+    async function startARExperience() {
+      loadingModal.classList.add('hidden');
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          await DeviceOrientationEvent.requestPermission();
+        } catch (_) {}
+      }
+
+      if (navigator.xr) {
+        try {
+          const supported = await navigator.xr.isSessionSupported('immersive-ar');
+          if (supported) {
+            const sessionInit = {
+              optionalFeatures: ['hit-test', 'local-floor', 'dom-overlay'],
+              domOverlay: { root: domOverlay }
+            };
+            const session = await navigator.xr.requestSession('immersive-ar', sessionInit);
+
+            try {
+              renderer.xr.setReferenceSpaceType('local-floor');
+              xrFloorY = 0;
+            } catch (_) {
+              renderer.xr.setReferenceSpaceType('local');
+              xrFloorY = -1.45;
+            }
+
+            await renderer.xr.setSession(session);
+            domOverlay.classList.add('active');
+            btnPlacePortal.classList.remove('hidden');
+
+            session.addEventListener('end', () => {
+              domOverlay.classList.remove('active');
+              window.location.reload();
+            });
+
+            lastFrameTime = performance.now();
+            renderer.setAnimationLoop(renderLoop);
+            return;
+          }
+        } catch (e) {
+          console.warn('Pasando a Cámara AR ligera:', e);
+        }
+      }
+
+      await startCameraGyroARSession();
+    }
+
+    // -- MODO CÁMARA AR FLUIDO (720p60 PARA EVITAR SATURAR MEMORIA DE VIDEO) --
+    async function startCameraGyroARSession() {
+      fallbackMode = true;
+      domOverlay.classList.add('active');
+      btnPlacePortal.classList.remove('hidden');
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+        fallbackVideo = document.createElement('video');
+        fallbackVideo.srcObject = stream;
+        fallbackVideo.setAttribute('playsinline', '');
+        fallbackVideo.muted = true;
+        await fallbackVideo.play();
+        Object.assign(fallbackVideo.style, {
+          position: 'fixed',
+          inset: '0',
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: '0'
+        });
+        document.body.prepend(fallbackVideo);
+      } catch (err) {
+        console.warn('Cámara no disponible en este entorno; usando vista 3D directa.');
+      }
+
+      userRig.position.set(0, 0, 0);
+      camera.position.set(0, 1.55, 0);
+      camera.rotation.set(-0.28, 0, 0, 'YXZ');
+
+      window.addEventListener('deviceorientation', (e) => {
+        if (e.alpha === null || e.beta === null || e.gamma === null) return;
+        hasGyro = true;
+        const alpha = THREE.MathUtils.degToRad(e.alpha);
+        const beta = THREE.MathUtils.degToRad(e.beta);
+        const gamma = THREE.MathUtils.degToRad(e.gamma);
+        const orient = THREE.MathUtils.degToRad(window.screen?.orientation?.angle || window.orientation || 0);
+
+        deviceEuler.set(beta, alpha, -gamma, 'YXZ');
+        deviceQuat.setFromEuler(deviceEuler);
+        deviceQuat.multiply(worldTransform);
+        deviceQuat.multiply(screenTransform.setFromAxisAngle(_zAxis, -orient));
+        camera.quaternion.copy(deviceQuat);
+      });
+
+      // Podómetro físico por acelerómetro para avanzar caminando
+      let lastStepTime = 0;
+      window.addEventListener('devicemotion', (e) => {
+        if (!hallPlaced) return;
+        const acc = e.accelerationIncludingGravity;
+        if (!acc) return;
+        const mag = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
+        const now = performance.now();
+        if (mag > 13.2 && now - lastStepTime > 360) {
+          lastStepTime = now;
+          walkForwardOffset = Math.min(11.5, walkForwardOffset + 0.42);
+          walkSlider.value = walkForwardOffset.toFixed(2);
+        }
+      });
+
+      let lastTouchX = null;
+      let lastTouchY = null;
+      window.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          lastTouchX = e.touches[0].clientX;
+          lastTouchY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1 || lastTouchY === null) return;
+        const dx = e.touches[0].clientX - lastTouchX;
+        const dy = e.touches[0].clientY - lastTouchY;
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+
+        if (!hasGyro) {
+          camera.rotation.y -= dx * 0.005;
+          camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - dy * 0.005, -1.2, 0.8);
+        }
+      }, { passive: true });
+
+      lastFrameTime = performance.now();
+      renderer.setAnimationLoop(renderLoop);
+    }
+
+    // -- ANCLAR LA SALA DE EXHIBICIÓN EN EL PISO --
+    function placeHallAtReticle() {
+      if (!reticle.visible) return;
+
+      hallGroup.matrixAutoUpdate = true;
+      hallGroup.position.copy(reticle.position);
+      hallGroup.position.y += floorOffsetY;
+
+      camera.getWorldPosition(_camWorldPos);
+      _lookTarget.set(_camWorldPos.x, hallGroup.position.y, _camWorldPos.z);
+      hallGroup.lookAt(_lookTarget);
+
+      // Congelar matriz mundial para que el pasillo quede 100% fijo en el suelo físico
+      hallGroup.updateMatrix();
+      hallGroup.updateMatrixWorld(true);
+      hallGroup.matrixAutoUpdate = false;
+      hallGroup.visible = true;
+
+      hallPlaced = true;
+      reticle.visible = false;
+
+      btnPlacePortal.classList.add('hidden');
+      btnResetPortal.classList.remove('hidden');
+      reticleStatus.querySelector('span:nth-child(2)').textContent = 'Sala fija en el suelo · Camina para explorar';
+      walkControls.classList.remove('hidden');
+      mediaControls.classList.remove('hidden');
+
+      // Activar clipping únicamente mientras dura la materialización
+      renderer.localClippingEnabled = true;
+      isMaterializing = true;
+      materializationT = 0;
+      clippingPlane.constant = hallGroup.position.y + 0.05;
+      leafParticles.visible = true;
+      leafMaterial.uniforms.uProgress.value = 0;
+      leafMaterial.uniforms.uOpacity.value = 1.0;
+
+      showToast('Materializando Sala Xilitla sobre el suelo...');
+    }
+
+    function resetHallPlacement() {
+      hallPlaced = false;
+      isMaterializing = false;
+      renderer.localClippingEnabled = false;
+      hallGroup.visible = false;
+      leafParticles.visible = false;
+      walkForwardOffset = 0;
+      walkSlider.value = '0';
+      userRig.position.set(0, 0, 0);
+
+      btnPlacePortal.classList.remove('hidden');
+      btnResetPortal.classList.add('hidden');
+      walkControls.classList.add('hidden');
+      mediaControls.classList.add('hidden');
+      reticleStatus.querySelector('span:nth-child(2)').textContent = 'Apunta al suelo y toca para anclar la sala';
+      showToast('Apunta al piso para reubicar la sala.');
+    }
+
+    function adjustFloorHeight(deltaY) {
+      floorOffsetY += deltaY;
+      if (hallPlaced) {
+        hallGroup.matrixAutoUpdate = true;
+        hallGroup.position.y += deltaY;
+        hallGroup.updateMatrix();
+        hallGroup.updateMatrixWorld(true);
+        hallGroup.matrixAutoUpdate = false;
+        if (isMaterializing) {
+          clippingPlane.constant = hallGroup.position.y + (materializationT * 5.0);
+        }
+        showToast(`Nivel del piso ajustado (${floorOffsetY >= 0 ? '+' : ''}${Math.round(floorOffsetY * 100)} cm)`);
+      }
+    }
+
+    // -- DETECCIÓN INSTANTÁNEA DE PISO POR RAYO + HIT-TEST --
+    function updateInstantFloorReticle(frame) {
+      let hitFound = false;
+
+      if (frame && !fallbackMode) {
+        const referenceSpace = renderer.xr.getReferenceSpace();
+        const session = renderer.xr.getSession();
+
+        if (!hitTestSourceRequested && session) {
+          session.requestReferenceSpace('viewer').then((viewerSpace) => {
+            if (session.requestHitTestSource) {
+              session.requestHitTestSource({ space: viewerSpace }).then((source) => {
+                hitTestSource = source;
+              }).catch(() => {});
+            }
+          }).catch(() => {});
+          hitTestSourceRequested = true;
+        }
+
+        if (hitTestSource && referenceSpace) {
+          const results = frame.getHitTestResults(hitTestSource);
+          if (results.length > 0) {
+            const pose = results[0].getPose(referenceSpace);
+            if (pose) {
+              reticle.position.set(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z);
+              xrFloorY = pose.transform.position.y;
+              hitFound = true;
+            }
+          }
+        }
+      }
+
+      if (!hitFound) {
+        const floorY = fallbackMode ? 0 : xrFloorY;
+        camera.getWorldPosition(_rayOrigin);
+        camera.getWorldDirection(_rayDir);
+
+        if (_rayDir.y < -0.08) {
+          const t = (floorY - _rayOrigin.y) / _rayDir.y;
+          const clampedT = THREE.MathUtils.clamp(t, 1.5, 4.2);
+          reticle.position.set(
+            _rayOrigin.x + _rayDir.x * clampedT,
+            floorY,
+            _rayOrigin.z + _rayDir.z * clampedT
+          );
+        } else {
+          _horizDir.set(_rayDir.x, 0, _rayDir.z).normalize();
+          if (_horizDir.lengthSq() < 0.001) _horizDir.set(0, 0, -1);
+          reticle.position.set(
+            _rayOrigin.x + _horizDir.x * 2.2,
+            floorY,
+            _rayOrigin.z + _horizDir.z * 2.2
+          );
+        }
+      }
+
+      reticle.visible = true;
+      btnPlacePortal.classList.remove('hidden');
+    }
+
+    // -- BUCLE PRINCIPAL OPTIMIZADO (CERO ALOCACIONES DE MEMORIA POR FRAME) --
+    function renderLoop(timestamp, frame) {
+      const dt = Math.min(0.05, (timestamp - lastFrameTime) / 1000 || 0.016);
+      lastFrameTime = timestamp;
+      const timeSec = timestamp * 0.001;
+
+      // 1. Fase de Detección de Suelo Instantánea
+      if (!hallPlaced) {
+        updateInstantFloorReticle(frame);
+        reticle.rotation.y = timeSec * 1.4;
+      }
+
+      // 2. Caminata fluida a lo largo de la sala de exhibición
+      if (hallPlaced) {
+        _hallForward.set(0, 0, -1).applyQuaternion(hallGroup.quaternion);
+        _hallForward.y = 0;
+        _hallForward.normalize();
+
+        userRig.position.set(
+          _hallForward.x * walkForwardOffset,
+          0,
+          _hallForward.z * walkForwardOffset
+        );
+      }
+
+      // 3. Animación GPU de Materialización con Hojas de Árboles (Verdes a Amarillos)
+      if (isMaterializing) {
+        materializationT = Math.min(1, materializationT + dt * 0.40);
+        const revealHeight = materializationT * 5.0;
+        clippingPlane.constant = hallGroup.position.y + revealHeight;
+
+        leafMaterial.uniforms.uTime.value = timeSec;
+        leafMaterial.uniforms.uProgress.value = materializationT;
+        leafMaterial.uniforms.uOpacity.value = 1.0 - (materializationT * 0.25);
+
+        if (materializationT >= 1) {
+          isMaterializing = false;
+          // Desactivar localClippingEnabled libera la GPU para exploración a 60 FPS estables
+          renderer.localClippingEnabled = false;
+          showToast('Sala materializada · Explora caminando');
+        }
+      } else if (hallPlaced && leafParticles.visible) {
+        // Desvanecer suavemente parte del follaje dejando solo una brisa ligera de hojas flotando
+        leafMaterial.uniforms.uTime.value = timeSec * 0.55;
+        leafMaterial.uniforms.uOpacity.value = Math.max(0.28, leafMaterial.uniforms.uOpacity.value - dt * 0.2);
+      }
+
+      renderer.render(scene, camera);
+
+      if (isRecording && compositeCtx) {
+        drawCompositeFrame(false);
+      }
+    }
+
+    // -- COMPOSITOR DE CAPTURA DE FOTO Y VIDEO HD --
+    function ensureCompositeCanvas() {
+      const w = renderer.domElement.width;
+      const h = renderer.domElement.height;
+      if (!compositeCanvas) {
+        compositeCanvas = document.createElement('canvas');
+        compositeCtx = compositeCanvas.getContext('2d');
+      }
+      if (compositeCanvas.width !== w || compositeCanvas.height !== h) {
+        compositeCanvas.width = w;
+        compositeCanvas.height = h;
+      }
+    }
+
+    function drawCompositeFrame(forceRender = true) {
+      if (forceRender) {
+        renderer.render(scene, camera);
+      }
+      ensureCompositeCanvas();
+      const w = compositeCanvas.width;
+      const h = compositeCanvas.height;
+      compositeCtx.clearRect(0, 0, w, h);
+
+      if (fallbackVideo && fallbackVideo.readyState >= 2) {
+        const vw = fallbackVideo.videoWidth || w;
+        const vh = fallbackVideo.videoHeight || h;
+        const scale = Math.max(w / vw, h / vh);
+        const sw = vw * scale;
+        const sh = vh * scale;
+        compositeCtx.drawImage(fallbackVideo, (w - sw) / 2, (h - sh) / 2, sw, sh);
+      } else {
+        compositeCtx.fillStyle = '#070d0b';
+        compositeCtx.fillRect(0, 0, w, h);
+      }
+
+      compositeCtx.drawImage(renderer.domElement, 0, 0, w, h);
+    }
+
+    async function saveOrShareFile(blob, filename, mimeType) {
+      const file = new File([blob], filename, { type: mimeType });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Sala Leonora Carrington AR'
+          });
+          return;
+        } catch (_) {}
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }
+
+    function setupMediaCapture() {
+      const btnPhoto = document.getElementById('btn-capture-photo');
+      const btnVideo = document.getElementById('btn-capture-video');
+      const videoLabel = document.getElementById('video-label');
+      const videoDot = document.getElementById('video-dot');
+
+      btnPhoto.addEventListener('click', () => {
+        drawCompositeFrame(true);
+        compositeCanvas.toBlob(async (blob) => {
+          if (!blob) return;
+          showToast('Guardando foto HD...');
+          await saveOrShareFile(blob, `Sala_Leonora_${Date.now()}.png`, 'image/png');
+        }, 'image/png', 0.95);
+      });
+
+      btnVideo.addEventListener('click', () => {
+        if (!isRecording) {
+          drawCompositeFrame(true);
+          const stream = compositeCanvas.captureStream(30);
+          const mimeType = MediaRecorder.isTypeSupported('video/mp4')
+            ? 'video/mp4'
+            : (MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm');
+
+          mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 6000000 });
+          recordedChunks = [];
+
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+            const blob = new Blob(recordedChunks, { type: mimeType });
+            showToast('Guardando video HD...');
+            await saveOrShareFile(blob, `Recorrido_Sala_Leonora_${Date.now()}.${ext}`, mimeType);
+          };
+
+          mediaRecorder.start(250);
+          isRecording = true;
+          videoLabel.textContent = 'Detener';
+          videoDot.classList.add('animate-ping');
+          showToast('Grabando recorrido AR...');
+        } else {
+          mediaRecorder.stop();
+          isRecording = false;
+          videoLabel.textContent = 'Video HD';
+          videoDot.classList.remove('animate-ping');
+        }
+      });
+    }
+
+  </script>
+</body>
+</html>
