@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Portal WebAR Stencil · Museo Leonora Carrington</title>
+  <title>Sala WebAR · Museo Leonora Carrington</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -99,30 +99,30 @@
 
   <!-- PANTALLA DE CARGA Y ENTRADA -->
   <div id="loading-modal" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950 px-6 text-center transition-opacity duration-500">
-    <div class="w-12 h-12 mb-4 rounded-full bg-emerald-500/10 border border-amber-300/30 flex items-center justify-center">
-      <div class="w-3 h-3 rounded-full bg-amber-300 animate-ping"></div>
+    <div class="w-12 h-12 mb-4 rounded-full bg-emerald-500/10 border border-lime-300/30 flex items-center justify-center">
+      <div class="w-3 h-3 rounded-full bg-lime-300 animate-ping"></div>
     </div>
 
-    <span class="text-[10px] uppercase tracking-[0.28em] text-amber-300/80 font-medium mb-1">
-      Portal Interdimensional WebXR
+    <span class="text-[10px] uppercase tracking-[0.28em] text-lime-300/80 font-medium mb-1">
+      Sala de Exhibición Virtual WebAR
     </span>
     <h1 class="font-museum text-3xl sm:text-4xl text-stone-100 tracking-wide mb-2">
       Pasillo Xilitla
     </h1>
     <p id="loading-message" class="text-xs text-stone-400 max-w-xs mb-6 leading-relaxed">
-      Cargando portal y arquitectura mágica...
+      Optimizando y cargando sala museográfica...
     </p>
 
     <!-- Progreso -->
     <div id="progress-container" class="w-56 flex flex-col items-center mb-4">
       <div class="w-full h-1 bg-stone-800 rounded-full overflow-hidden">
-        <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-400 to-amber-300 w-0 transition-all duration-300"></div>
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-emerald-500 via-lime-400 to-yellow-300 w-0 transition-all duration-300"></div>
       </div>
       <span id="progress-text" class="text-[10px] font-mono text-stone-500 mt-2">0%</span>
     </div>
 
     <!-- Botón de Entrada (oculto hasta cargar) -->
-    <button id="btn-enter-ar" class="hidden w-full max-w-xs py-3.5 px-6 rounded-full bg-gradient-to-r from-amber-200 via-amber-300 to-emerald-300 hover:opacity-95 text-stone-950 font-semibold text-xs uppercase tracking-widest shadow-xl items-center justify-center gap-2 transition-all">
+    <button id="btn-enter-ar" class="hidden w-full max-w-xs py-3.5 px-6 rounded-full bg-gradient-to-r from-emerald-400 via-lime-300 to-yellow-300 hover:opacity-95 text-stone-950 font-semibold text-xs uppercase tracking-widest shadow-xl items-center justify-center gap-2 transition-all">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
       <span>Iniciar Cámara AR</span>
     </button>
@@ -133,34 +133,34 @@
     <div id="toast-banner">Iniciando realidad aumentada...</div>
     
     <header class="w-full flex items-center justify-between gap-2 mt-2">
-      <div id="reticle-status" class="flex items-center gap-2.5 bg-black/65 backdrop-blur-xl border border-amber-300/30 rounded-full px-4 py-2 shadow-lg">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        <span class="text-xs font-medium text-stone-100">Apunta al suelo y toca para anclar</span>
+      <div id="reticle-status" class="flex items-center gap-2.5 bg-black/65 backdrop-blur-xl border border-lime-300/30 rounded-full px-4 py-2 shadow-lg">
+        <span class="w-2 h-2 rounded-full bg-lime-400 animate-ping"></span>
+        <span class="text-xs font-medium text-stone-100">Apunta al suelo y toca para anclar la sala</span>
       </div>
 
       <!-- Botón para reubicar en el suelo en cualquier momento -->
-      <button id="btn-reset-portal" class="interactive hidden px-3.5 py-2 rounded-full bg-black/65 border border-white/20 text-amber-200 text-[11px] font-medium backdrop-blur-xl shadow-lg active:scale-95 transition-transform">
-        Reubicar Piso
+      <button id="btn-reset-portal" class="interactive hidden px-3.5 py-2 rounded-full bg-black/65 border border-white/20 text-lime-200 text-[11px] font-medium backdrop-blur-xl shadow-lg active:scale-95 transition-transform">
+        Reubicar Sala
       </button>
     </header>
 
     <footer class="w-full flex flex-col items-center gap-3 mb-4">
-      <!-- Botón para fijar el portal (Fase Detección Instantánea) -->
-      <button id="btn-place-portal" class="interactive hidden px-8 py-4 rounded-full bg-gradient-to-r from-amber-300 via-amber-200 to-emerald-300 hover:opacity-95 text-stone-950 font-bold text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all">
-        Anclar Portal en el Piso Aquí
+      <!-- Botón para fijar la sala (Fase Detección Instantánea) -->
+      <button id="btn-place-portal" class="interactive hidden px-8 py-4 rounded-full bg-gradient-to-r from-emerald-400 via-lime-300 to-yellow-300 hover:opacity-95 text-stone-950 font-bold text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all">
+        Anclar Sala en el Piso Aquí
       </button>
 
       <!-- Controles de exploración y ajuste de nivel de piso -->
       <div id="walk-controls" class="hidden interactive w-full max-w-md bg-black/65 backdrop-blur-xl border border-white/15 rounded-2xl px-4 py-2.5 flex flex-col gap-2 shadow-xl">
         <div class="flex items-center justify-between text-[11px] text-stone-300">
-          <span class="uppercase tracking-wider text-amber-200/90 font-medium">Camina físicamente o desliza</span>
+          <span class="uppercase tracking-wider text-lime-200/90 font-medium">Camina por la sala o desliza</span>
           <div class="flex items-center gap-1.5">
             <span class="text-[10px] text-stone-400">Nivel Piso:</span>
             <button id="btn-floor-down" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white font-mono text-xs">-15cm</button>
             <button id="btn-floor-up" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white font-mono text-xs">+15cm</button>
           </div>
         </div>
-        <input id="walk-slider" type="range" min="-2.5" max="11.5" step="0.05" value="0" class="w-full accent-amber-300 h-1.5 bg-stone-700 rounded-lg cursor-pointer" />
+        <input id="walk-slider" type="range" min="-2.5" max="11.5" step="0.05" value="0" class="w-full accent-lime-300 h-1.5 bg-stone-700 rounded-lg cursor-pointer" />
       </div>
 
       <!-- Controles de medios (Fase Exploración) -->
@@ -195,16 +195,14 @@
     let scene, camera, renderer, gltfLoader;
     let hitTestSource = null;
     let hitTestSourceRequested = false;
-    let xrFloorY = -1.45; // Altura estimada del piso respecto al inicio si aún no hay hit-test
+    let xrFloorY = -1.45;
     
-    // Grupos y Elementos 3D
-    let reticle, portalGroup, portalFrame, portalVeilMesh, interiorGroup;
-    let clippingPlane, magicParticles, particleMaterial;
-    let particleBasePositions = null;
+    // Grupos y Elementos 3D (Sin Portal ni Stencil para máxima estabilidad en móvil)
+    let reticle, hallGroup, interiorGroup;
+    let clippingPlane, leafParticles, leafMaterial;
     
     // Estados Espaciales y de Animación
-    let portalPlaced = false;
-    let isInsidePortal = false;
+    let hallPlaced = false;
     let materializationT = 0;
     let isMaterializing = false;
     let lastFrameTime = performance.now();
@@ -216,10 +214,19 @@
     let walkForwardOffset = 0;
     let floorOffsetY = 0;
     let hasGyro = false;
-    let deviceEuler = new THREE.Euler();
-    let deviceQuat = new THREE.Quaternion();
+    const deviceEuler = new THREE.Euler();
+    const deviceQuat = new THREE.Quaternion();
     const screenTransform = new THREE.Quaternion();
     const worldTransform = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+
+    // Vectores pre-alocados para evitar Garbage Collection y crashes en el bucle de render
+    const _rayOrigin = new THREE.Vector3();
+    const _rayDir = new THREE.Vector3();
+    const _horizDir = new THREE.Vector3();
+    const _camWorldPos = new THREE.Vector3();
+    const _lookTarget = new THREE.Vector3();
+    const _hallForward = new THREE.Vector3();
+    const _zAxis = new THREE.Vector3(0, 0, 1);
 
     // Grabación Multimedia (Compositor Cámara + 3D)
     let isRecording = false;
@@ -227,8 +234,6 @@
     let recordedChunks = [];
     let compositeCanvas = null;
     let compositeCtx = null;
-    
-    const allRevealMaterials = [];
 
     // UI Elements
     const domOverlay = document.getElementById('ar-overlay');
@@ -248,7 +253,7 @@
       toastBanner.textContent = msg;
       toastBanner.style.opacity = '1';
       clearTimeout(showToast._timer);
-      showToast._timer = setTimeout(() => { toastBanner.style.opacity = '0'; }, 3200);
+      showToast._timer = setTimeout(() => { toastBanner.style.opacity = '0'; }, 3000);
     }
 
     init();
@@ -262,52 +267,59 @@
       userRig.position.set(0, 0, 0);
       scene.add(userRig);
 
-      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 120);
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.08, 75);
       camera.position.set(0, 1.55, 0); // Altura humana promedio sobre el piso Y = 0
       userRig.add(camera);
 
+      // Configuración WebGL optimizada para no saturar la VRAM del teléfono
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
-        stencil: true,
+        stencil: false,
         powerPreference: 'high-performance',
-        preserveDrawingBuffer: true
+        preserveDrawingBuffer: false
       });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      // Limitar pixelRatio a 1.5 evita sobrecalentamiento y cierres por memoria en pantallas QHD/Retina
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
-      renderer.localClippingEnabled = true;
+      renderer.localClippingEnabled = false;
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.15;
+      renderer.toneMappingExposure = 1.12;
       container.appendChild(renderer.domElement);
+
+      // Manejo preventivo de pérdida de contexto WebGL
+      renderer.domElement.addEventListener('webglcontextlost', (e) => {
+        e.preventDefault();
+        showToast('Recuperando memoria gráfica...');
+      }, false);
 
       setupLighting();
       setupReticle();
 
-      // Crear Jerarquía del Portal y Sala
-      portalGroup = new THREE.Group();
-      portalGroup.visible = false;
-      scene.add(portalGroup);
+      // Crear Jerarquía de la Sala de Exhibición
+      hallGroup = new THREE.Group();
+      hallGroup.visible = false;
+      scene.add(hallGroup);
 
       interiorGroup = new THREE.Group();
-      portalGroup.add(interiorGroup);
+      hallGroup.add(interiorGroup);
 
-      createSurrealPortalFrame();
-      setupMaterializationMagic();
+      setupLeafMaterialization();
 
-      // Cargar los 3 modelos en paralelo para máxima velocidad
+      // Cargar los 3 modelos en paralelo
       await loadModelsParallel();
 
       // Eventos de Interfaz
       btnEnterAR.addEventListener('click', startARExperience);
-      btnPlacePortal.addEventListener('click', placePortalAtReticle);
-      btnResetPortal.addEventListener('click', resetPortalPlacement);
+      btnPlacePortal.addEventListener('click', placeHallAtReticle);
+      btnResetPortal.addEventListener('click', resetHallPlacement);
 
-      // Permitir también tocar directamente cualquier parte del suelo en pantalla para fijar el portal
+      // Permitir tocar directamente el suelo en pantalla para fijar la sala
       renderer.domElement.addEventListener('click', () => {
-        if (!portalPlaced && reticle.visible) {
-          placePortalAtReticle();
+        if (!hallPlaced && reticle.visible) {
+          placeHallAtReticle();
         }
       });
 
@@ -328,34 +340,30 @@
     }
 
     function setupLighting() {
-      const hemiLight = new THREE.HemisphereLight(0xfef3c7, 0x064e3b, 1.35);
+      const hemiLight = new THREE.HemisphereLight(0xfef9c3, 0x14532d, 1.45);
       hemiLight.position.set(0, 8, 0);
       scene.add(hemiLight);
 
-      const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.8);
+      const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.75);
       dirLight.position.set(3, 9, 4);
       scene.add(dirLight);
-
-      const portalGlow = new THREE.PointLight(0x10b981, 2.2, 6);
-      portalGlow.position.set(0, 1.8, 0.3);
-      scene.add(portalGlow);
     }
 
-    // -- RETÍCULA HOLOGRÁFICA DE DETECCIÓN DE PISO --
+    // -- RETÍCULA LIGERA DE DETECCIÓN DE PISO --
     function setupReticle() {
       reticle = new THREE.Group();
 
       const outerRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.22, 0.27, 48).rotateX(-Math.PI / 2),
-        new THREE.MeshBasicMaterial({ color: 0x6ee7b7, side: THREE.DoubleSide })
+        new THREE.RingGeometry(0.22, 0.26, 32).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0x84cc16, side: THREE.DoubleSide })
       );
       const innerRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.08, 0.11, 32).rotateX(-Math.PI / 2),
-        new THREE.MeshBasicMaterial({ color: 0xfde68a, side: THREE.DoubleSide })
+        new THREE.RingGeometry(0.07, 0.10, 24).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
       );
       const centerDisc = new THREE.Mesh(
-        new THREE.CircleGeometry(0.22, 32).rotateX(-Math.PI / 2),
-        new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
+        new THREE.CircleGeometry(0.22, 24).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
       );
 
       reticle.add(centerDisc, outerRing, innerRing);
@@ -363,189 +371,200 @@
       scene.add(reticle);
     }
 
-    // -- PORTAL INTERDIMENSIONAL INSPIRADO EN LEONORA CARRINGTON --
-    function createSurrealPortalFrame() {
-      portalFrame = new THREE.Group();
+    // -- TEXTURA PROCEDURAL DE HOJA BOTÁNICA --
+    function createLeafTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
 
-      const goldMat = new THREE.MeshStandardMaterial({
-        color: 0xd4af37,
-        emissive: 0x422006,
-        emissiveIntensity: 0.35,
-        metalness: 0.88,
-        roughness: 0.22,
-        side: THREE.DoubleSide
+      ctx.save();
+      ctx.translate(64, 64);
+
+      // Silueta orgánica de hoja de árbol
+      ctx.beginPath();
+      ctx.moveTo(0, -52);
+      ctx.bezierCurveTo(36, -34, 44, 14, 0, 48);
+      ctx.bezierCurveTo(-44, 14, -36, -34, 0, -52);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, -52, 0, 52);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+      grad.addColorStop(0.6, 'rgba(240, 255, 240, 0.96)');
+      grad.addColorStop(1, 'rgba(215, 245, 215, 0.88)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Nervadura central y pecíolo
+      ctx.strokeStyle = 'rgba(170, 210, 160, 0.85)';
+      ctx.lineWidth = 2.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, -46);
+      ctx.lineTo(0, 56);
+      ctx.stroke();
+
+      // Nervaduras secundarias
+      ctx.lineWidth = 1.5;
+      const veins = [
+        [-18, -16, -2, -26],
+        [18, -16, 2, -26],
+        [-22, 2, -2, -10],
+        [22, 2, 2, -10],
+        [-16, 20, -2, 8],
+        [16, 20, 2, 8]
+      ];
+      veins.forEach(([x1, y1, x2, y2]) => {
+        ctx.beginPath();
+        ctx.moveTo(0, y1 + 8);
+        ctx.quadraticCurveTo((x1 + x2) * 0.5, (y1 + y2) * 0.5, x1, y2);
+        ctx.stroke();
       });
 
-      const obsidianMat = new THREE.MeshStandardMaterial({
-        color: 0x064e3b,
-        emissive: 0x022c22,
-        emissiveIntensity: 0.5,
-        metalness: 0.7,
-        roughness: 0.3,
-        side: THREE.DoubleSide
-      });
+      ctx.restore();
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.needsUpdate = true;
+      return tex;
+    }
 
-      // Pilares surrealistas entrelazados a nivel exacto del suelo (y = 0 a y = 2.6m)
-      const pillarGeo = new THREE.CylinderGeometry(0.09, 0.14, 2.5, 24);
-      const spiralGeo = new THREE.TorusKnotGeometry(0.13, 0.032, 96, 16, 2, 5);
+    // -- SISTEMA GPU DE MATERIALIZACIÓN CON HOJAS DE ÁRBOLES (VERDE A AMARILLO) --
+    function setupLeafMaterialization() {
+      // Plano de corte horizontal (se activa únicamente durante los ~2.6s de materialización)
+      clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 100);
 
-      [-1.05, 1.05].forEach((xPos) => {
-        const pillar = new THREE.Mesh(pillarGeo, obsidianMat);
-        pillar.position.set(xPos, 1.25, 0);
-        portalFrame.add(pillar);
+      const leafTexture = createLeafTexture();
 
-        const spiral = new THREE.Mesh(spiralGeo, goldMat);
-        spiral.position.set(xPos, 1.25, 0);
-        spiral.scale.set(1, 3.8, 1);
-        portalFrame.add(spiral);
+      // Paleta botánica del verde selva al amarillo solar
+      const palette = [
+        new THREE.Color('#15803d'), // Verde bosque profundo
+        new THREE.Color('#16a34a'), // Verde hoja esmeralda
+        new THREE.Color('#22c55e'), // Verde selva vivo
+        new THREE.Color('#65a30d'), // Verde musgo cálido
+        new THREE.Color('#84cc16'), // Verde lima fresco
+        new THREE.Color('#a3e635'), // Lima amarillento
+        new THREE.Color('#eab308'), // Amarillo ocre dorado
+        new THREE.Color('#facc15'), // Amarillo brillante
+        new THREE.Color('#fde047')  // Amarillo luz cálido
+      ];
 
-        // Pedestal escalonado sobre el suelo (y = 0)
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 0.18, 24), goldMat);
-        base.position.set(xPos, 0.09, 0);
-        portalFrame.add(base);
-      });
+      // 420 hojas animadas 100% en GPU (1 solo draw call, 0 actualizaciones de CPU por frame)
+      const leafCount = 420;
+      const geo = new THREE.BufferGeometry();
+      const positions = new Float32Array(leafCount * 3);
+      const colors = new Float32Array(leafCount * 3);
+      const seeds = new Float32Array(leafCount * 3); // [phase, scale, rotSpeed]
 
-      // Arco ojival y creciente lunar alquímica superior
-      const arch = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.08, 20, 64, Math.PI), goldMat);
-      arch.position.set(0, 2.45, 0);
-      portalFrame.add(arch);
+      for (let i = 0; i < leafCount; i++) {
+        // Distribuir a lo largo de las paredes, piso y bóveda del pasillo
+        const side = Math.random() < 0.75 ? (Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 1.1) : (Math.random() - 0.5) * 2.2;
+        const x = side;
+        const y = Math.random() * 4.2;
+        const z = -Math.random() * 13.4;
 
-      const outerHalo = new THREE.Mesh(new THREE.TorusGeometry(1.22, 0.025, 16, 64, Math.PI), obsidianMat);
-      outerHalo.position.set(0, 2.45, 0);
-      portalFrame.add(outerHalo);
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
 
-      // Orbe místico esmeralda y corona solar en la cúspide del portal
-      const orbMat = new THREE.MeshStandardMaterial({
-        color: 0x10b981,
-        emissive: 0x059669,
-        emissiveIntensity: 2.2,
-        roughness: 0.1
-      });
-      const orb = new THREE.Mesh(new THREE.SphereGeometry(0.16, 32, 32), orbMat);
-      orb.position.set(0, 3.55, 0);
-      portalFrame.add(orb);
+        const c = palette[Math.floor(Math.random() * palette.length)];
+        colors[i * 3] = c.r;
+        colors[i * 3 + 1] = c.g;
+        colors[i * 3 + 2] = c.b;
 
-      const crownRing = new THREE.Mesh(new THREE.RingGeometry(0.21, 0.28, 32), goldMat);
-      crownRing.position.set(0, 3.55, 0);
-      portalFrame.add(crownRing);
+        seeds[i * 3] = Math.random() * Math.PI * 2;       // Fase aleatoria
+        seeds[i * 3 + 1] = 0.65 + Math.random() * 0.75;   // Tamaño relativo de hoja
+        seeds[i * 3 + 2] = (Math.random() - 0.5) * 3.8;   // Velocidad de giro
+      }
 
-      // Umbral en el suelo (y = 0.01) para marcar el paso interdimensional
-      const threshold = new THREE.Mesh(
-        new THREE.BoxGeometry(2.4, 0.03, 0.35),
-        goldMat
-      );
-      threshold.position.set(0, 0.015, 0);
-      portalFrame.add(threshold);
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('aColor', new THREE.BufferAttribute(colors, 3));
+      geo.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 3));
 
-      // Velo energético interdimensional en el marco de la puerta
-      const veilGeo = new THREE.PlaneGeometry(2.05, 2.65, 1, 1);
-      const veilMat = new THREE.ShaderMaterial({
+      leafMaterial = new THREE.ShaderMaterial({
         transparent: true,
         depthWrite: false,
-        side: THREE.DoubleSide,
         uniforms: {
+          uMap: { value: leafTexture },
           uTime: { value: 0 },
-          uOpacity: { value: 0.42 }
+          uProgress: { value: 0 },
+          uOpacity: { value: 1.0 },
+          uPixelRatio: { value: renderer.getPixelRatio() }
         },
         vertexShader: `
-          varying vec2 vUv;
+          attribute vec3 aColor;
+          attribute vec3 aSeed;
+          varying vec3 vColor;
+          varying float vAngle;
+          varying float vAlpha;
+
+          uniform float uTime;
+          uniform float uProgress;
+          uniform float uPixelRatio;
+
           void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            vColor = aColor;
+            float phase = aSeed.x;
+            float leafScale = aSeed.y;
+            float rotSpeed = aSeed.z;
+
+            vec3 pos = position;
+
+            // Durante la materialización las hojas emergen en remolino acompañando el frente de aparición
+            float bandY = uProgress * 4.6;
+            float swirl = sin(uTime * 2.4 + phase) * 0.22;
+            float flutterZ = cos(uTime * 1.9 + phase) * 0.16;
+
+            pos.x += swirl;
+            pos.z += flutterZ;
+            pos.y = mod(pos.y + uTime * 0.45, 4.4) * clamp(uProgress * 1.25, 0.15, 1.0);
+
+            // Mayor concentración y brillo justo en la franja donde se materializa el pasillo
+            float distToWave = abs(pos.y - bandY);
+            float waveBoost = smoothstep(1.6, 0.0, distToWave);
+
+            vAngle = phase + uTime * rotSpeed;
+            vAlpha = clamp(0.45 + waveBoost * 0.55, 0.0, 1.0);
+
+            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+
+            float baseSize = 72.0 * leafScale * (1.0 + waveBoost * 0.35);
+            gl_PointSize = clamp((baseSize * uPixelRatio) / max(-mvPosition.z, 0.4), 6.0, 96.0);
           }
         `,
         fragmentShader: `
-          varying vec2 vUv;
-          uniform float uTime;
+          uniform sampler2D uMap;
           uniform float uOpacity;
+          varying vec3 vColor;
+          varying float vAngle;
+          varying float vAlpha;
+
           void main() {
-            vec2 centered = vUv * 2.0 - 1.0;
-            float dist = length(centered);
-            float ripple = sin(dist * 14.0 - uTime * 3.2) * 0.5 + 0.5;
-            float edgeGlow = smoothstep(0.2, 0.98, dist);
-            vec3 emerald = vec3(0.06, 0.72, 0.50);
-            vec3 gold = vec3(0.98, 0.85, 0.45);
-            vec3 col = mix(emerald, gold, ripple * 0.65 + edgeGlow * 0.35);
-            float alpha = (edgeGlow * 0.55 + ripple * 0.18) * uOpacity;
-            gl_FragColor = vec4(col, alpha);
+            vec2 centered = gl_PointCoord - vec2(0.5);
+            float c = cos(vAngle);
+            float s = sin(vAngle);
+            vec2 rotatedUV = vec2(
+              centered.x * c - centered.y * s,
+              centered.x * s + centered.y * c
+            ) + vec2(0.5);
+
+            if (rotatedUV.x < 0.0 || rotatedUV.x > 1.0 || rotatedUV.y < 0.0 || rotatedUV.y > 1.0) discard;
+
+            vec4 texColor = texture2D(uMap, rotatedUV);
+            if (texColor.a < 0.15) discard;
+
+            gl_FragColor = vec4(vColor * texColor.rgb, texColor.a * vAlpha * uOpacity);
           }
         `
       });
-      portalVeilMesh = new THREE.Mesh(veilGeo, veilMat);
-      portalVeilMesh.position.set(0, 1.35, 0.02);
-      portalFrame.add(portalVeilMesh);
 
-      portalGroup.add(portalFrame);
+      leafParticles = new THREE.Points(geo, leafMaterial);
+      leafParticles.frustumCulled = false;
+      leafParticles.visible = false;
+      hallGroup.add(leafParticles);
     }
 
-    // -- SISTEMA DE MATERIALIZACIÓN CON PARTÍCULAS DE BRILLO PULSANTES --
-    function setupMaterializationMagic() {
-      // Plano de corte horizontal en coordenadas del mundo (revela todo donde Y <= constant)
-      clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 100);
-
-      // Textura procedural de destello estelar para las partículas
-      const sparkCanvas = document.createElement('canvas');
-      sparkCanvas.width = 64;
-      sparkCanvas.height = 64;
-      const sCtx = sparkCanvas.getContext('2d');
-      const grad = sCtx.createRadialGradient(32, 32, 1, 32, 32, 30);
-      grad.addColorStop(0, 'rgba(255, 255, 240, 1)');
-      grad.addColorStop(0.35, 'rgba(253, 224, 71, 0.9)');
-      grad.addColorStop(0.7, 'rgba(16, 185, 129, 0.45)');
-      grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
-      sCtx.fillStyle = grad;
-      sCtx.fillRect(0, 0, 64, 64);
-      const sparkTexture = new THREE.CanvasTexture(sparkCanvas);
-
-      const pCount = 900;
-      const pGeo = new THREE.BufferGeometry();
-      const pos = new Float32Array(pCount * 3);
-      particleBasePositions = new Float32Array(pCount * 3);
-
-      for (let i = 0; i < pCount; i++) {
-        // Distribuir partículas tanto en el portal de entrada como a lo largo del pasillo
-        const isPortalZone = i < 320;
-        const x = isPortalZone ? (Math.random() - 0.5) * 2.8 : (Math.random() - 0.5) * 4.2;
-        const y = Math.random() * 4.2;
-        const z = isPortalZone ? (Math.random() - 0.5) * 0.9 : -Math.random() * 13.5;
-
-        pos[i * 3] = x;
-        pos[i * 3 + 1] = y;
-        pos[i * 3 + 2] = z;
-
-        particleBasePositions[i * 3] = x;
-        particleBasePositions[i * 3 + 1] = y;
-        particleBasePositions[i * 3 + 2] = z;
-      }
-
-      pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-
-      particleMaterial = new THREE.PointsMaterial({
-        color: 0xfef08a,
-        map: sparkTexture,
-        size: 0.14,
-        transparent: true,
-        opacity: 0.95,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-
-      magicParticles = new THREE.Points(pGeo, particleMaterial);
-      magicParticles.visible = false;
-      portalGroup.add(magicParticles);
-
-      // Registrar materiales del portal para que se materialicen junto con el pasillo
-      portalFrame.traverse((node) => {
-        if (node.isMesh && node !== portalVeilMesh && node.material) {
-          node.material = node.material.clone();
-          node.material.clippingPlanes = [clippingPlane];
-          allRevealMaterials.push(node.material);
-        }
-      });
-    }
-
-    // -- CORRECCIÓN DE MATERIALES PBR DEL PASILLO --
-    function fixCorridorMaterial(mat) {
+    // -- OPTIMIZACIÓN Y CORRECCIÓN DE MATERIALES PBR DEL PASILLO --
+    function fixCorridorMaterial(mat, maxAnisotropy) {
       if (!mat) return;
       const name = (mat.name || '').toLowerCase();
       const cutoutNames = ['alexandrapalm', 'wild bush', 'plantas', 'plant.leaf', 'rejapared', 'leaves', 'orchid', 'sepal'];
@@ -553,17 +572,25 @@
 
       if (isCutout) {
         mat.transparent = false;
-        mat.alphaTest = 0.4;
+        mat.alphaTest = 0.42;
         mat.depthWrite = true;
         mat.side = THREE.DoubleSide;
       } else {
         mat.transparent = false;
         mat.alphaTest = 0;
         mat.depthWrite = true;
+        mat.side = THREE.FrontSide;
       }
+
+      // Limitar anisotropía a 2 para ahorrar ancho de banda de GPU móvil sin perder nitidez
+      ['map', 'normalMap', 'roughnessMap', 'metalnessMap'].forEach((mapKey) => {
+        if (mat[mapKey]) {
+          mat[mapKey].anisotropy = maxAnisotropy;
+        }
+      });
     }
 
-    // -- CARGA PARALELA Y NIVELACIÓN EXACTA AL PISO (Y = 0) --
+    // -- CARGA PARALELA, CONGELADO DE MATRICES Y NIVELACIÓN AL PISO (Y = 0) --
     async function loadModelsParallel() {
       await MeshoptDecoder.ready;
 
@@ -600,7 +627,6 @@
         });
 
       try {
-        // Descargar los 3 modelos simultáneamente para reducir el tiempo de espera a menos de la mitad
         const [gltfCorridor, gltfRock, gltfSculpture] = await Promise.all([
           loadWithProgress(MODELS.corridor, 'corridor'),
           loadWithProgress(MODELS.rock, 'rock'),
@@ -611,8 +637,7 @@
         corridor.scale.setScalar(5.2);
         corridor.updateMatrixWorld(true);
 
-        // Detectar específicamente las losas de piso (pisoceart1 / stones) y muros (murocear)
-        // para que el piso caminable quede exactamente en Y = 0 (y no elevado por geometría subterránea)
+        // Detectar las losas de piso (pisoceart1 / stones) y muros (murocear) para nivelar a Y = 0
         const floorBox = new THREE.Box3();
         const wallBox = new THREE.Box3();
         let hasFloorMesh = false;
@@ -635,7 +660,6 @@
 
         const fullCorrBox = new THREE.Box3().setFromObject(corridor);
         const refCenter = hasWallMesh ? wallBox.getCenter(new THREE.Vector3()) : fullCorrBox.getCenter(new THREE.Vector3());
-        // Nivelar la superficie superior de las losas del piso exactamente en Y = 0
         const walkableFloorY = hasFloorMesh ? floorBox.max.y : fullCorrBox.min.y;
         const entranceZ = hasWallMesh ? wallBox.max.z : fullCorrBox.max.z;
         const backZ = hasWallMesh ? wallBox.min.z : fullCorrBox.min.z;
@@ -647,7 +671,6 @@
         );
         corridor.updateMatrixWorld(true);
 
-        // Punto medio exacto del pasillo detrás del portal (Z negativo hacia adentro)
         const corridorLength = Math.abs(entranceZ - backZ);
         const midCorridorZ = -(corridorLength * 0.48);
 
@@ -658,6 +681,7 @@
         const rockBox = new THREE.Box3().setFromObject(rock);
         const rockCenter = rockBox.getCenter(new THREE.Vector3());
         rock.position.set(-rockCenter.x, -rockBox.min.y, midCorridorZ - rockCenter.z);
+        rock.updateMatrixWorld(true);
         const rockHeight = rockBox.max.y - rockBox.min.y;
 
         // Posicionar escultura sobre la cumbre de la roca
@@ -671,26 +695,36 @@
           rockHeight - sculpBox.min.y - 0.04,
           midCorridorZ - sculpCenter.z
         );
+        sculpture.updateMatrixWorld(true);
 
         interiorGroup.add(corridor, rock, sculpture);
 
-        // Configurar materiales PBR y plano de materialización
+        const maxAniso = Math.min(2, renderer.capabilities.getMaxAnisotropy());
+        const processedMaterials = new Set();
+
+        // Optimizar materiales y congelar matrices de todos los nodos estáticos
         interiorGroup.traverse((node) => {
+          node.matrixAutoUpdate = false;
+          node.updateMatrix();
           if (node.isMesh && node.material) {
             const mats = Array.isArray(node.material) ? node.material : [node.material];
             mats.forEach((mat) => {
-              fixCorridorMaterial(mat);
-              mat.clippingPlanes = [clippingPlane];
-              mat.needsUpdate = true;
-              allRevealMaterials.push(mat);
+              if (!processedMaterials.has(mat)) {
+                fixCorridorMaterial(mat, maxAniso);
+                mat.clippingPlanes = [clippingPlane];
+                mat.needsUpdate = true;
+                processedMaterials.add(mat);
+              }
             });
           }
         });
 
+        dracoLoader.dispose();
+
         document.getElementById('progress-bar').style.width = '100%';
         document.getElementById('progress-text').textContent = '100%';
         document.getElementById('progress-container').classList.add('hidden');
-        document.getElementById('loading-message').textContent = 'Sala y Portal Leonora Carrington listos para explorar a nivel de piso.';
+        document.getElementById('loading-message').textContent = 'Sala de exhibición lista para explorar a nivel de piso.';
         btnEnterAR.classList.remove('hidden');
         btnEnterAR.classList.add('flex');
       } catch (e) {
@@ -699,11 +733,10 @@
       }
     }
 
-    // -- INICIO DE CÁMARA AR (WEBXR CON DETECCIÓN INSTANTÁNEA O CÁMARA + GIROSCOPIO 3DoF) --
+    // -- INICIO DE CÁMARA AR --
     async function startARExperience() {
       loadingModal.classList.add('hidden');
 
-      // Solicitar permisos de giroscopio en iOS si aplica
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
           await DeviceOrientationEvent.requestPermission();
@@ -720,7 +753,6 @@
             };
             const session = await navigator.xr.requestSession('immersive-ar', sessionInit);
 
-            // Usar local-floor si está disponible para que Y = 0 sea el suelo físico desde el inicio
             try {
               renderer.xr.setReferenceSpaceType('local-floor');
               xrFloorY = 0;
@@ -743,14 +775,14 @@
             return;
           }
         } catch (e) {
-          console.warn('Pasando a Cámara AR con detección geométrica instantánea:', e);
+          console.warn('Pasando a Cámara AR ligera:', e);
         }
       }
 
       await startCameraGyroARSession();
     }
 
-    // -- MODO CÁMARA AR UNIVERSAL CON GIROSCOPIO 3DoF + PODÓMETRO + RAYCAST DE PISO --
+    // -- MODO CÁMARA AR FLUIDO (720p60 PARA EVITAR SATURAR MEMORIA DE VIDEO) --
     async function startCameraGyroARSession() {
       fallbackMode = true;
       domOverlay.classList.add('active');
@@ -760,8 +792,8 @@
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: { ideal: 'environment' },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
           },
           audio: false
         });
@@ -783,12 +815,10 @@
         console.warn('Cámara no disponible en este entorno; usando vista 3D directa.');
       }
 
-      // Posicionar al usuario de pie sobre el piso (ojos a 1.55m sobre Y = 0) mirando ligeramente hacia el suelo
       userRig.position.set(0, 0, 0);
       camera.position.set(0, 1.55, 0);
       camera.rotation.set(-0.28, 0, 0, 'YXZ');
 
-      // Giroscopio en tiempo real para rotar la cámara 3D igual que el teléfono
       window.addEventListener('deviceorientation', (e) => {
         if (e.alpha === null || e.beta === null || e.gamma === null) return;
         hasGyro = true;
@@ -800,14 +830,14 @@
         deviceEuler.set(beta, alpha, -gamma, 'YXZ');
         deviceQuat.setFromEuler(deviceEuler);
         deviceQuat.multiply(worldTransform);
-        deviceQuat.multiply(screenTransform.setFromAxisAngle(new THREE.Vector3(0, 0, 1), -orient));
+        deviceQuat.multiply(screenTransform.setFromAxisAngle(_zAxis, -orient));
         camera.quaternion.copy(deviceQuat);
       });
 
-      // Podómetro físico por acelerómetro: caminar con el teléfono avanza por la sala
+      // Podómetro físico por acelerómetro para avanzar caminando
       let lastStepTime = 0;
       window.addEventListener('devicemotion', (e) => {
-        if (!portalPlaced) return;
+        if (!hallPlaced) return;
         const acc = e.accelerationIncludingGravity;
         if (!acc) return;
         const mag = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
@@ -819,7 +849,6 @@
         }
       });
 
-      // Controles táctiles para girar vista (si no hay giroscopio) y avanzar
       let lastTouchX = null;
       let lastTouchY = null;
       window.addEventListener('touchstart', (e) => {
@@ -846,51 +875,51 @@
       renderer.setAnimationLoop(renderLoop);
     }
 
-    // -- ANCLAR EL PORTAL Y LA SALA A NIVEL DEL PISO CON MATRIZ BLOQUEADA --
-    function placePortalAtReticle() {
+    // -- ANCLAR LA SALA DE EXHIBICIÓN EN EL PISO --
+    function placeHallAtReticle() {
       if (!reticle.visible) return;
 
-      // Desbloquear temporalmente para aplicar la posición exacta en el suelo y orientación hacia el usuario
-      portalGroup.matrixAutoUpdate = true;
-      portalGroup.position.copy(reticle.position);
-      portalGroup.position.y += floorOffsetY;
+      hallGroup.matrixAutoUpdate = true;
+      hallGroup.position.copy(reticle.position);
+      hallGroup.position.y += floorOffsetY;
 
-      // Orientar la puerta del portal mirando horizontalmente hacia el usuario
-      const camWorldPos = new THREE.Vector3();
-      camera.getWorldPosition(camWorldPos);
-      const lookTarget = new THREE.Vector3(camWorldPos.x, portalGroup.position.y, camWorldPos.z);
-      portalGroup.lookAt(lookTarget);
+      camera.getWorldPosition(_camWorldPos);
+      _lookTarget.set(_camWorldPos.x, hallGroup.position.y, _camWorldPos.z);
+      hallGroup.lookAt(_lookTarget);
 
-      // Congelar matriz mundial para que el pasillo quede 100% inmóvil sobre el piso
-      portalGroup.updateMatrix();
-      portalGroup.updateMatrixWorld(true);
-      portalGroup.matrixAutoUpdate = false;
-      portalGroup.visible = true;
+      // Congelar matriz mundial para que el pasillo quede 100% fijo en el suelo físico
+      hallGroup.updateMatrix();
+      hallGroup.updateMatrixWorld(true);
+      hallGroup.matrixAutoUpdate = false;
+      hallGroup.visible = true;
 
-      portalPlaced = true;
-      isInsidePortal = false;
+      hallPlaced = true;
       reticle.visible = false;
 
-      // Actualizar interfaz a modo exploración
       btnPlacePortal.classList.add('hidden');
       btnResetPortal.classList.remove('hidden');
-      reticleStatus.querySelector('span:nth-child(2)').textContent = 'Sala fija en el suelo · Camina hacia el portal';
+      reticleStatus.querySelector('span:nth-child(2)').textContent = 'Sala fija en el suelo · Camina para explorar';
       walkControls.classList.remove('hidden');
       mediaControls.classList.remove('hidden');
 
-      // Iniciar materialización inmediata desde el suelo (sin demora)
+      // Activar clipping únicamente mientras dura la materialización
+      renderer.localClippingEnabled = true;
       isMaterializing = true;
       materializationT = 0;
-      clippingPlane.constant = portalGroup.position.y + 0.05;
-      magicParticles.visible = true;
+      clippingPlane.constant = hallGroup.position.y + 0.05;
+      leafParticles.visible = true;
+      leafMaterial.uniforms.uProgress.value = 0;
+      leafMaterial.uniforms.uOpacity.value = 1.0;
 
-      showToast('Portal anclado a nivel del suelo. Camina hacia su interior.');
+      showToast('Materializando Sala Xilitla sobre el suelo...');
     }
 
-    function resetPortalPlacement() {
-      portalPlaced = false;
-      portalGroup.visible = false;
-      magicParticles.visible = false;
+    function resetHallPlacement() {
+      hallPlaced = false;
+      isMaterializing = false;
+      renderer.localClippingEnabled = false;
+      hallGroup.visible = false;
+      leafParticles.visible = false;
       walkForwardOffset = 0;
       walkSlider.value = '0';
       userRig.position.set(0, 0, 0);
@@ -899,33 +928,29 @@
       btnResetPortal.classList.add('hidden');
       walkControls.classList.add('hidden');
       mediaControls.classList.add('hidden');
-      reticleStatus.querySelector('span:nth-child(2)').textContent = 'Apunta al suelo y toca para anclar';
+      reticleStatus.querySelector('span:nth-child(2)').textContent = 'Apunta al suelo y toca para anclar la sala';
       showToast('Apunta al piso para reubicar la sala.');
     }
 
     function adjustFloorHeight(deltaY) {
       floorOffsetY += deltaY;
-      if (portalPlaced) {
-        portalGroup.matrixAutoUpdate = true;
-        portalGroup.position.y += deltaY;
-        portalGroup.updateMatrix();
-        portalGroup.updateMatrixWorld(true);
-        portalGroup.matrixAutoUpdate = false;
-        if (!isMaterializing) {
-          clippingPlane.constant = portalGroup.position.y + 50;
+      if (hallPlaced) {
+        hallGroup.matrixAutoUpdate = true;
+        hallGroup.position.y += deltaY;
+        hallGroup.updateMatrix();
+        hallGroup.updateMatrixWorld(true);
+        hallGroup.matrixAutoUpdate = false;
+        if (isMaterializing) {
+          clippingPlane.constant = hallGroup.position.y + (materializationT * 5.0);
         }
         showToast(`Nivel del piso ajustado (${floorOffsetY >= 0 ? '+' : ''}${Math.round(floorOffsetY * 100)} cm)`);
       }
     }
 
     // -- DETECCIÓN INSTANTÁNEA DE PISO POR RAYO + HIT-TEST --
-    const _rayOrigin = new THREE.Vector3();
-    const _rayDir = new THREE.Vector3();
-
     function updateInstantFloorReticle(frame) {
       let hitFound = false;
 
-      // 1. Intentar WebXR Hit-Test nativo si hay sesión activa
       if (frame && !fallbackMode) {
         const referenceSpace = renderer.xr.getReferenceSpace();
         const session = renderer.xr.getSession();
@@ -954,28 +979,26 @@
         }
       }
 
-      // 2. Respaldo Geométrico Instantáneo (< 0.1s): proyectar el rayo de la cámara al plano del suelo
       if (!hitFound) {
         const floorY = fallbackMode ? 0 : xrFloorY;
         camera.getWorldPosition(_rayOrigin);
         camera.getWorldDirection(_rayDir);
 
-        // Si el usuario mira hacia abajo o al frente, intersectar con el piso a distancia cómoda (2.2m - 4.0m)
         if (_rayDir.y < -0.08) {
           const t = (floorY - _rayOrigin.y) / _rayDir.y;
-          const clampedT = THREE.MathUtils.clamp(t, 1.6, 4.5);
+          const clampedT = THREE.MathUtils.clamp(t, 1.5, 4.2);
           reticle.position.set(
             _rayOrigin.x + _rayDir.x * clampedT,
             floorY,
             _rayOrigin.z + _rayDir.z * clampedT
           );
         } else {
-          const horizDir = new THREE.Vector3(_rayDir.x, 0, _rayDir.z).normalize();
-          if (horizDir.lengthSq() < 0.001) horizDir.set(0, 0, -1);
+          _horizDir.set(_rayDir.x, 0, _rayDir.z).normalize();
+          if (_horizDir.lengthSq() < 0.001) _horizDir.set(0, 0, -1);
           reticle.position.set(
-            _rayOrigin.x + horizDir.x * 2.4,
+            _rayOrigin.x + _horizDir.x * 2.2,
             floorY,
-            _rayOrigin.z + horizDir.z * 2.4
+            _rayOrigin.z + _horizDir.z * 2.2
           );
         }
       }
@@ -984,105 +1007,61 @@
       btnPlacePortal.classList.remove('hidden');
     }
 
-    // -- BUCLE PRINCIPAL DE RENDERIZADO Y MATERIALIZACIÓN --
+    // -- BUCLE PRINCIPAL OPTIMIZADO (CERO ALOCACIONES DE MEMORIA POR FRAME) --
     function renderLoop(timestamp, frame) {
       const dt = Math.min(0.05, (timestamp - lastFrameTime) / 1000 || 0.016);
       lastFrameTime = timestamp;
-
-      // Animar el velo energético del portal de Leonora Carrington
-      if (portalVeilMesh) {
-        portalVeilMesh.material.uniforms.uTime.value = timestamp * 0.001;
-      }
+      const timeSec = timestamp * 0.001;
 
       // 1. Fase de Detección de Suelo Instantánea
-      if (!portalPlaced) {
+      if (!hallPlaced) {
         updateInstantFloorReticle(frame);
-        reticle.rotation.y = timestamp * 0.0015;
+        reticle.rotation.y = timeSec * 1.4;
       }
 
-      // 2. Movimiento de exploración a lo largo del pasillo (manteniendo el modelo 100% fijo en el suelo)
-      if (portalPlaced) {
-        // Dirección hacia el interior del pasillo (-Z del portalGroup)
-        const portalForward = new THREE.Vector3(0, 0, -1).applyQuaternion(portalGroup.quaternion);
-        portalForward.y = 0;
-        portalForward.normalize();
+      // 2. Caminata fluida a lo largo de la sala de exhibición
+      if (hallPlaced) {
+        _hallForward.set(0, 0, -1).applyQuaternion(hallGroup.quaternion);
+        _hallForward.y = 0;
+        _hallForward.normalize();
 
         userRig.position.set(
-          portalForward.x * walkForwardOffset,
+          _hallForward.x * walkForwardOffset,
           0,
-          portalForward.z * walkForwardOffset
+          _hallForward.z * walkForwardOffset
         );
       }
 
-      // 3. Animación de Materialización con Destellos de Partículas Pulsantes (~2.4 segundos)
+      // 3. Animación GPU de Materialización con Hojas de Árboles (Verdes a Amarillos)
       if (isMaterializing) {
-        materializationT = Math.min(1, materializationT + dt * 0.42);
-        const revealHeight = materializationT * 5.2; // Sube desde 0m en el piso hasta 5.2m de altura
-        clippingPlane.constant = portalGroup.position.y + revealHeight;
+        materializationT = Math.min(1, materializationT + dt * 0.40);
+        const revealHeight = materializationT * 5.0;
+        clippingPlane.constant = hallGroup.position.y + revealHeight;
 
-        // Hacer pulsar y ascender las partículas mágicas alrededor de la arquitectura que emerge
-        const positions = magicParticles.geometry.attributes.position.array;
-        const count = positions.length / 3;
-        for (let i = 0; i < count; i++) {
-          const baseX = particleBasePositions[i * 3];
-          const baseY = particleBasePositions[i * 3 + 1];
-          const baseZ = particleBasePositions[i * 3 + 2];
-
-          const wave = Math.sin(timestamp * 0.006 + i * 0.35);
-          positions[i * 3] = baseX + wave * 0.08;
-          // Concentrar destellos cerca del frente de materialización y a lo largo del portal
-          positions[i * 3 + 1] = (baseY * materializationT) + Math.abs(wave) * 0.25;
-          positions[i * 3 + 2] = baseZ;
-        }
-        magicParticles.geometry.attributes.position.needsUpdate = true;
-
-        const pulse = 0.7 + 0.3 * Math.sin(timestamp * 0.016);
-        particleMaterial.size = 0.12 + 0.06 * pulse;
-        particleMaterial.opacity = Math.max(0.15, (1.05 - materializationT * 0.65) * pulse);
+        leafMaterial.uniforms.uTime.value = timeSec;
+        leafMaterial.uniforms.uProgress.value = materializationT;
+        leafMaterial.uniforms.uOpacity.value = 1.0 - (materializationT * 0.25);
 
         if (materializationT >= 1) {
           isMaterializing = false;
-          clippingPlane.constant = portalGroup.position.y + 80;
-          // Mantener una bruma sutil de partículas mágicas pulsando suavemente en el portal
-          particleMaterial.opacity = 0.38;
+          // Desactivar localClippingEnabled libera la GPU para exploración a 60 FPS estables
+          renderer.localClippingEnabled = false;
+          showToast('Sala materializada · Explora caminando');
         }
-      } else if (portalPlaced && magicParticles.visible) {
-        // Brillo pulsante continuo y sutil digno del universo de Leonora Carrington
-        const gentlePulse = 0.28 + 0.14 * Math.sin(timestamp * 0.005);
-        particleMaterial.opacity = gentlePulse;
-        particleMaterial.size = 0.10 + 0.04 * Math.sin(timestamp * 0.008);
-      }
-
-      // 4. Detección de Cruce del Umbral del Portal (Entrada / Interior)
-      if (portalPlaced) {
-        const camWorldPos = new THREE.Vector3();
-        camera.getWorldPosition(camWorldPos);
-        const localPos = portalGroup.worldToLocal(camWorldPos.clone());
-        const nowInside = localPos.z < -0.15;
-
-        if (nowInside !== isInsidePortal) {
-          isInsidePortal = nowInside;
-          if (portalVeilMesh) {
-            portalVeilMesh.material.uniforms.uOpacity.value = isInsidePortal ? 0.12 : 0.42;
-          }
-          if (isInsidePortal) {
-            reticleStatus.querySelector('span:nth-child(2)').textContent = 'Explorando el interior del Pasillo Xilitla';
-            showToast('Has cruzado el Portal de Leonora Carrington');
-          } else {
-            reticleStatus.querySelector('span:nth-child(2)').textContent = 'Exterior del Portal · Camina hacia adentro';
-          }
-        }
+      } else if (hallPlaced && leafParticles.visible) {
+        // Desvanecer suavemente parte del follaje dejando solo una brisa ligera de hojas flotando
+        leafMaterial.uniforms.uTime.value = timeSec * 0.55;
+        leafMaterial.uniforms.uOpacity.value = Math.max(0.28, leafMaterial.uniforms.uOpacity.value - dt * 0.2);
       }
 
       renderer.render(scene, camera);
 
-      // Si está grabando video en modo cámara AR, actualizar el lienzo compositor
       if (isRecording && compositeCtx) {
-        drawCompositeFrame();
+        drawCompositeFrame(false);
       }
     }
 
-    // -- COMPOSITOR DE CAPTURA DE FOTO Y VIDEO HD (CÁMARA REAL + ESCENA 3D) --
+    // -- COMPOSITOR DE CAPTURA DE FOTO Y VIDEO HD --
     function ensureCompositeCanvas() {
       const w = renderer.domElement.width;
       const h = renderer.domElement.height;
@@ -1096,13 +1075,15 @@
       }
     }
 
-    function drawCompositeFrame() {
+    function drawCompositeFrame(forceRender = true) {
+      if (forceRender) {
+        renderer.render(scene, camera);
+      }
       ensureCompositeCanvas();
       const w = compositeCanvas.width;
       const h = compositeCanvas.height;
       compositeCtx.clearRect(0, 0, w, h);
 
-      // 1. Dibujar el video de la cámara trasera si está activo
       if (fallbackVideo && fallbackVideo.readyState >= 2) {
         const vw = fallbackVideo.videoWidth || w;
         const vh = fallbackVideo.videoHeight || h;
@@ -1115,7 +1096,6 @@
         compositeCtx.fillRect(0, 0, w, h);
       }
 
-      // 2. Superponer el render 3D del portal y pasillo
       compositeCtx.drawImage(renderer.domElement, 0, 0, w, h);
     }
 
@@ -1125,7 +1105,7 @@
         try {
           await navigator.share({
             files: [file],
-            title: 'Portal Leonora Carrington AR'
+            title: 'Sala Leonora Carrington AR'
           });
           return;
         } catch (_) {}
@@ -1147,25 +1127,23 @@
       const videoDot = document.getElementById('video-dot');
 
       btnPhoto.addEventListener('click', () => {
-        renderer.render(scene, camera);
-        drawCompositeFrame();
+        drawCompositeFrame(true);
         compositeCanvas.toBlob(async (blob) => {
           if (!blob) return;
           showToast('Guardando foto HD...');
-          await saveOrShareFile(blob, `Portal_Leonora_${Date.now()}.png`, 'image/png');
-        }, 'image/png', 1.0);
+          await saveOrShareFile(blob, `Sala_Leonora_${Date.now()}.png`, 'image/png');
+        }, 'image/png', 0.95);
       });
 
       btnVideo.addEventListener('click', () => {
         if (!isRecording) {
-          ensureCompositeCanvas();
-          drawCompositeFrame();
+          drawCompositeFrame(true);
           const stream = compositeCanvas.captureStream(30);
           const mimeType = MediaRecorder.isTypeSupported('video/mp4')
             ? 'video/mp4'
             : (MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm');
 
-          mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8000000 });
+          mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 6000000 });
           recordedChunks = [];
 
           mediaRecorder.ondataavailable = (e) => {
@@ -1176,14 +1154,14 @@
             const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
             const blob = new Blob(recordedChunks, { type: mimeType });
             showToast('Guardando video HD...');
-            await saveOrShareFile(blob, `Recorrido_Portal_Leonora_${Date.now()}.${ext}`, mimeType);
+            await saveOrShareFile(blob, `Recorrido_Sala_Leonora_${Date.now()}.${ext}`, mimeType);
           };
 
-          mediaRecorder.start(200);
+          mediaRecorder.start(250);
           isRecording = true;
           videoLabel.textContent = 'Detener';
           videoDot.classList.add('animate-ping');
-          showToast('Grabando recorrido AR en alta calidad...');
+          showToast('Grabando recorrido AR...');
         } else {
           mediaRecorder.stop();
           isRecording = false;
