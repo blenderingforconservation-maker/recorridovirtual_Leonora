@@ -52,7 +52,7 @@
       z-index: 2;
     }
 
-    /* Superposición AR limpia sin solicitar Fullscreen del sistema */
+    /* Superposición AR limpia (sin invocar jamás requestFullscreen) */
     #ar-overlay {
       position: fixed;
       inset: 0;
@@ -60,7 +60,7 @@
       pointer-events: none;
       display: none;
       flex-direction: column;
-      justify-content: flex-end;
+      justify-content: space-between;
       padding: env(safe-area-inset-top, 14px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 16px);
     }
 
@@ -73,43 +73,42 @@
       touch-action: manipulation;
     }
 
-    /* Botones Futuristas Mágicos (Alquimia Esmeralda & Oro Solar) */
+    /* Estética Futurista Mágica (Alquimia Esmeralda & Oro Solar) */
     .magic-deck {
-      background: linear-gradient(135deg, rgba(6, 20, 15, 0.86) 0%, rgba(12, 32, 24, 0.82) 100%);
-      border: 1px solid rgba(163, 230, 53, 0.32);
+      background: linear-gradient(135deg, rgba(6, 20, 15, 0.88) 0%, rgba(12, 32, 24, 0.84) 100%);
+      border: 1px solid rgba(163, 230, 53, 0.36);
       box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), 0 0 22px rgba(34, 197, 94, 0.18), inset 0 1px 0 rgba(254, 240, 138, 0.22);
     }
 
     .magic-btn {
       position: relative;
       overflow: hidden;
-      background: radial-gradient(circle at 50% 0%, rgba(163, 230, 53, 0.28), rgba(16, 46, 33, 0.9) 75%);
-      border: 1px solid rgba(250, 204, 21, 0.42);
-      box-shadow: 0 0 18px rgba(132, 204, 22, 0.22), inset 0 0 12px rgba(250, 204, 21, 0.14);
-      transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      background: radial-gradient(circle at 50% 0%, rgba(163, 230, 53, 0.30), rgba(16, 46, 33, 0.92) 75%);
+      border: 1px solid rgba(250, 204, 21, 0.48);
+      box-shadow: 0 0 18px rgba(132, 204, 22, 0.24), inset 0 0 12px rgba(250, 204, 21, 0.15);
+      transition: transform 0.12s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     }
 
     .magic-btn:active,
     .magic-btn.is-pressing {
-      transform: scale(0.94);
-      border-color: rgba(254, 240, 138, 0.9);
-      box-shadow: 0 0 26px rgba(163, 230, 53, 0.6), inset 0 0 16px rgba(250, 204, 21, 0.35);
+      transform: scale(0.93);
+      border-color: rgba(254, 240, 138, 0.95);
+      box-shadow: 0 0 28px rgba(163, 230, 53, 0.65), inset 0 0 16px rgba(250, 204, 21, 0.38);
     }
 
     .magic-btn-primary {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.32) 0%, rgba(132, 204, 22, 0.38) 50%, rgba(234, 179, 8, 0.34) 100%);
-      border: 1px solid rgba(253, 224, 71, 0.6);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.38) 0%, rgba(132, 204, 22, 0.44) 50%, rgba(234, 179, 8, 0.40) 100%);
+      border: 1px solid rgba(253, 224, 71, 0.68);
     }
 
-    /* Píldora Toast de Notificación */
     #toast-banner {
       position: fixed;
-      top: 28px;
+      top: 68px;
       left: 50%;
       transform: translateX(-50%);
       padding: 7px 20px;
-      background: rgba(6, 18, 14, 0.85);
-      border: 1px solid rgba(163, 230, 53, 0.35);
+      background: rgba(6, 18, 14, 0.90);
+      border: 1px solid rgba(163, 230, 53, 0.40);
       border-radius: 999px;
       color: #ecfccb;
       font-size: 11px;
@@ -160,33 +159,52 @@
     </button>
   </div>
 
-  <!-- INTERFAZ AR FUTURISTA Y MÁGICA (Sin avisos de pantalla completa ni cajas superiores) -->
+  <!-- INTERFAZ AR CON DETECTOR DE SUELO Y NAVEGACIÓN MÁGICA -->
   <div id="ar-overlay">
-    <div id="toast-banner">Materializando Sala Xilitla...</div>
+    <div id="toast-banner">Apunta hacia el piso para detectar el suelo...</div>
 
+    <!-- Barra Superior: Estado del Detector de Piso y Botón de Reubicación -->
+    <header class="w-full flex items-center justify-between gap-2">
+      <div id="scanner-pill" class="magic-deck rounded-full px-3.5 py-1.5 flex items-center gap-2">
+        <span id="scanner-dot" class="w-2 h-2 rounded-full bg-yellow-300"></span>
+        <span id="scanner-text" class="text-[11px] font-medium text-lime-100">Apunta al piso para detectar el suelo</span>
+      </div>
+
+      <button id="btn-relocate-hall" type="button" class="interactive hidden magic-deck px-3.5 py-1.5 rounded-full text-lime-200 text-[11px] font-medium active:scale-95 transition-transform">
+        Reubicar en Piso
+      </button>
+    </header>
+
+    <!-- Consola Inferior: Anclaje en Piso + Locomoción Mágica + Foto/Video -->
     <footer class="w-full flex flex-col items-center gap-3 mb-1">
-      <!-- Consola Mágica de Locomoción (Pasos Largos + Mantener para Deslizamiento Continuo) -->
-      <div id="walk-controls" class="interactive magic-deck w-full max-w-sm rounded-full p-2 flex items-center justify-between gap-2">
+      <!-- Botón de Anclaje Manual Instantáneo (Fase 1: Detección de Suelo) -->
+      <button id="btn-place-hall" type="button" class="interactive magic-btn magic-btn-primary px-7 py-3.5 rounded-full text-yellow-100 font-semibold text-xs uppercase tracking-widest shadow-2xl flex items-center gap-2.5">
+        <span class="w-2 h-2 rounded-full bg-lime-300"></span>
+        <span id="btn-place-label">Fijar Sala en el Piso Aquí</span>
+      </button>
+
+      <!-- Consola Mágica de Locomoción (Fase 2: Exploración Caminando + Botones Futuristas) -->
+      <div id="walk-controls" class="hidden interactive magic-deck w-full max-w-sm rounded-full p-2 flex items-center justify-between gap-2">
         <!-- Botón Retroceder Paso -->
-        <button id="btn-step-back" type="button" class="magic-btn rounded-full px-4 py-3 flex items-center gap-2 text-lime-100 text-xs font-medium tracking-wider uppercase" aria-label="Retroceder">
+        <button id="btn-step-back" type="button" class="magic-btn rounded-full px-4 py-3 flex items-center gap-1.5 text-lime-100 text-xs font-medium tracking-wider uppercase" aria-label="Retroceder">
           <svg class="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
           </svg>
-          <span class="hidden sm:inline">Atrás</span>
+          <span>Atrás</span>
         </button>
 
-        <!-- Orbe Central Indicador de Recorrido (Tocar para volver al inicio) -->
-        <button id="btn-step-home" type="button" class="flex flex-col items-center justify-center px-3 py-1 rounded-full hover:bg-white/5 transition-colors" title="Toca para volver a la entrada">
+        <!-- Orbe Central Indicador de Recorrido (Tocar para volver a la entrada) -->
+        <button id="btn-step-home" type="button" class="flex flex-col items-center justify-center px-3 py-1 rounded-full hover:bg-white/5 transition-colors" title="Toca para regresar a la entrada">
           <div class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-yellow-300"></span>
+            <span id="step-pulse-left" class="w-1.5 h-1.5 rounded-full bg-yellow-300 transition-transform"></span>
             <span id="walk-distance-label" class="font-museum text-sm text-lime-200 tracking-widest font-semibold">0.0 m</span>
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span id="step-pulse-right" class="w-1.5 h-1.5 rounded-full bg-emerald-400 transition-transform"></span>
           </div>
-          <span class="text-[9px] uppercase tracking-[0.2em] text-stone-300/80">Camina o Impulsa</span>
+          <span class="text-[9px] uppercase tracking-[0.18em] text-stone-300/85">Camina o Impulsa</span>
         </button>
 
         <!-- Botón Avanzar Paso Mágico -->
-        <button id="btn-step-forward" type="button" class="magic-btn magic-btn-primary rounded-full px-5 py-3 flex items-center gap-2 text-yellow-100 text-xs font-semibold tracking-wider uppercase" aria-label="Avanzar">
+        <button id="btn-step-forward" type="button" class="magic-btn magic-btn-primary rounded-full px-5 py-3 flex items-center gap-1.5 text-yellow-100 text-xs font-semibold tracking-wider uppercase" aria-label="Avanzar">
           <span>Avanzar</span>
           <svg class="w-4 h-4 text-yellow-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
@@ -195,7 +213,7 @@
       </div>
 
       <!-- Controles de Captura Multimedia Directa -->
-      <div id="media-controls" class="interactive flex items-center gap-4">
+      <div id="media-controls" class="hidden interactive flex items-center gap-4">
         <button id="btn-capture-photo" type="button" class="magic-deck flex items-center gap-2.5 px-5 py-2.5 rounded-full text-white text-xs font-medium active:scale-95 transition-transform">
           <span class="w-5 h-5 rounded-full bg-gradient-to-tr from-lime-300 to-yellow-200 flex items-center justify-center">
             <svg class="w-3 h-3 text-stone-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
@@ -224,10 +242,20 @@
       sculpture: `${REPO_RAW_BASE}models/3DModel.glb`
     };
 
-    // Variables Globales
+    // Variables de Escena y Jerarquía de 3 Niveles (Anclaje Piso -> Locomoción -> Modelos)
     let scene, camera, renderer, gltfLoader;
-    let hallGroup, interiorGroup;
+    let reticle, reticleProgressRing;
+    let hallAnchorGroup, walkStageGroup, interiorGroup;
     let clippingPlane, leafParticles, leafMaterial;
+
+    // Variables de Detección de Suelo Real (WebXR Hit-Test + Local-Floor + Fallback Geométrico)
+    let isWebXRSession = false;
+    let hitTestSource = null;
+    let hitTestSourceRequested = false;
+    let detectedFloorY = 0;
+    let floorSurfaceLocked = false;
+    let floorLockTimer = 0;
+    const FLOOR_AUTO_LOCK_SECONDS = 0.90; // Auto-anclaje al sostener la mirada en el suelo 0.9s
 
     // Estados de Materialización y Tiempo
     let hallPlaced = false;
@@ -235,15 +263,14 @@
     let isMaterializing = false;
     let lastFrameTime = performance.now();
 
-    // Locomoción en Primera Persona (Pasos Largos + Interpolación Fluida)
+    // Locomoción Híbrida (SLAM 6DoF + Podómetro de Paso Largo + Botones Mágicos)
     const MAX_WALK_DISTANCE = 14.5;
     const MIN_WALK_DISTANCE = -1.5;
-    const PHYSICAL_STEP_STRIDE = 1.45; // Metros virtuales por paso físico detectado
-    const BUTTON_TAP_STRIDE = 1.60;    // Metros virtuales por toque de botón mágico
-    const HOLD_WALK_SPEED = 3.8;       // Metros/segundo al mantener presionado
+    const PHYSICAL_STEP_STRIDE = 1.50; // 1.50m de avance virtual por cada paso físico
+    const BUTTON_TAP_STRIDE = 1.80;    // 1.80m de avance virtual por toque en botón mágico
+    const HOLD_WALK_SPEED = 4.20;      // 4.20 m/s de caminata fluida al mantener presionado
 
     let cameraVideo = null;
-    let userRig = null;
     let targetWalkZ = 0;
     let currentWalkZ = 0;
     let targetWalkX = 0;
@@ -251,7 +278,7 @@
     let moveHoldDir = 0; // +1 avanzando, -1 retrocediendo, 0 libre
     let stepBobPhase = 0;
 
-    // Orientación por Giroscopio (3DoF + Locomoción Espacial)
+    // Sensores de Orientación y Vectores Pre-Alocados (Cero Garbage Collection)
     let hasGyro = false;
     let initialAlpha = null;
     const deviceEuler = new THREE.Euler();
@@ -259,7 +286,12 @@
     const screenTransform = new THREE.Quaternion();
     const worldTransform = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
     const _zAxis = new THREE.Vector3(0, 0, 1);
-    const _lookDir = new THREE.Vector3();
+    const _camWorldPos = new THREE.Vector3();
+    const _camWorldDir = new THREE.Vector3();
+    const _horizDir = new THREE.Vector3();
+    const _localCamPos = new THREE.Vector3();
+    const _localLookDir = new THREE.Vector3();
+    const _anchorLookTarget = new THREE.Vector3();
 
     // Grabación Multimedia Ligera (Compositor Cámara + 3D)
     let isRecording = false;
@@ -268,14 +300,23 @@
     let compositeCanvas = null;
     let compositeCtx = null;
 
-    // Elementos de Interfaz
+    // Elementos UI
     const domOverlay = document.getElementById('ar-overlay');
     const btnEnterAR = document.getElementById('btn-enter-ar');
     const loadingModal = document.getElementById('loading-modal');
+    const scannerDot = document.getElementById('scanner-dot');
+    const scannerText = document.getElementById('scanner-text');
+    const btnPlaceHall = document.getElementById('btn-place-hall');
+    const btnPlaceLabel = document.getElementById('btn-place-label');
+    const btnRelocateHall = document.getElementById('btn-relocate-hall');
+    const walkControls = document.getElementById('walk-controls');
+    const mediaControls = document.getElementById('media-controls');
     const btnStepForward = document.getElementById('btn-step-forward');
     const btnStepBack = document.getElementById('btn-step-back');
     const btnStepHome = document.getElementById('btn-step-home');
     const walkDistanceLabel = document.getElementById('walk-distance-label');
+    const stepPulseLeft = document.getElementById('step-pulse-left');
+    const stepPulseRight = document.getElementById('step-pulse-right');
     const toastBanner = document.getElementById('toast-banner');
 
     function showToast(msg) {
@@ -291,16 +332,11 @@
       const container = document.getElementById('webgl-viewport');
       scene = new THREE.Scene();
 
-      // Rig del visitante (se desplaza por el pasillo manteniendo el piso en Y = 0)
-      userRig = new THREE.Group();
-      userRig.position.set(0, 0, 0);
-      scene.add(userRig);
+      // Cámara a altura humana (1.60m sobre el plano del suelo Y = 0)
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.08, 85);
+      camera.position.set(0, 1.60, 0);
+      scene.add(camera);
 
-      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.08, 80);
-      camera.position.set(0, 1.55, 0);
-      userRig.add(camera);
-
-      // WebGL optimizado para máxima estabilidad en Android e iOS
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
@@ -310,6 +346,7 @@
       });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.xr.enabled = true;
       renderer.localClippingEnabled = false;
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -322,20 +359,40 @@
       }, false);
 
       setupLighting();
+      setupFloorReticle();
 
-      // Jerarquía de la Sala de Exhibición (Fija en el suelo desde el inicio)
-      hallGroup = new THREE.Group();
-      hallGroup.position.set(0, 0, -1.4); // Entrada del pasillo en el suelo frente al visitante
-      hallGroup.visible = false;
-      scene.add(hallGroup);
+      // JERARQUÍA DE 3 NIVELES PARA SOPORTAR TANTO ANCLAJE FIJO EN PISO COMO CAMINATA FLUIDA
+      // 1. hallAnchorGroup: Fijo en la coordenada exacta del piso físico detectado
+      hallAnchorGroup = new THREE.Group();
+      hallAnchorGroup.visible = false;
+      hallAnchorGroup.frustumCulled = false;
+      scene.add(hallAnchorGroup);
 
+      // 2. walkStageGroup: Nodo dinámico que acerca el pasillo cuando el usuario camina o pulsa botones
+      walkStageGroup = new THREE.Group();
+      walkStageGroup.matrixAutoUpdate = true;
+      walkStageGroup.frustumCulled = false;
+      hallAnchorGroup.add(walkStageGroup);
+
+      // 3. interiorGroup: Contiene el pasillo nivelado a Y = 0, el pedestal de roca y la escultura
       interiorGroup = new THREE.Group();
-      hallGroup.add(interiorGroup);
+      interiorGroup.frustumCulled = false;
+      walkStageGroup.add(interiorGroup);
 
       setupLeafMaterialization();
       await loadModelsParallel();
 
       btnEnterAR.addEventListener('click', startARExperience);
+      btnPlaceHall.addEventListener('click', anchorHallOnDetectedFloor);
+      btnRelocateHall.addEventListener('click', resetFloorScanner);
+
+      // Permitir tocar directamente el suelo en pantalla para anclar la sala al instante
+      renderer.domElement.addEventListener('click', () => {
+        if (!hallPlaced && reticle.visible) {
+          anchorHallOnDetectedFloor();
+        }
+      });
+
       setupMagicalWalkControls();
       setupMediaCapture();
 
@@ -356,24 +413,31 @@
       scene.add(dirLight);
     }
 
-    // -- RETÍCULA LIGERA DE DETECCIÓN DE PISO --
-    function setupReticle() {
+    // -- RETÍCULA DETECTOR DE SUELO REAL CON ANILLO DE AUTO-LOCK --
+    function setupFloorReticle() {
       reticle = new THREE.Group();
 
       const outerRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.22, 0.26, 32).rotateX(-Math.PI / 2),
+        new THREE.RingGeometry(0.24, 0.28, 36).rotateX(-Math.PI / 2),
         new THREE.MeshBasicMaterial({ color: 0x84cc16, side: THREE.DoubleSide })
       );
       const innerRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.07, 0.10, 24).rotateX(-Math.PI / 2),
+        new THREE.RingGeometry(0.06, 0.09, 24).rotateX(-Math.PI / 2),
         new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
       );
       const centerDisc = new THREE.Mesh(
-        new THREE.CircleGeometry(0.22, 24).rotateX(-Math.PI / 2),
-        new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.2, side: THREE.DoubleSide })
+        new THREE.CircleGeometry(0.24, 32).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
       );
 
-      reticle.add(centerDisc, outerRing, innerRing);
+      // Anillo que crece al confirmar que el plano es el piso horizontal
+      reticleProgressRing = new THREE.Mesh(
+        new THREE.RingGeometry(0.10, 0.22, 32).rotateX(-Math.PI / 2),
+        new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.65, side: THREE.DoubleSide })
+      );
+      reticleProgressRing.scale.setScalar(0.01);
+
+      reticle.add(centerDisc, outerRing, innerRing, reticleProgressRing);
       reticle.visible = false;
       scene.add(reticle);
     }
@@ -567,7 +631,7 @@
       leafParticles = new THREE.Points(geo, leafMaterial);
       leafParticles.frustumCulled = false;
       leafParticles.visible = false;
-      hallGroup.add(leafParticles);
+      walkStageGroup.add(leafParticles);
     }
 
     // -- OPTIMIZACIÓN Y CORRECCIÓN DE MATERIALES PBR DEL PASILLO --
@@ -597,7 +661,7 @@
       });
     }
 
-    // -- CARGA PARALELA, CONGELADO DE MATRICES Y NIVELACIÓN AL PISO (Y = 0) --
+    // -- CARGA PARALELA Y NIVELACIÓN MILIMÉTRICA EXCLUSIVA DE LOSAS 'pisoceart' A Y = 0.000 --
     async function loadModelsParallel() {
       await MeshoptDecoder.ready;
 
@@ -644,21 +708,22 @@
         corridor.scale.setScalar(5.2);
         corridor.updateMatrixWorld(true);
 
-        // Detectar las losas de piso (pisoceart1 / stones) y muros (murocear) para nivelar a Y = 0
-        const floorBox = new THREE.Box3();
+        // Aislar EXCLUSIVAMENTE las losas caminables ('pisoceart1', 'pisoceart1.001', 'pisoceart1.002')
+        // ignorando 'stones' o raíces para que el pasillo jamás quede flotando
+        const pisoSlabBox = new THREE.Box3();
         const wallBox = new THREE.Box3();
-        let hasFloorMesh = false;
+        let hasPisoSlab = false;
         let hasWallMesh = false;
 
         corridor.traverse((node) => {
           if (node.isMesh) {
             const mName = (node.name || '').toLowerCase();
             const matName = (node.material?.name || '').toLowerCase();
-            if (mName.includes('piso') || matName.includes('pisoceart') || matName.includes('stones')) {
-              floorBox.expandByObject(node);
-              hasFloorMesh = true;
+            if (mName.includes('pisoceart') || matName.includes('pisoceart')) {
+              pisoSlabBox.expandByObject(node);
+              hasPisoSlab = true;
             }
-            if (mName.includes('muro') || matName.includes('murocear')) {
+            if (mName.includes('murocear') || matName.includes('murocear')) {
               wallBox.expandByObject(node);
               hasWallMesh = true;
             }
@@ -667,22 +732,23 @@
 
         const fullCorrBox = new THREE.Box3().setFromObject(corridor);
         const refCenter = hasWallMesh ? wallBox.getCenter(new THREE.Vector3()) : fullCorrBox.getCenter(new THREE.Vector3());
-        const walkableFloorY = hasFloorMesh ? floorBox.max.y : fullCorrBox.min.y;
+        // Nivel exacto de las losas caminables pisoceart1 en Y = 0.000
+        const exactFloorSlabY = hasPisoSlab ? pisoSlabBox.min.y : fullCorrBox.min.y;
         const entranceZ = hasWallMesh ? wallBox.max.z : fullCorrBox.max.z;
         const backZ = hasWallMesh ? wallBox.min.z : fullCorrBox.min.z;
 
         corridor.position.set(
           -refCenter.x,
-          -walkableFloorY,
+          -exactFloorSlabY,
           -entranceZ
         );
         corridor.updateMatrixWorld(true);
 
         const corridorLength = Math.abs(entranceZ - backZ);
-        // Desplazar el conjunto monumental más al fondo del pasillo (68% de la profundidad)
+        // Ubicación monumental al 68% del fondo del pasillo
         const targetCorridorZ = -(corridorLength * 0.68);
 
-        // Posicionar pedestal de roca en el piso (Y = 0) a 2.5 veces el tamaño anterior (1.15 * 2.5 = 2.875)
+        // Pedestal de roca a escala 2.875 (1.15 * 2.5) apoyado al ras del piso Y = 0
         const rock = gltfRock.scene;
         rock.scale.setScalar(1.15 * 2.5);
         rock.updateMatrixWorld(true);
@@ -692,7 +758,7 @@
         rock.updateMatrixWorld(true);
         const rockHeight = rockBox.max.y - rockBox.min.y;
 
-        // Posicionar escultura sobre la cumbre de la roca a 2.5 veces el tamaño anterior (1.75 * 2.5 = 4.375)
+        // Escultura a escala 4.375 (1.75 * 2.5) sobre la cumbre de la roca
         const sculpture = gltfSculpture.scene;
         sculpture.scale.setScalar(1.75 * 2.5);
         sculpture.updateMatrixWorld(true);
@@ -710,7 +776,6 @@
         const maxAniso = Math.min(2, renderer.capabilities.getMaxAnisotropy());
         const processedMaterials = new Set();
 
-        // Optimizar materiales y congelar matrices de todos los nodos estáticos
         interiorGroup.traverse((node) => {
           node.frustumCulled = false;
           node.matrixAutoUpdate = false;
@@ -733,7 +798,7 @@
         document.getElementById('progress-bar').style.width = '100%';
         document.getElementById('progress-text').textContent = '100%';
         document.getElementById('progress-container').classList.add('hidden');
-        document.getElementById('loading-message').textContent = 'Sala de exhibición lista para explorar a nivel de piso.';
+        document.getElementById('loading-message').textContent = 'Sala de exhibición lista para detectar el suelo y explorar.';
         btnEnterAR.classList.remove('hidden');
         btnEnterAR.classList.add('flex');
       } catch (e) {
@@ -742,14 +807,32 @@
       }
     }
 
-    // -- CONTROLES FUTURISTAS MÁGICOS DE CAMINATA (TOQUE + MANTENER PRESIONADO) --
+    // -- CONTROLES FUTURISTAS MÁGICOS DE CAMINATA (PASO LARGO + MANTENER PRESIONADO) --
+    function pulseStepIndicators() {
+      stepPulseLeft.style.transform = 'scale(1.7)';
+      stepPulseRight.style.transform = 'scale(1.7)';
+      clearTimeout(pulseStepIndicators._t);
+      pulseStepIndicators._t = setTimeout(() => {
+        stepPulseLeft.style.transform = 'scale(1)';
+        stepPulseRight.style.transform = 'scale(1)';
+      }, 180);
+    }
+
+    function getLocalCorridorLookDirection() {
+      camera.getWorldDirection(_camWorldDir);
+      // Transformar dirección de mirada al espacio local del pasillo anclado
+      _localLookDir.copy(_camWorldDir). applyQuaternion(hallAnchorGroup.quaternion.clone().invert());
+      return _localLookDir;
+    }
+
     function triggerVirtualStride(direction) {
-      camera.getWorldDirection(_lookDir);
+      if (!hallPlaced) return;
+      const localDir = getLocalCorridorLookDirection();
       const stepDistance = BUTTON_TAP_STRIDE * direction;
       targetWalkZ = THREE.MathUtils.clamp(targetWalkZ + stepDistance, MIN_WALK_DISTANCE, MAX_WALK_DISTANCE);
-      // Desplazamiento lateral sutil guiado hacia donde mira el visitante (acotado entre muros)
-      targetWalkX = THREE.MathUtils.clamp(targetWalkX + (_lookDir.x * 0.45 * direction), -0.85, 0.85);
+      targetWalkX = THREE.MathUtils.clamp(targetWalkX + (localDir.x * 0.40 * direction), -0.80, 0.80);
       stepBobPhase += Math.PI;
+      pulseStepIndicators();
     }
 
     function setupMagicalWalkControls() {
@@ -758,6 +841,7 @@
       const bindWalkButton = (btn, dir) => {
         btn.addEventListener('pointerdown', (e) => {
           e.preventDefault();
+          e.stopPropagation();
           holdStartTime = performance.now();
           moveHoldDir = dir;
           btn.classList.add('is-pressing');
@@ -766,11 +850,11 @@
         const stopHold = (e) => {
           if (moveHoldDir !== dir) return;
           e.preventDefault();
+          e.stopPropagation();
           const elapsed = performance.now() - holdStartTime;
           moveHoldDir = 0;
           btn.classList.remove('is-pressing');
-          // Si fue un toque corto (< 220ms), impulsar un paso largo mágico de 1.60m
-          if (elapsed < 220) {
+          if (elapsed < 230) {
             triggerVirtualStride(dir);
           }
         };
@@ -783,14 +867,16 @@
       bindWalkButton(btnStepForward, 1);
       bindWalkButton(btnStepBack, -1);
 
-      btnStepHome.addEventListener('click', () => {
+      btnStepHome.addEventListener('click', (e) => {
+        e.stopPropagation();
         targetWalkZ = 0;
         targetWalkX = 0;
+        pulseStepIndicators();
         showToast('Regresando a la entrada del pasillo');
       });
     }
 
-    // -- INICIO DIRECTO EN CÁMARA AR (SIN PANTALLA COMPLETA FORZADA NI RETÍCULA) --
+    // -- INICIO DE EXPERIENCIA AR (WEBXR HIT-TEST REAL CON FALLBACK CÁMARA + GIROSCOPIO) --
     async function startARExperience() {
       loadingModal.classList.add('hidden');
       domOverlay.classList.add('active');
@@ -801,7 +887,45 @@
         } catch (_) {}
       }
 
-      // Abrir cámara trasera directamente en el viewport 100dvh (sin requestFullscreen ni aviso de sistema)
+      setupSensorsAndPedometer();
+
+      // 1. Intentar WebXR 'immersive-ar' con 'local-floor' y 'hit-test' para detección física del suelo
+      if (navigator.xr) {
+        try {
+          const supported = await navigator.xr.isSessionSupported('immersive-ar');
+          if (supported) {
+            const session = await navigator.xr.requestSession('immersive-ar', {
+              optionalFeatures: ['hit-test', 'local-floor', 'dom-overlay'],
+              domOverlay: { root: domOverlay }
+            });
+
+            isWebXRSession = true;
+            try {
+              renderer.xr.setReferenceSpaceType('local-floor');
+              detectedFloorY = 0;
+            } catch (_) {
+              renderer.xr.setReferenceSpaceType('local');
+              detectedFloorY = -1.55;
+            }
+
+            await renderer.xr.setSession(session);
+
+            session.addEventListener('end', () => {
+              domOverlay.classList.remove('active');
+              window.location.reload();
+            });
+
+            lastFrameTime = performance.now();
+            renderer.setAnimationLoop(renderLoop);
+            return;
+          }
+        } catch (err) {
+          console.warn('WebXR no disponible; activando cámara AR directa con plano de suelo:', err);
+          isWebXRSession = false;
+        }
+      }
+
+      // 2. Fallback universal con cámara trasera 720p (sin requestFullscreen)
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
@@ -826,45 +950,188 @@
         });
         document.body.prepend(cameraVideo);
       } catch (err) {
-        console.warn('Usando vista 3D directa:', err);
+        console.warn('Vista 3D directa activada:', err);
       }
 
-      setupSensorsAndPedometer();
-      deployHallImmediatelyOnFloor();
-
+      detectedFloorY = 0;
       lastFrameTime = performance.now();
       renderer.setAnimationLoop(renderLoop);
     }
 
-    // -- ANCLAJE INMEDIATO DEL PASILLO EN EL SUELO DESDE EL SEGUNDO CERO --
-    function deployHallImmediatelyOnFloor() {
-      hallGroup.matrixAutoUpdate = true;
-      hallGroup.position.set(0, 0, -1.4); // Piso exacto Y = 0, entrada a 1.4m frente al usuario
-      hallGroup.rotation.set(0, 0, 0);
-      hallGroup.updateMatrix();
-      hallGroup.updateMatrixWorld(true);
-      hallGroup.matrixAutoUpdate = false;
-      hallGroup.visible = true;
+    // -- DETECTOR ESTRICTO DEL MERO PISO (DESCARTA PAREDES Y MESAS ALTAS) --
+    function updateFloorDetector(frame, dt) {
+      let validFloorHit = false;
+      camera.getWorldPosition(_camWorldPos);
+      camera.getWorldDirection(_camWorldDir);
+
+      if (frame && isWebXRSession) {
+        const referenceSpace = renderer.xr.getReferenceSpace();
+        const session = renderer.xr.getSession();
+
+        if (!hitTestSourceRequested && session) {
+          session.requestReferenceSpace('viewer').then((viewerSpace) => {
+            if (session.requestHitTestSource) {
+              session.requestHitTestSource({ space: viewerSpace }).then((source) => {
+                hitTestSource = source;
+              }).catch(() => {});
+            }
+          }).catch(() => {});
+          hitTestSourceRequested = true;
+        }
+
+        if (hitTestSource && referenceSpace) {
+          const results = frame.getHitTestResults(hitTestSource);
+          for (let i = 0; i < results.length; i++) {
+            const pose = results[i].getPose(referenceSpace);
+            if (!pose) continue;
+
+            const m = pose.transform.matrix;
+            const normalY = m[5]; // Componente Y de la normal de la superficie
+            const hitY = pose.transform.position.y;
+
+            // Validar que sea un plano horizontal (normalY > 0.72) y esté en el suelo (>0.55m debajo del teléfono)
+            if (normalY > 0.72 && hitY < (_camWorldPos.y - 0.55)) {
+              reticle.position.set(pose.transform.position.x, hitY, pose.transform.position.z);
+              detectedFloorY = hitY;
+              validFloorHit = true;
+              break;
+            }
+          }
+        }
+      }
+
+      // Proyección geométrica al suelo real (Y = detectedFloorY) cuando se apunta hacia abajo
+      if (!validFloorHit) {
+        const floorY = isWebXRSession ? detectedFloorY : 0;
+        const heightAboveFloor = Math.max(0.85, _camWorldPos.y - floorY);
+
+        if (_camWorldDir.y < -0.10) {
+          const distToFloor = THREE.MathUtils.clamp(heightAboveFloor / -_camWorldDir.y, 1.35, 3.60);
+          reticle.position.set(
+            _camWorldPos.x + _camWorldDir.x * distToFloor,
+            floorY,
+            _camWorldPos.z + _camWorldDir.z * distToFloor
+          );
+          validFloorHit = _camWorldDir.y < -0.18;
+        } else {
+          _horizDir.set(_camWorldDir.x, 0, _camWorldDir.z).normalize();
+          if (_horizDir.lengthSq() < 0.001) _horizDir.set(0, 0, -1);
+          reticle.position.set(
+            _camWorldPos.x + _horizDir.x * 1.85,
+            floorY,
+            _camWorldPos.z + _horizDir.z * 1.85
+          );
+        }
+      }
+
+      reticle.visible = true;
+
+      // Actualizar progreso de bloqueo automático en el suelo (Auto-Lock en 0.9s)
+      if (validFloorHit) {
+        floorLockTimer = Math.min(FLOOR_AUTO_LOCK_SECONDS, floorLockTimer + dt);
+        const lockProgress = floorLockTimer / FLOOR_AUTO_LOCK_SECONDS;
+        reticleProgressRing.scale.setScalar(Math.max(0.05, lockProgress));
+        scannerDot.className = 'w-2 h-2 rounded-full bg-lime-400';
+        scannerText.textContent = `Suelo detectado (${Math.round(lockProgress * 100)}%) · Fijando en el piso...`;
+        btnPlaceLabel.textContent = 'Fijar Sala en el Piso Ahora';
+
+        if (floorLockTimer >= FLOOR_AUTO_LOCK_SECONDS && !hallPlaced) {
+          anchorHallOnDetectedFloor();
+        }
+      } else {
+        floorLockTimer = Math.max(0, floorLockTimer - dt * 0.5);
+        reticleProgressRing.scale.setScalar(Math.max(0.05, floorLockTimer / FLOOR_AUTO_LOCK_SECONDS));
+        scannerDot.className = 'w-2 h-2 rounded-full bg-yellow-300';
+        scannerText.textContent = 'Inclina un poco hacia el suelo o toca Fijar Sala';
+      }
+    }
+
+    // -- ANCLAR EL PASILLO EN EL MERO PISO Y ACTIVAR EXPLORACIÓN --
+    function anchorHallOnDetectedFloor() {
+      if (hallPlaced) return;
+
+      camera.getWorldPosition(_camWorldPos);
+      camera.getWorldDirection(_camWorldDir);
+
+      // Posicionar el ancla exactamente sobre la coordenada del suelo detectado
+      hallAnchorGroup.matrixAutoUpdate = true;
+      hallAnchorGroup.position.copy(reticle.position);
+
+      // Orientar la entrada del pasillo alineada con la dirección horizontal hacia donde mira el usuario
+      _horizDir.set(_camWorldDir.x, 0, _camWorldDir.z).normalize();
+      if (_horizDir.lengthSq() < 0.001) _horizDir.set(0, 0, -1);
+
+      _anchorLookTarget.set(
+        hallAnchorGroup.position.x - _horizDir.x,
+        hallAnchorGroup.position.y,
+        hallAnchorGroup.position.z - _horizDir.z
+      );
+      hallAnchorGroup.lookAt(_anchorLookTarget);
+
+      // Bloquear matriz del ancla de suelo para que jamás flote ni derive
+      hallAnchorGroup.updateMatrix();
+      hallAnchorGroup.updateMatrixWorld(true);
+      hallAnchorGroup.matrixAutoUpdate = false;
+      hallAnchorGroup.visible = true;
+
+      // Reiniciar etapa de caminata en la entrada del pasillo (0.0m)
+      targetWalkZ = 0;
+      currentWalkZ = 0;
+      targetWalkX = 0;
+      currentWalkX = 0;
+      walkStageGroup.position.set(0, 0, 0);
 
       hallPlaced = true;
+      reticle.visible = false;
 
-      // Iniciar materialización progresiva con hojas de árboles (verde a amarillo)
+      // Actualizar interfaz a Modo Exploración de Sala
+      btnPlaceHall.classList.add('hidden');
+      btnRelocateHall.classList.remove('hidden');
+      walkControls.classList.remove('hidden');
+      mediaControls.classList.remove('hidden');
+      scannerDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+      scannerText.textContent = 'Sala fija en el piso · Camina para explorar';
+
+      // Iniciar materialización con hojas de árboles desde la cota exacta del suelo
       renderer.localClippingEnabled = true;
       isMaterializing = true;
       materializationT = 0;
-      clippingPlane.constant = 0.05;
+      clippingPlane.constant = hallAnchorGroup.position.y + 0.05;
       leafParticles.visible = true;
       leafMaterial.uniforms.uProgress.value = 0;
       leafMaterial.uniforms.uOpacity.value = 1.0;
 
-      showToast('Sala anclada en el suelo · Camina o usa los controles');
+      showToast('Sala anclada al ras del suelo · Camina hacia el interior');
     }
 
-    // -- GIROSCOPIO ALINEADO + PODÓMETRO BIOMECÁNICO DE PASO LARGO --
+    function resetFloorScanner() {
+      hallPlaced = false;
+      isMaterializing = false;
+      floorLockTimer = 0;
+      renderer.localClippingEnabled = false;
+      hallAnchorGroup.visible = false;
+      leafParticles.visible = false;
+      targetWalkZ = 0;
+      currentWalkZ = 0;
+      targetWalkX = 0;
+      currentWalkX = 0;
+      walkStageGroup.position.set(0, 0, 0);
+
+      btnPlaceHall.classList.remove('hidden');
+      btnRelocateHall.classList.add('hidden');
+      walkControls.classList.add('hidden');
+      mediaControls.classList.add('hidden');
+      scannerDot.className = 'w-2 h-2 rounded-full bg-yellow-300';
+      scannerText.textContent = 'Apunta al piso para detectar el suelo';
+      showToast('Apunta al piso para reubicar la sala');
+    }
+
+    // -- GIROSCOPIO + PODÓMETRO BIOMECÁNICO DE ZANCADA LARGA (1.50M POR PASO) --
     function setupSensorsAndPedometer() {
-      camera.rotation.set(-0.08, 0, 0, 'YXZ');
+      camera.rotation.set(-0.22, 0, 0, 'YXZ');
 
       window.addEventListener('deviceorientation', (e) => {
+        if (isWebXRSession) return; // En WebXR nativo el tracking 6DoF controla la cámara
         if (e.alpha === null || e.beta === null || e.gamma === null) return;
         hasGyro = true;
         if (initialAlpha === null) initialAlpha = e.alpha;
@@ -881,7 +1148,7 @@
         camera.quaternion.copy(deviceQuat);
       }, { passive: true });
 
-      // Filtro de paso bajo para detectar cada paso físico con alta sensibilidad y zancada larga (1.45m)
+      // Detector de pasos físicos con filtro paso-bajo (funciona tanto en WebXR como en modo Cámara)
       let filteredMag = 9.81;
       let lastStepTime = 0;
 
@@ -895,26 +1162,27 @@
         const az = acc.z || 0;
         const rawMag = Math.sqrt(ax * ax + ay * ay + az * az);
 
-        filteredMag = filteredMag * 0.82 + rawMag * 0.18;
+        filteredMag = filteredMag * 0.80 + rawMag * 0.20;
         const deltaAcc = Math.abs(rawMag - filteredMag);
         const now = performance.now();
 
-        if (deltaAcc > 1.15 && now - lastStepTime > 280) {
+        if (deltaAcc > 1.05 && now - lastStepTime > 270) {
           lastStepTime = now;
-          camera.getWorldDirection(_lookDir);
-          // Avanzar en la dirección hacia la que mira el visitante (hacia el fondo o hacia la entrada)
-          const dirSign = _lookDir.z <= 0.25 ? 1 : -1;
+          const localDir = getLocalCorridorLookDirection();
+          // Si el usuario mira hacia el interior del pasillo (localDir.z <= 0.35), avanza; si mira a la salida, retrocede
+          const dirSign = localDir.z <= 0.35 ? 1 : -1;
           targetWalkZ = THREE.MathUtils.clamp(
             targetWalkZ + PHYSICAL_STEP_STRIDE * dirSign,
             MIN_WALK_DISTANCE,
             MAX_WALK_DISTANCE
           );
-          targetWalkX = THREE.MathUtils.clamp(targetWalkX + _lookDir.x * 0.35, -0.85, 0.85);
+          targetWalkX = THREE.MathUtils.clamp(targetWalkX + localDir.x * 0.35 * dirSign, -0.80, 0.80);
           stepBobPhase += Math.PI;
+          pulseStepIndicators();
         }
       }, { passive: true });
 
-      // Soporte táctil para girar la vista en dispositivos sin giroscopio
+      // Respaldo táctil para rotar vista en dispositivos sin giroscopio
       let lastTouchX = null;
       let lastTouchY = null;
       renderer.domElement.addEventListener('touchstart', (e) => {
@@ -925,57 +1193,67 @@
       }, { passive: true });
 
       renderer.domElement.addEventListener('touchmove', (e) => {
-        if (e.touches.length !== 1 || lastTouchX === null) return;
+        if (isWebXRSession || hasGyro || e.touches.length !== 1 || lastTouchX === null) return;
         const dx = e.touches[0].clientX - lastTouchX;
         const dy = e.touches[0].clientY - lastTouchY;
         lastTouchX = e.touches[0].clientX;
         lastTouchY = e.touches[0].clientY;
 
-        if (!hasGyro) {
-          camera.rotation.y -= dx * 0.005;
-          camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - dy * 0.005, -1.2, 0.8);
-        }
+        camera.rotation.y -= dx * 0.005;
+        camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - dy * 0.005, -1.2, 0.8);
       }, { passive: true });
     }
 
-    // -- BUCLE PRINCIPAL OPTIMIZADO (60 FPS ESTABLES) --
-    function renderLoop(timestamp) {
+    // -- BUCLE PRINCIPAL OPTIMIZADO (DETECCIÓN DE PISO + LOCOMOCIÓN EN 'walkStageGroup') --
+    function renderLoop(timestamp, frame) {
       const dt = Math.min(0.05, (timestamp - lastFrameTime) / 1000 || 0.016);
       lastFrameTime = timestamp;
       const timeSec = timestamp * 0.001;
 
+      // FASE 1: Escaneo de Suelo Real antes de anclar la sala
+      if (!hallPlaced) {
+        updateFloorDetector(frame, dt);
+        reticle.rotation.y = timeSec * 1.5;
+      }
+
+      // FASE 2: Locomoción Híbrida sobre el eje del pasillo (sin despegar las losas del piso)
       if (hallPlaced) {
-        // Desplazamiento continuo suave al mantener presionado cualquiera de los botones mágicos
         if (moveHoldDir !== 0) {
-          camera.getWorldDirection(_lookDir);
+          const localDir = getLocalCorridorLookDirection();
           targetWalkZ = THREE.MathUtils.clamp(
             targetWalkZ + moveHoldDir * HOLD_WALK_SPEED * dt,
             MIN_WALK_DISTANCE,
             MAX_WALK_DISTANCE
           );
           targetWalkX = THREE.MathUtils.clamp(
-            targetWalkX + _lookDir.x * moveHoldDir * 1.1 * dt,
-            -0.85,
-            0.85
+            targetWalkX + localDir.x * moveHoldDir * 1.15 * dt,
+            -0.80,
+            0.80
           );
-          stepBobPhase += dt * 9.5;
+          stepBobPhase += dt * 10.0;
         }
 
-        // Interpolación cinemática suave de la caminata sobre el eje del pasillo
-        currentWalkZ = THREE.MathUtils.lerp(currentWalkZ, targetWalkZ, 0.10);
-        currentWalkX = THREE.MathUtils.lerp(currentWalkX, targetWalkX, 0.10);
+        // Interpolar suavemente walkStageGroup sobre el plano del suelo (Y se mantiene en 0.000)
+        currentWalkZ = THREE.MathUtils.lerp(currentWalkZ, targetWalkZ, 0.12);
+        currentWalkX = THREE.MathUtils.lerp(currentWalkX, targetWalkX, 0.12);
 
-        const walkSpeedDelta = Math.abs(targetWalkZ - currentWalkZ);
-        const bobOffset = walkSpeedDelta > 0.02 ? Math.sin(stepBobPhase + timeSec * 7.0) * 0.028 : 0;
+        // Desplazar walkStageGroup en +Z acerca el fondo del pasillo (-Z) hacia el visitante
+        walkStageGroup.position.set(-currentWalkX, 0, currentWalkZ);
 
-        userRig.position.set(currentWalkX, bobOffset, -currentWalkZ);
-        walkDistanceLabel.textContent = `${Math.max(0, currentWalkZ).toFixed(1)} m`;
+        // Calcular distancia total recorrida (avance físico 6DoF + avance virtual por pasos/botones)
+        camera.getWorldPosition(_camWorldPos);
+        _localCamPos.copy(_camWorldPos);
+        hallAnchorGroup.worldToLocal(_localCamPos);
+        const physicalWalkedZ = Math.max(0, -_localCamPos.z);
+        const totalDepth = Math.max(0, currentWalkZ + physicalWalkedZ);
+        walkDistanceLabel.textContent = `${totalDepth.toFixed(1)} m`;
       }
 
-      // Animación GPU de Materialización con Hojas de Árboles (Verdes a Amarillos)
+      // FASE 3: Materialización con Hojas de Árboles (Verdes a Amarillos)
       if (isMaterializing) {
         materializationT = Math.min(1, materializationT + dt * 0.42);
-        clippingPlane.constant = materializationT * 8.5;
+        const revealHeight = materializationT * 8.5;
+        clippingPlane.constant = hallAnchorGroup.position.y + revealHeight;
 
         leafMaterial.uniforms.uTime.value = timeSec;
         leafMaterial.uniforms.uProgress.value = materializationT;
