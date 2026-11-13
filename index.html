@@ -35,10 +35,11 @@
       margin: 0;
       padding: 0;
       width: 100%;
-      height: 100%;
+      height: 100dvh;
       overflow: hidden;
       background-color: #070d0b;
       font-family: 'Inter', sans-serif;
+      overscroll-behavior: none;
     }
 
     .font-museum {
@@ -46,49 +47,80 @@
     }
 
     #webgl-viewport {
-      position: absolute;
+      position: fixed;
       inset: 0;
-      z-index: 1;
+      z-index: 2;
     }
 
-    /* WebXR DOM Overlay root - debe ser pointer-events: none, con hijos auto */
+    /* Superposición AR limpia sin solicitar Fullscreen del sistema */
     #ar-overlay {
-      position: absolute;
+      position: fixed;
       inset: 0;
       z-index: 10;
       pointer-events: none;
-      display: none; /* Se muestra al entrar en AR */
+      display: none;
       flex-direction: column;
-      justify-content: space-between;
-      padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 16px);
+      justify-content: flex-end;
+      padding: env(safe-area-inset-top, 14px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 16px);
     }
-    
+
     #ar-overlay.active {
       display: flex;
     }
 
     .interactive {
       pointer-events: auto;
+      touch-action: manipulation;
+    }
+
+    /* Botones Futuristas Mágicos (Alquimia Esmeralda & Oro Solar) */
+    .magic-deck {
+      background: linear-gradient(135deg, rgba(6, 20, 15, 0.86) 0%, rgba(12, 32, 24, 0.82) 100%);
+      border: 1px solid rgba(163, 230, 53, 0.32);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65), 0 0 22px rgba(34, 197, 94, 0.18), inset 0 1px 0 rgba(254, 240, 138, 0.22);
+    }
+
+    .magic-btn {
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 0%, rgba(163, 230, 53, 0.28), rgba(16, 46, 33, 0.9) 75%);
+      border: 1px solid rgba(250, 204, 21, 0.42);
+      box-shadow: 0 0 18px rgba(132, 204, 22, 0.22), inset 0 0 12px rgba(250, 204, 21, 0.14);
+      transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .magic-btn:active,
+    .magic-btn.is-pressing {
+      transform: scale(0.94);
+      border-color: rgba(254, 240, 138, 0.9);
+      box-shadow: 0 0 26px rgba(163, 230, 53, 0.6), inset 0 0 16px rgba(250, 204, 21, 0.35);
+    }
+
+    .magic-btn-primary {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.32) 0%, rgba(132, 204, 22, 0.38) 50%, rgba(234, 179, 8, 0.34) 100%);
+      border: 1px solid rgba(253, 224, 71, 0.6);
     }
 
     /* Píldora Toast de Notificación */
     #toast-banner {
-      position: absolute;
-      top: 20%;
+      position: fixed;
+      top: 28px;
       left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 8px 24px;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.1);
+      transform: translateX(-50%);
+      padding: 7px 20px;
+      background: rgba(6, 18, 14, 0.85);
+      border: 1px solid rgba(163, 230, 53, 0.35);
       border-radius: 999px;
-      color: #fff;
-      font-size: 12px;
+      color: #ecfccb;
+      font-size: 11px;
+      letter-spacing: 0.04em;
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: opacity 0.25s ease;
       pointer-events: none;
       text-align: center;
       width: max-content;
+      max-width: 90vw;
+      z-index: 30;
     }
   </style>
 </head>
@@ -128,50 +160,51 @@
     </button>
   </div>
 
-  <!-- WEBXR DOM OVERLAY (UI AR) -->
+  <!-- INTERFAZ AR FUTURISTA Y MÁGICA (Sin avisos de pantalla completa ni cajas superiores) -->
   <div id="ar-overlay">
-    <div id="toast-banner">Iniciando realidad aumentada...</div>
-    
-    <header class="w-full flex items-center justify-between gap-2 mt-2">
-      <div id="reticle-status" class="flex items-center gap-2.5 bg-black/65 backdrop-blur-xl border border-lime-300/30 rounded-full px-4 py-2 shadow-lg">
-        <span class="w-2 h-2 rounded-full bg-lime-400 animate-ping"></span>
-        <span class="text-xs font-medium text-stone-100">Apunta al suelo y toca para anclar la sala</span>
-      </div>
+    <div id="toast-banner">Materializando Sala Xilitla...</div>
 
-      <!-- Botón para reubicar en el suelo en cualquier momento -->
-      <button id="btn-reset-portal" class="interactive hidden px-3.5 py-2 rounded-full bg-black/65 border border-white/20 text-lime-200 text-[11px] font-medium backdrop-blur-xl shadow-lg active:scale-95 transition-transform">
-        Reubicar Sala
-      </button>
-    </header>
-
-    <footer class="w-full flex flex-col items-center gap-3 mb-4">
-      <!-- Botón para fijar la sala (Fase Detección Instantánea) -->
-      <button id="btn-place-portal" class="interactive hidden px-8 py-4 rounded-full bg-gradient-to-r from-emerald-400 via-lime-300 to-yellow-300 hover:opacity-95 text-stone-950 font-bold text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all">
-        Anclar Sala en el Piso Aquí
-      </button>
-
-      <!-- Controles de exploración y ajuste de nivel de piso -->
-      <div id="walk-controls" class="hidden interactive w-full max-w-md bg-black/65 backdrop-blur-xl border border-white/15 rounded-2xl px-4 py-2.5 flex flex-col gap-2 shadow-xl">
-        <div class="flex items-center justify-between text-[11px] text-stone-300">
-          <span class="uppercase tracking-wider text-lime-200/90 font-medium">Camina por la sala o desliza</span>
-          <div class="flex items-center gap-1.5">
-            <span class="text-[10px] text-stone-400">Nivel Piso:</span>
-            <button id="btn-floor-down" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white font-mono text-xs">-15cm</button>
-            <button id="btn-floor-up" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white font-mono text-xs">+15cm</button>
-          </div>
-        </div>
-        <input id="walk-slider" type="range" min="-2.5" max="13.5" step="0.05" value="0" class="w-full accent-lime-300 h-1.5 bg-stone-700 rounded-lg cursor-pointer" />
-      </div>
-
-      <!-- Controles de medios (Fase Exploración) -->
-      <div id="media-controls" class="hidden interactive flex items-center gap-5">
-        <button id="btn-capture-photo" class="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-black/65 border border-white/25 text-white text-xs font-medium backdrop-blur-xl shadow-lg active:scale-95 transition-transform">
-          <span class="w-6 h-6 rounded-full bg-white flex items-center justify-center"><svg class="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg></span>
-          <span>Foto HD</span>
+    <footer class="w-full flex flex-col items-center gap-3 mb-1">
+      <!-- Consola Mágica de Locomoción (Pasos Largos + Mantener para Deslizamiento Continuo) -->
+      <div id="walk-controls" class="interactive magic-deck w-full max-w-sm rounded-full p-2 flex items-center justify-between gap-2">
+        <!-- Botón Retroceder Paso -->
+        <button id="btn-step-back" type="button" class="magic-btn rounded-full px-4 py-3 flex items-center gap-2 text-lime-100 text-xs font-medium tracking-wider uppercase" aria-label="Retroceder">
+          <svg class="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+          </svg>
+          <span class="hidden sm:inline">Atrás</span>
         </button>
-        <button id="btn-capture-video" class="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-black/65 border border-white/25 text-white text-xs font-medium backdrop-blur-xl shadow-lg active:scale-95 transition-transform">
-          <span id="video-dot" class="w-3 h-3 rounded-full bg-red-500"></span>
-          <span id="video-label">Video HD</span>
+
+        <!-- Orbe Central Indicador de Recorrido (Tocar para volver al inicio) -->
+        <button id="btn-step-home" type="button" class="flex flex-col items-center justify-center px-3 py-1 rounded-full hover:bg-white/5 transition-colors" title="Toca para volver a la entrada">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-yellow-300"></span>
+            <span id="walk-distance-label" class="font-museum text-sm text-lime-200 tracking-widest font-semibold">0.0 m</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          </div>
+          <span class="text-[9px] uppercase tracking-[0.2em] text-stone-300/80">Camina o Impulsa</span>
+        </button>
+
+        <!-- Botón Avanzar Paso Mágico -->
+        <button id="btn-step-forward" type="button" class="magic-btn magic-btn-primary rounded-full px-5 py-3 flex items-center gap-2 text-yellow-100 text-xs font-semibold tracking-wider uppercase" aria-label="Avanzar">
+          <span>Avanzar</span>
+          <svg class="w-4 h-4 text-yellow-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Controles de Captura Multimedia Directa -->
+      <div id="media-controls" class="interactive flex items-center gap-4">
+        <button id="btn-capture-photo" type="button" class="magic-deck flex items-center gap-2.5 px-5 py-2.5 rounded-full text-white text-xs font-medium active:scale-95 transition-transform">
+          <span class="w-5 h-5 rounded-full bg-gradient-to-tr from-lime-300 to-yellow-200 flex items-center justify-center">
+            <svg class="w-3 h-3 text-stone-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+          </span>
+          <span>Foto</span>
+        </button>
+        <button id="btn-capture-video" type="button" class="magic-deck flex items-center gap-2.5 px-5 py-2.5 rounded-full text-white text-xs font-medium active:scale-95 transition-transform">
+          <span id="video-dot" class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+          <span id="video-label">Video</span>
         </button>
       </div>
     </footer>
@@ -193,67 +226,63 @@
 
     // Variables Globales
     let scene, camera, renderer, gltfLoader;
-    let hitTestSource = null;
-    let hitTestSourceRequested = false;
-    let xrFloorY = -1.45;
-    
-    // Grupos y Elementos 3D (Sin Portal ni Stencil para máxima estabilidad en móvil)
-    let reticle, hallGroup, interiorGroup;
+    let hallGroup, interiorGroup;
     let clippingPlane, leafParticles, leafMaterial;
-    
-    // Estados Espaciales y de Animación
+
+    // Estados de Materialización y Tiempo
     let hallPlaced = false;
     let materializationT = 0;
     let isMaterializing = false;
     let lastFrameTime = performance.now();
 
-    // Caminata y Giroscopio (para modo AR cámara y ajuste fino)
-    let fallbackMode = false;
-    let fallbackVideo = null;
+    // Locomoción en Primera Persona (Pasos Largos + Interpolación Fluida)
+    const MAX_WALK_DISTANCE = 14.5;
+    const MIN_WALK_DISTANCE = -1.5;
+    const PHYSICAL_STEP_STRIDE = 1.45; // Metros virtuales por paso físico detectado
+    const BUTTON_TAP_STRIDE = 1.60;    // Metros virtuales por toque de botón mágico
+    const HOLD_WALK_SPEED = 3.8;       // Metros/segundo al mantener presionado
+
+    let cameraVideo = null;
     let userRig = null;
-    let walkForwardOffset = 0;
-    let floorOffsetY = 0;
+    let targetWalkZ = 0;
+    let currentWalkZ = 0;
+    let targetWalkX = 0;
+    let currentWalkX = 0;
+    let moveHoldDir = 0; // +1 avanzando, -1 retrocediendo, 0 libre
+    let stepBobPhase = 0;
+
+    // Orientación por Giroscopio (3DoF + Locomoción Espacial)
     let hasGyro = false;
+    let initialAlpha = null;
     const deviceEuler = new THREE.Euler();
     const deviceQuat = new THREE.Quaternion();
     const screenTransform = new THREE.Quaternion();
     const worldTransform = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-
-    // Vectores pre-alocados para evitar Garbage Collection y crashes en el bucle de render
-    const _rayOrigin = new THREE.Vector3();
-    const _rayDir = new THREE.Vector3();
-    const _horizDir = new THREE.Vector3();
-    const _camWorldPos = new THREE.Vector3();
-    const _lookTarget = new THREE.Vector3();
-    const _hallForward = new THREE.Vector3();
     const _zAxis = new THREE.Vector3(0, 0, 1);
+    const _lookDir = new THREE.Vector3();
 
-    // Grabación Multimedia (Compositor Cámara + 3D)
+    // Grabación Multimedia Ligera (Compositor Cámara + 3D)
     let isRecording = false;
     let mediaRecorder = null;
     let recordedChunks = [];
     let compositeCanvas = null;
     let compositeCtx = null;
 
-    // UI Elements
+    // Elementos de Interfaz
     const domOverlay = document.getElementById('ar-overlay');
     const btnEnterAR = document.getElementById('btn-enter-ar');
     const loadingModal = document.getElementById('loading-modal');
-    const btnPlacePortal = document.getElementById('btn-place-portal');
-    const btnResetPortal = document.getElementById('btn-reset-portal');
-    const reticleStatus = document.getElementById('reticle-status');
-    const walkControls = document.getElementById('walk-controls');
-    const walkSlider = document.getElementById('walk-slider');
-    const btnFloorDown = document.getElementById('btn-floor-down');
-    const btnFloorUp = document.getElementById('btn-floor-up');
-    const mediaControls = document.getElementById('media-controls');
+    const btnStepForward = document.getElementById('btn-step-forward');
+    const btnStepBack = document.getElementById('btn-step-back');
+    const btnStepHome = document.getElementById('btn-step-home');
+    const walkDistanceLabel = document.getElementById('walk-distance-label');
     const toastBanner = document.getElementById('toast-banner');
 
     function showToast(msg) {
       toastBanner.textContent = msg;
       toastBanner.style.opacity = '1';
       clearTimeout(showToast._timer);
-      showToast._timer = setTimeout(() => { toastBanner.style.opacity = '0'; }, 3000);
+      showToast._timer = setTimeout(() => { toastBanner.style.opacity = '0'; }, 2600);
     }
 
     init();
@@ -262,16 +291,16 @@
       const container = document.getElementById('webgl-viewport');
       scene = new THREE.Scene();
 
-      // Rig del usuario para caminar en el espacio 3D manteniendo el piso en Y = 0
+      // Rig del visitante (se desplaza por el pasillo manteniendo el piso en Y = 0)
       userRig = new THREE.Group();
       userRig.position.set(0, 0, 0);
       scene.add(userRig);
 
-      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.08, 75);
-      camera.position.set(0, 1.55, 0); // Altura humana promedio sobre el piso Y = 0
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.08, 80);
+      camera.position.set(0, 1.55, 0);
       userRig.add(camera);
 
-      // Configuración WebGL optimizada para no saturar la VRAM del teléfono
+      // WebGL optimizado para máxima estabilidad en Android e iOS
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
@@ -279,27 +308,24 @@
         powerPreference: 'high-performance',
         preserveDrawingBuffer: false
       });
-      // Limitar pixelRatio a 1.5 evita sobrecalentamiento y cierres por memoria en pantallas QHD/Retina
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.xr.enabled = true;
       renderer.localClippingEnabled = false;
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.12;
       container.appendChild(renderer.domElement);
 
-      // Manejo preventivo de pérdida de contexto WebGL
       renderer.domElement.addEventListener('webglcontextlost', (e) => {
         e.preventDefault();
-        showToast('Recuperando memoria gráfica...');
+        showToast('Restaurando memoria gráfica...');
       }, false);
 
       setupLighting();
-      setupReticle();
 
-      // Crear Jerarquía de la Sala de Exhibición
+      // Jerarquía de la Sala de Exhibición (Fija en el suelo desde el inicio)
       hallGroup = new THREE.Group();
+      hallGroup.position.set(0, 0, -1.4); // Entrada del pasillo en el suelo frente al visitante
       hallGroup.visible = false;
       scene.add(hallGroup);
 
@@ -307,29 +333,10 @@
       hallGroup.add(interiorGroup);
 
       setupLeafMaterialization();
-
-      // Cargar los 3 modelos en paralelo
       await loadModelsParallel();
 
-      // Eventos de Interfaz
       btnEnterAR.addEventListener('click', startARExperience);
-      btnPlacePortal.addEventListener('click', placeHallAtReticle);
-      btnResetPortal.addEventListener('click', resetHallPlacement);
-
-      // Permitir tocar directamente el suelo en pantalla para fijar la sala
-      renderer.domElement.addEventListener('click', () => {
-        if (!hallPlaced && reticle.visible) {
-          placeHallAtReticle();
-        }
-      });
-
-      // Controles de caminata y ajuste rápido de nivel de suelo
-      walkSlider.addEventListener('input', (e) => {
-        walkForwardOffset = parseFloat(e.target.value) || 0;
-      });
-      btnFloorDown.addEventListener('click', () => adjustFloorHeight(-0.15));
-      btnFloorUp.addEventListener('click', () => adjustFloorHeight(0.15));
-
+      setupMagicalWalkControls();
       setupMediaCapture();
 
       window.addEventListener('resize', () => {
@@ -735,9 +742,58 @@
       }
     }
 
-    // -- INICIO DE CÁMARA AR --
+    // -- CONTROLES FUTURISTAS MÁGICOS DE CAMINATA (TOQUE + MANTENER PRESIONADO) --
+    function triggerVirtualStride(direction) {
+      camera.getWorldDirection(_lookDir);
+      const stepDistance = BUTTON_TAP_STRIDE * direction;
+      targetWalkZ = THREE.MathUtils.clamp(targetWalkZ + stepDistance, MIN_WALK_DISTANCE, MAX_WALK_DISTANCE);
+      // Desplazamiento lateral sutil guiado hacia donde mira el visitante (acotado entre muros)
+      targetWalkX = THREE.MathUtils.clamp(targetWalkX + (_lookDir.x * 0.45 * direction), -0.85, 0.85);
+      stepBobPhase += Math.PI;
+    }
+
+    function setupMagicalWalkControls() {
+      let holdStartTime = 0;
+
+      const bindWalkButton = (btn, dir) => {
+        btn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          holdStartTime = performance.now();
+          moveHoldDir = dir;
+          btn.classList.add('is-pressing');
+        });
+
+        const stopHold = (e) => {
+          if (moveHoldDir !== dir) return;
+          e.preventDefault();
+          const elapsed = performance.now() - holdStartTime;
+          moveHoldDir = 0;
+          btn.classList.remove('is-pressing');
+          // Si fue un toque corto (< 220ms), impulsar un paso largo mágico de 1.60m
+          if (elapsed < 220) {
+            triggerVirtualStride(dir);
+          }
+        };
+
+        btn.addEventListener('pointerup', stopHold);
+        btn.addEventListener('pointercancel', stopHold);
+        btn.addEventListener('pointerleave', stopHold);
+      };
+
+      bindWalkButton(btnStepForward, 1);
+      bindWalkButton(btnStepBack, -1);
+
+      btnStepHome.addEventListener('click', () => {
+        targetWalkZ = 0;
+        targetWalkX = 0;
+        showToast('Regresando a la entrada del pasillo');
+      });
+    }
+
+    // -- INICIO DIRECTO EN CÁMARA AR (SIN PANTALLA COMPLETA FORZADA NI RETÍCULA) --
     async function startARExperience() {
       loadingModal.classList.add('hidden');
+      domOverlay.classList.add('active');
 
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
@@ -745,51 +801,7 @@
         } catch (_) {}
       }
 
-      if (navigator.xr) {
-        try {
-          const supported = await navigator.xr.isSessionSupported('immersive-ar');
-          if (supported) {
-            const sessionInit = {
-              optionalFeatures: ['hit-test', 'local-floor', 'dom-overlay'],
-              domOverlay: { root: domOverlay }
-            };
-            const session = await navigator.xr.requestSession('immersive-ar', sessionInit);
-
-            try {
-              renderer.xr.setReferenceSpaceType('local-floor');
-              xrFloorY = 0;
-            } catch (_) {
-              renderer.xr.setReferenceSpaceType('local');
-              xrFloorY = -1.45;
-            }
-
-            await renderer.xr.setSession(session);
-            domOverlay.classList.add('active');
-            btnPlacePortal.classList.remove('hidden');
-
-            session.addEventListener('end', () => {
-              domOverlay.classList.remove('active');
-              window.location.reload();
-            });
-
-            lastFrameTime = performance.now();
-            renderer.setAnimationLoop(renderLoop);
-            return;
-          }
-        } catch (e) {
-          console.warn('Pasando a Cámara AR ligera:', e);
-        }
-      }
-
-      await startCameraGyroARSession();
-    }
-
-    // -- MODO CÁMARA AR FLUIDO (720p60 PARA EVITAR SATURAR MEMORIA DE VIDEO) --
-    async function startCameraGyroARSession() {
-      fallbackMode = true;
-      domOverlay.classList.add('active');
-      btnPlacePortal.classList.remove('hidden');
-
+      // Abrir cámara trasera directamente en el viewport 100dvh (sin requestFullscreen ni aviso de sistema)
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
@@ -799,12 +811,12 @@
           },
           audio: false
         });
-        fallbackVideo = document.createElement('video');
-        fallbackVideo.srcObject = stream;
-        fallbackVideo.setAttribute('playsinline', '');
-        fallbackVideo.muted = true;
-        await fallbackVideo.play();
-        Object.assign(fallbackVideo.style, {
+        cameraVideo = document.createElement('video');
+        cameraVideo.srcObject = stream;
+        cameraVideo.setAttribute('playsinline', '');
+        cameraVideo.muted = true;
+        await cameraVideo.play();
+        Object.assign(cameraVideo.style, {
           position: 'fixed',
           inset: '0',
           width: '100%',
@@ -812,56 +824,108 @@
           objectFit: 'cover',
           zIndex: '0'
         });
-        document.body.prepend(fallbackVideo);
+        document.body.prepend(cameraVideo);
       } catch (err) {
-        console.warn('Cámara no disponible en este entorno; usando vista 3D directa.');
+        console.warn('Usando vista 3D directa:', err);
       }
 
-      userRig.position.set(0, 0, 0);
-      camera.position.set(0, 1.55, 0);
-      camera.rotation.set(-0.28, 0, 0, 'YXZ');
+      setupSensorsAndPedometer();
+      deployHallImmediatelyOnFloor();
+
+      lastFrameTime = performance.now();
+      renderer.setAnimationLoop(renderLoop);
+    }
+
+    // -- ANCLAJE INMEDIATO DEL PASILLO EN EL SUELO DESDE EL SEGUNDO CERO --
+    function deployHallImmediatelyOnFloor() {
+      hallGroup.matrixAutoUpdate = true;
+      hallGroup.position.set(0, 0, -1.4); // Piso exacto Y = 0, entrada a 1.4m frente al usuario
+      hallGroup.rotation.set(0, 0, 0);
+      hallGroup.updateMatrix();
+      hallGroup.updateMatrixWorld(true);
+      hallGroup.matrixAutoUpdate = false;
+      hallGroup.visible = true;
+
+      hallPlaced = true;
+
+      // Iniciar materialización progresiva con hojas de árboles (verde a amarillo)
+      renderer.localClippingEnabled = true;
+      isMaterializing = true;
+      materializationT = 0;
+      clippingPlane.constant = 0.05;
+      leafParticles.visible = true;
+      leafMaterial.uniforms.uProgress.value = 0;
+      leafMaterial.uniforms.uOpacity.value = 1.0;
+
+      showToast('Sala anclada en el suelo · Camina o usa los controles');
+    }
+
+    // -- GIROSCOPIO ALINEADO + PODÓMETRO BIOMECÁNICO DE PASO LARGO --
+    function setupSensorsAndPedometer() {
+      camera.rotation.set(-0.08, 0, 0, 'YXZ');
 
       window.addEventListener('deviceorientation', (e) => {
         if (e.alpha === null || e.beta === null || e.gamma === null) return;
         hasGyro = true;
-        const alpha = THREE.MathUtils.degToRad(e.alpha);
+        if (initialAlpha === null) initialAlpha = e.alpha;
+
+        const alignedAlpha = THREE.MathUtils.degToRad(e.alpha - initialAlpha);
         const beta = THREE.MathUtils.degToRad(e.beta);
         const gamma = THREE.MathUtils.degToRad(e.gamma);
         const orient = THREE.MathUtils.degToRad(window.screen?.orientation?.angle || window.orientation || 0);
 
-        deviceEuler.set(beta, alpha, -gamma, 'YXZ');
+        deviceEuler.set(beta, alignedAlpha, -gamma, 'YXZ');
         deviceQuat.setFromEuler(deviceEuler);
         deviceQuat.multiply(worldTransform);
         deviceQuat.multiply(screenTransform.setFromAxisAngle(_zAxis, -orient));
         camera.quaternion.copy(deviceQuat);
-      });
+      }, { passive: true });
 
-      // Podómetro físico por acelerómetro para avanzar caminando
+      // Filtro de paso bajo para detectar cada paso físico con alta sensibilidad y zancada larga (1.45m)
+      let filteredMag = 9.81;
       let lastStepTime = 0;
+
       window.addEventListener('devicemotion', (e) => {
         if (!hallPlaced) return;
-        const acc = e.accelerationIncludingGravity;
+        const acc = e.accelerationIncludingGravity || e.acceleration;
         if (!acc) return;
-        const mag = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
-        const now = performance.now();
-        if (mag > 13.2 && now - lastStepTime > 360) {
-          lastStepTime = now;
-          walkForwardOffset = Math.min(13.5, walkForwardOffset + 0.42);
-          walkSlider.value = walkForwardOffset.toFixed(2);
-        }
-      });
 
+        const ax = acc.x || 0;
+        const ay = acc.y || 0;
+        const az = acc.z || 0;
+        const rawMag = Math.sqrt(ax * ax + ay * ay + az * az);
+
+        filteredMag = filteredMag * 0.82 + rawMag * 0.18;
+        const deltaAcc = Math.abs(rawMag - filteredMag);
+        const now = performance.now();
+
+        if (deltaAcc > 1.15 && now - lastStepTime > 280) {
+          lastStepTime = now;
+          camera.getWorldDirection(_lookDir);
+          // Avanzar en la dirección hacia la que mira el visitante (hacia el fondo o hacia la entrada)
+          const dirSign = _lookDir.z <= 0.25 ? 1 : -1;
+          targetWalkZ = THREE.MathUtils.clamp(
+            targetWalkZ + PHYSICAL_STEP_STRIDE * dirSign,
+            MIN_WALK_DISTANCE,
+            MAX_WALK_DISTANCE
+          );
+          targetWalkX = THREE.MathUtils.clamp(targetWalkX + _lookDir.x * 0.35, -0.85, 0.85);
+          stepBobPhase += Math.PI;
+        }
+      }, { passive: true });
+
+      // Soporte táctil para girar la vista en dispositivos sin giroscopio
       let lastTouchX = null;
       let lastTouchY = null;
-      window.addEventListener('touchstart', (e) => {
+      renderer.domElement.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
           lastTouchX = e.touches[0].clientX;
           lastTouchY = e.touches[0].clientY;
         }
       }, { passive: true });
 
-      window.addEventListener('touchmove', (e) => {
-        if (e.touches.length !== 1 || lastTouchY === null) return;
+      renderer.domElement.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1 || lastTouchX === null) return;
         const dx = e.touches[0].clientX - lastTouchX;
         const dy = e.touches[0].clientY - lastTouchY;
         lastTouchX = e.touches[0].clientX;
@@ -872,173 +936,46 @@
           camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - dy * 0.005, -1.2, 0.8);
         }
       }, { passive: true });
-
-      lastFrameTime = performance.now();
-      renderer.setAnimationLoop(renderLoop);
     }
 
-    // -- ANCLAR LA SALA DE EXHIBICIÓN EN EL PISO --
-    function placeHallAtReticle() {
-      if (!reticle.visible) return;
-
-      hallGroup.matrixAutoUpdate = true;
-      hallGroup.position.copy(reticle.position);
-      hallGroup.position.y += floorOffsetY;
-
-      camera.getWorldPosition(_camWorldPos);
-      _lookTarget.set(_camWorldPos.x, hallGroup.position.y, _camWorldPos.z);
-      hallGroup.lookAt(_lookTarget);
-
-      // Congelar matriz mundial para que el pasillo quede 100% fijo en el suelo físico
-      hallGroup.updateMatrix();
-      hallGroup.updateMatrixWorld(true);
-      hallGroup.matrixAutoUpdate = false;
-      hallGroup.visible = true;
-
-      hallPlaced = true;
-      reticle.visible = false;
-
-      btnPlacePortal.classList.add('hidden');
-      btnResetPortal.classList.remove('hidden');
-      reticleStatus.querySelector('span:nth-child(2)').textContent = 'Sala fija en el suelo · Camina para explorar';
-      walkControls.classList.remove('hidden');
-      mediaControls.classList.remove('hidden');
-
-      // Activar clipping únicamente mientras dura la materialización
-      renderer.localClippingEnabled = true;
-      isMaterializing = true;
-      materializationT = 0;
-      clippingPlane.constant = hallGroup.position.y + 0.05;
-      leafParticles.visible = true;
-      leafMaterial.uniforms.uProgress.value = 0;
-      leafMaterial.uniforms.uOpacity.value = 1.0;
-
-      showToast('Materializando Sala Xilitla sobre el suelo...');
-    }
-
-    function resetHallPlacement() {
-      hallPlaced = false;
-      isMaterializing = false;
-      renderer.localClippingEnabled = false;
-      hallGroup.visible = false;
-      leafParticles.visible = false;
-      walkForwardOffset = 0;
-      walkSlider.value = '0';
-      userRig.position.set(0, 0, 0);
-
-      btnPlacePortal.classList.remove('hidden');
-      btnResetPortal.classList.add('hidden');
-      walkControls.classList.add('hidden');
-      mediaControls.classList.add('hidden');
-      reticleStatus.querySelector('span:nth-child(2)').textContent = 'Apunta al suelo y toca para anclar la sala';
-      showToast('Apunta al piso para reubicar la sala.');
-    }
-
-    function adjustFloorHeight(deltaY) {
-      floorOffsetY += deltaY;
-      if (hallPlaced) {
-        hallGroup.matrixAutoUpdate = true;
-        hallGroup.position.y += deltaY;
-        hallGroup.updateMatrix();
-        hallGroup.updateMatrixWorld(true);
-        hallGroup.matrixAutoUpdate = false;
-        if (isMaterializing) {
-          clippingPlane.constant = hallGroup.position.y + (materializationT * 8.5);
-        }
-        showToast(`Nivel del piso ajustado (${floorOffsetY >= 0 ? '+' : ''}${Math.round(floorOffsetY * 100)} cm)`);
-      }
-    }
-
-    // -- DETECCIÓN INSTANTÁNEA DE PISO POR RAYO + HIT-TEST --
-    function updateInstantFloorReticle(frame) {
-      let hitFound = false;
-
-      if (frame && !fallbackMode) {
-        const referenceSpace = renderer.xr.getReferenceSpace();
-        const session = renderer.xr.getSession();
-
-        if (!hitTestSourceRequested && session) {
-          session.requestReferenceSpace('viewer').then((viewerSpace) => {
-            if (session.requestHitTestSource) {
-              session.requestHitTestSource({ space: viewerSpace }).then((source) => {
-                hitTestSource = source;
-              }).catch(() => {});
-            }
-          }).catch(() => {});
-          hitTestSourceRequested = true;
-        }
-
-        if (hitTestSource && referenceSpace) {
-          const results = frame.getHitTestResults(hitTestSource);
-          if (results.length > 0) {
-            const pose = results[0].getPose(referenceSpace);
-            if (pose) {
-              reticle.position.set(pose.transform.position.x, pose.transform.position.y, pose.transform.position.z);
-              xrFloorY = pose.transform.position.y;
-              hitFound = true;
-            }
-          }
-        }
-      }
-
-      if (!hitFound) {
-        const floorY = fallbackMode ? 0 : xrFloorY;
-        camera.getWorldPosition(_rayOrigin);
-        camera.getWorldDirection(_rayDir);
-
-        if (_rayDir.y < -0.08) {
-          const t = (floorY - _rayOrigin.y) / _rayDir.y;
-          const clampedT = THREE.MathUtils.clamp(t, 1.5, 4.2);
-          reticle.position.set(
-            _rayOrigin.x + _rayDir.x * clampedT,
-            floorY,
-            _rayOrigin.z + _rayDir.z * clampedT
-          );
-        } else {
-          _horizDir.set(_rayDir.x, 0, _rayDir.z).normalize();
-          if (_horizDir.lengthSq() < 0.001) _horizDir.set(0, 0, -1);
-          reticle.position.set(
-            _rayOrigin.x + _horizDir.x * 2.2,
-            floorY,
-            _rayOrigin.z + _horizDir.z * 2.2
-          );
-        }
-      }
-
-      reticle.visible = true;
-      btnPlacePortal.classList.remove('hidden');
-    }
-
-    // -- BUCLE PRINCIPAL OPTIMIZADO (CERO ALOCACIONES DE MEMORIA POR FRAME) --
-    function renderLoop(timestamp, frame) {
+    // -- BUCLE PRINCIPAL OPTIMIZADO (60 FPS ESTABLES) --
+    function renderLoop(timestamp) {
       const dt = Math.min(0.05, (timestamp - lastFrameTime) / 1000 || 0.016);
       lastFrameTime = timestamp;
       const timeSec = timestamp * 0.001;
 
-      // 1. Fase de Detección de Suelo Instantánea
-      if (!hallPlaced) {
-        updateInstantFloorReticle(frame);
-        reticle.rotation.y = timeSec * 1.4;
-      }
-
-      // 2. Caminata fluida a lo largo de la sala de exhibición
       if (hallPlaced) {
-        _hallForward.set(0, 0, -1).applyQuaternion(hallGroup.quaternion);
-        _hallForward.y = 0;
-        _hallForward.normalize();
+        // Desplazamiento continuo suave al mantener presionado cualquiera de los botones mágicos
+        if (moveHoldDir !== 0) {
+          camera.getWorldDirection(_lookDir);
+          targetWalkZ = THREE.MathUtils.clamp(
+            targetWalkZ + moveHoldDir * HOLD_WALK_SPEED * dt,
+            MIN_WALK_DISTANCE,
+            MAX_WALK_DISTANCE
+          );
+          targetWalkX = THREE.MathUtils.clamp(
+            targetWalkX + _lookDir.x * moveHoldDir * 1.1 * dt,
+            -0.85,
+            0.85
+          );
+          stepBobPhase += dt * 9.5;
+        }
 
-        userRig.position.set(
-          _hallForward.x * walkForwardOffset,
-          0,
-          _hallForward.z * walkForwardOffset
-        );
+        // Interpolación cinemática suave de la caminata sobre el eje del pasillo
+        currentWalkZ = THREE.MathUtils.lerp(currentWalkZ, targetWalkZ, 0.10);
+        currentWalkX = THREE.MathUtils.lerp(currentWalkX, targetWalkX, 0.10);
+
+        const walkSpeedDelta = Math.abs(targetWalkZ - currentWalkZ);
+        const bobOffset = walkSpeedDelta > 0.02 ? Math.sin(stepBobPhase + timeSec * 7.0) * 0.028 : 0;
+
+        userRig.position.set(currentWalkX, bobOffset, -currentWalkZ);
+        walkDistanceLabel.textContent = `${Math.max(0, currentWalkZ).toFixed(1)} m`;
       }
 
-      // 3. Animación GPU de Materialización con Hojas de Árboles (Verdes a Amarillos)
+      // Animación GPU de Materialización con Hojas de Árboles (Verdes a Amarillos)
       if (isMaterializing) {
-        materializationT = Math.min(1, materializationT + dt * 0.40);
-        const revealHeight = materializationT * 8.5;
-        clippingPlane.constant = hallGroup.position.y + revealHeight;
+        materializationT = Math.min(1, materializationT + dt * 0.42);
+        clippingPlane.constant = materializationT * 8.5;
 
         leafMaterial.uniforms.uTime.value = timeSec;
         leafMaterial.uniforms.uProgress.value = materializationT;
@@ -1046,14 +983,14 @@
 
         if (materializationT >= 1) {
           isMaterializing = false;
-          // Desactivar localClippingEnabled libera la GPU para exploración a 60 FPS estables
           renderer.localClippingEnabled = false;
-          showToast('Sala materializada · Explora caminando');
         }
       } else if (hallPlaced && leafParticles.visible) {
-        // Desvanecer suavemente parte del follaje dejando solo una brisa ligera de hojas flotando
         leafMaterial.uniforms.uTime.value = timeSec * 0.55;
-        leafMaterial.uniforms.uOpacity.value = Math.max(0.28, leafMaterial.uniforms.uOpacity.value - dt * 0.2);
+        leafMaterial.uniforms.uOpacity.value = Math.max(0, leafMaterial.uniforms.uOpacity.value - dt * 0.35);
+        if (leafMaterial.uniforms.uOpacity.value <= 0.02) {
+          leafParticles.visible = false;
+        }
       }
 
       renderer.render(scene, camera);
@@ -1063,13 +1000,18 @@
       }
     }
 
-    // -- COMPOSITOR DE CAPTURA DE FOTO Y VIDEO HD --
+    // -- COMPOSITOR DE FOTO Y VIDEO LIGERO (960p MÁX, 24 FPS, 1.8 MBPS) --
     function ensureCompositeCanvas() {
-      const w = renderer.domElement.width;
-      const h = renderer.domElement.height;
+      const rawW = renderer.domElement.width;
+      const rawH = renderer.domElement.height;
+      const maxDim = 960;
+      const scale = Math.min(1, maxDim / Math.max(rawW, rawH));
+      const w = Math.max(2, Math.floor((rawW * scale) / 2) * 2);
+      const h = Math.max(2, Math.floor((rawH * scale) / 2) * 2);
+
       if (!compositeCanvas) {
         compositeCanvas = document.createElement('canvas');
-        compositeCtx = compositeCanvas.getContext('2d');
+        compositeCtx = compositeCanvas.getContext('2d', { alpha: false });
       }
       if (compositeCanvas.width !== w || compositeCanvas.height !== h) {
         compositeCanvas.width = w;
@@ -1084,15 +1026,14 @@
       ensureCompositeCanvas();
       const w = compositeCanvas.width;
       const h = compositeCanvas.height;
-      compositeCtx.clearRect(0, 0, w, h);
 
-      if (fallbackVideo && fallbackVideo.readyState >= 2) {
-        const vw = fallbackVideo.videoWidth || w;
-        const vh = fallbackVideo.videoHeight || h;
+      if (cameraVideo && cameraVideo.readyState >= 2) {
+        const vw = cameraVideo.videoWidth || w;
+        const vh = cameraVideo.videoHeight || h;
         const scale = Math.max(w / vw, h / vh);
         const sw = vw * scale;
         const sh = vh * scale;
-        compositeCtx.drawImage(fallbackVideo, (w - sw) / 2, (h - sh) / 2, sw, sh);
+        compositeCtx.drawImage(cameraVideo, (w - sw) / 2, (h - sh) / 2, sw, sh);
       } else {
         compositeCtx.fillStyle = '#070d0b';
         compositeCtx.fillRect(0, 0, w, h);
@@ -1132,20 +1073,27 @@
         drawCompositeFrame(true);
         compositeCanvas.toBlob(async (blob) => {
           if (!blob) return;
-          showToast('Guardando foto HD...');
-          await saveOrShareFile(blob, `Sala_Leonora_${Date.now()}.png`, 'image/png');
-        }, 'image/png', 0.95);
+          showToast('Guardando fotografía...');
+          await saveOrShareFile(blob, `Sala_Leonora_${Date.now()}.jpg`, 'image/jpeg');
+        }, 'image/jpeg', 0.92);
       });
 
       btnVideo.addEventListener('click', () => {
         if (!isRecording) {
           drawCompositeFrame(true);
-          const stream = compositeCanvas.captureStream(30);
-          const mimeType = MediaRecorder.isTypeSupported('video/mp4')
-            ? 'video/mp4'
-            : (MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm');
+          const stream = compositeCanvas.captureStream(24);
+          const mimeTypes = [
+            'video/mp4;codecs=avc1.42E01E',
+            'video/mp4',
+            'video/webm;codecs=vp8',
+            'video/webm'
+          ];
+          const mimeType = mimeTypes.find((type) => MediaRecorder.isTypeSupported(type)) || '';
 
-          mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 6000000 });
+          mediaRecorder = new MediaRecorder(
+            stream,
+            mimeType ? { mimeType, videoBitsPerSecond: 1800000 } : { videoBitsPerSecond: 1800000 }
+          );
           recordedChunks = [];
 
           mediaRecorder.ondataavailable = (e) => {
@@ -1153,22 +1101,23 @@
           };
 
           mediaRecorder.onstop = async () => {
-            const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-            const blob = new Blob(recordedChunks, { type: mimeType });
-            showToast('Guardando video HD...');
-            await saveOrShareFile(blob, `Recorrido_Sala_Leonora_${Date.now()}.${ext}`, mimeType);
+            const actualMime = mediaRecorder.mimeType || mimeType || 'video/webm';
+            const ext = actualMime.includes('mp4') ? 'mp4' : 'webm';
+            const blob = new Blob(recordedChunks, { type: actualMime });
+            showToast('Guardando video ligero...');
+            await saveOrShareFile(blob, `Recorrido_Sala_Leonora_${Date.now()}.${ext}`, actualMime);
           };
 
-          mediaRecorder.start(250);
+          mediaRecorder.start(400);
           isRecording = true;
           videoLabel.textContent = 'Detener';
-          videoDot.classList.add('animate-ping');
+          videoDot.classList.add('animate-pulse');
           showToast('Grabando recorrido AR...');
         } else {
           mediaRecorder.stop();
           isRecording = false;
-          videoLabel.textContent = 'Video HD';
-          videoDot.classList.remove('animate-ping');
+          videoLabel.textContent = 'Video';
+          videoDot.classList.remove('animate-pulse');
         }
       });
     }
