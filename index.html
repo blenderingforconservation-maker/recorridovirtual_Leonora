@@ -160,7 +160,7 @@
             <button id="btn-floor-up" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white font-mono text-xs">+15cm</button>
           </div>
         </div>
-        <input id="walk-slider" type="range" min="-2.5" max="11.5" step="0.05" value="0" class="w-full accent-lime-300 h-1.5 bg-stone-700 rounded-lg cursor-pointer" />
+        <input id="walk-slider" type="range" min="-2.5" max="13.5" step="0.05" value="0" class="w-full accent-lime-300 h-1.5 bg-stone-700 rounded-lg cursor-pointer" />
       </div>
 
       <!-- Controles de medios (Fase Exploración) -->
@@ -455,10 +455,10 @@
       const seeds = new Float32Array(leafCount * 3); // [phase, scale, rotSpeed]
 
       for (let i = 0; i < leafCount; i++) {
-        // Distribuir a lo largo de las paredes, piso y bóveda del pasillo
+        // Distribuir a lo largo de las paredes, piso y bóveda del pasillo (hasta 8.2m para cubrir la escultura 2.5x)
         const side = Math.random() < 0.75 ? (Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 1.1) : (Math.random() - 0.5) * 2.2;
         const x = side;
-        const y = Math.random() * 4.2;
+        const y = Math.random() * 8.2;
         const z = -Math.random() * 13.4;
 
         positions[i * 3] = x;
@@ -508,16 +508,16 @@
 
             vec3 pos = position;
 
-            // Durante la materialización las hojas emergen en remolino acompañando el frente de aparición
-            float bandY = uProgress * 4.6;
+            // Durante la materialización las hojas emergen en remolino acompañando el frente de aparición (8.5m)
+            float bandY = uProgress * 8.5;
             float swirl = sin(uTime * 2.4 + phase) * 0.22;
             float flutterZ = cos(uTime * 1.9 + phase) * 0.16;
 
             pos.x += swirl;
             pos.z += flutterZ;
-            pos.y = mod(pos.y + uTime * 0.45, 4.4) * clamp(uProgress * 1.25, 0.15, 1.0);
+            pos.y = mod(pos.y + uTime * 0.45, 8.2) * clamp(uProgress * 1.25, 0.15, 1.0);
 
-            // Mayor concentración y brillo justo en la franja donde se materializa el pasillo
+            // Mayor concentración y brillo justo en la franja donde se materializa el pasillo y la escultura
             float distToWave = abs(pos.y - bandY);
             float waveBoost = smoothstep(1.6, 0.0, distToWave);
 
@@ -672,28 +672,29 @@
         corridor.updateMatrixWorld(true);
 
         const corridorLength = Math.abs(entranceZ - backZ);
-        const midCorridorZ = -(corridorLength * 0.48);
+        // Desplazar el conjunto monumental más al fondo del pasillo (68% de la profundidad)
+        const targetCorridorZ = -(corridorLength * 0.68);
 
-        // Posicionar roca en el piso (Y = 0) a mitad del pasillo
+        // Posicionar pedestal de roca en el piso (Y = 0) a 2.5 veces el tamaño anterior (1.15 * 2.5 = 2.875)
         const rock = gltfRock.scene;
-        rock.scale.setScalar(1.15);
+        rock.scale.setScalar(1.15 * 2.5);
         rock.updateMatrixWorld(true);
         const rockBox = new THREE.Box3().setFromObject(rock);
         const rockCenter = rockBox.getCenter(new THREE.Vector3());
-        rock.position.set(-rockCenter.x, -rockBox.min.y, midCorridorZ - rockCenter.z);
+        rock.position.set(-rockCenter.x, -rockBox.min.y, targetCorridorZ - rockCenter.z);
         rock.updateMatrixWorld(true);
         const rockHeight = rockBox.max.y - rockBox.min.y;
 
-        // Posicionar escultura sobre la cumbre de la roca
+        // Posicionar escultura sobre la cumbre de la roca a 2.5 veces el tamaño anterior (1.75 * 2.5 = 4.375)
         const sculpture = gltfSculpture.scene;
-        sculpture.scale.setScalar(1.75);
+        sculpture.scale.setScalar(1.75 * 2.5);
         sculpture.updateMatrixWorld(true);
         const sculpBox = new THREE.Box3().setFromObject(sculpture);
         const sculpCenter = sculpBox.getCenter(new THREE.Vector3());
         sculpture.position.set(
           -sculpCenter.x,
-          rockHeight - sculpBox.min.y - 0.04,
-          midCorridorZ - sculpCenter.z
+          rockHeight - sculpBox.min.y - 0.08,
+          targetCorridorZ - sculpCenter.z
         );
         sculpture.updateMatrixWorld(true);
 
@@ -704,6 +705,7 @@
 
         // Optimizar materiales y congelar matrices de todos los nodos estáticos
         interiorGroup.traverse((node) => {
+          node.frustumCulled = false;
           node.matrixAutoUpdate = false;
           node.updateMatrix();
           if (node.isMesh && node.material) {
@@ -844,7 +846,7 @@
         const now = performance.now();
         if (mag > 13.2 && now - lastStepTime > 360) {
           lastStepTime = now;
-          walkForwardOffset = Math.min(11.5, walkForwardOffset + 0.42);
+          walkForwardOffset = Math.min(13.5, walkForwardOffset + 0.42);
           walkSlider.value = walkForwardOffset.toFixed(2);
         }
       });
@@ -941,7 +943,7 @@
         hallGroup.updateMatrixWorld(true);
         hallGroup.matrixAutoUpdate = false;
         if (isMaterializing) {
-          clippingPlane.constant = hallGroup.position.y + (materializationT * 5.0);
+          clippingPlane.constant = hallGroup.position.y + (materializationT * 8.5);
         }
         showToast(`Nivel del piso ajustado (${floorOffsetY >= 0 ? '+' : ''}${Math.round(floorOffsetY * 100)} cm)`);
       }
@@ -1035,7 +1037,7 @@
       // 3. Animación GPU de Materialización con Hojas de Árboles (Verdes a Amarillos)
       if (isMaterializing) {
         materializationT = Math.min(1, materializationT + dt * 0.40);
-        const revealHeight = materializationT * 5.0;
+        const revealHeight = materializationT * 8.5;
         clippingPlane.constant = hallGroup.position.y + revealHeight;
 
         leafMaterial.uniforms.uTime.value = timeSec;
