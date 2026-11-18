@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Sala WebAR · Museo Leonora Carrington</title>
+  <title>Sala WebXR · Museo Leonora Carrington (Meta Quest 3 & Mobile)</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -71,7 +71,6 @@
       pointer-events: auto;
     }
 
-    /* Botones mágicos futuristas */
     .magic-btn {
       background: radial-gradient(circle at 50% 0%, rgba(163, 230, 53, 0.28), rgba(6, 28, 20, 0.88) 75%);
       border: 1px solid rgba(190, 242, 100, 0.45);
@@ -122,8 +121,8 @@
   <!-- Lienzo WebGL Three.js -->
   <div id="webgl-viewport"></div>
 
-  <!-- Notificación flotante -->
-  <div id="toast-banner">Iniciando realidad aumentada...</div>
+  <!-- Notificación flotante 2D -->
+  <div id="toast-banner">Iniciando experiencia inmersiva...</div>
 
   <!-- PANTALLA DE CARGA -->
   <div id="loading-modal" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-stone-950 px-6 text-center transition-opacity duration-500">
@@ -132,7 +131,7 @@
     </div>
 
     <span class="text-[10px] uppercase tracking-[0.3em] text-lime-300/90 font-semibold mb-1">
-      Exhibición Inmersiva WebAR
+      Meta Quest 3 · WebXR & Passthrough AR
     </span>
     <h1 class="font-museum text-3xl sm:text-4xl text-stone-100 tracking-wide mb-2">
       Pasillo Leonora Carrington
@@ -148,17 +147,23 @@
       <span id="progress-text" class="text-[10px] font-mono text-lime-300/80 mt-2">0%</span>
     </div>
 
-    <button id="btn-enter-ar" class="hidden magic-cta w-full max-w-xs py-4 px-7 rounded-full text-stone-950 font-bold text-xs uppercase tracking-widest items-center justify-center gap-2.5">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-      </svg>
-      <span>Entrar a la Sala AR</span>
-    </button>
+    <!-- Botones de Entrada: AR Passthrough (Principal) y VR Inmersivo -->
+    <div id="xr-launch-buttons" class="hidden flex-col gap-3 w-full max-w-xs">
+      <button id="btn-enter-ar" class="magic-cta w-full py-4 px-7 rounded-full text-stone-950 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+        <span>Entrar en AR (Quest Passthrough)</span>
+      </button>
+
+      <button id="btn-enter-vr" class="magic-btn w-full py-3.5 px-6 rounded-full text-lime-200 font-semibold text-xs uppercase tracking-widest flex items-center justify-center gap-2">
+        <span>Entrar en Modo VR Total</span>
+      </button>
+    </div>
   </div>
 
-  <!-- INTERFAZ AR -->
+  <!-- INTERFAZ AR 2D (Para Móviles / Respaldo en Pantalla) -->
   <div id="ar-overlay">
-    <!-- Barra Superior -->
     <header class="w-full flex items-center justify-between gap-2">
       <div id="status-pill" class="flex items-center gap-2.5 bg-stone-950/85 border border-lime-400/35 rounded-full px-4 py-2 shadow-lg">
         <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-300 animate-pulse"></span>
@@ -170,9 +175,7 @@
       </button>
     </header>
 
-    <!-- Controles Inferiores -->
     <footer class="w-full flex flex-col items-center gap-3.5">
-      <!-- FASE 1: Botón de Iniciar Materialización al detectar el piso -->
       <div id="materialize-cta-wrap" class="hidden flex-col items-center gap-2">
         <button id="btn-start-materialization" class="interactive magic-cta px-8 py-4 rounded-full text-stone-950 font-extrabold text-xs uppercase tracking-widest flex items-center gap-2.5">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,14 +184,12 @@
           <span>Iniciar Materialización</span>
         </button>
         <span class="text-[11px] text-lime-200/90 bg-stone-950/80 px-3 py-1 rounded-full border border-white/10">
-          Superficie del piso lista · Toca el botón para invocar la sala
+          En Quest 3: Presiona el Gatillo o Pellizca para invocar la sala
         </span>
       </div>
 
-      <!-- FASE 2: Consola Futurista Mágica de Exploración Libre (Sin límite de metros) -->
       <div id="exploration-hud" class="hidden interactive flex flex-col items-center gap-3 w-full max-w-sm">
         <div class="flex items-center justify-center gap-3 w-full">
-          <!-- Botón Retroceder -->
           <button id="btn-step-back" class="magic-btn flex-1 py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 text-lime-100 text-xs font-semibold tracking-wider uppercase">
             <svg class="w-4 h-4 text-lime-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
@@ -196,13 +197,11 @@
             <span>Atrás</span>
           </button>
 
-          <!-- Orbe indicador de distancia recorrida (Tocar para volver al inicio) -->
           <button id="btn-reset-walk" title="Volver a la entrada" class="px-4 py-2.5 rounded-2xl bg-stone-950/90 border border-yellow-300/40 flex flex-col items-center justify-center min-w-[92px] shadow-inner active:scale-95 transition-transform">
             <span class="text-[9px] uppercase tracking-widest text-lime-300/80">Recorrido</span>
             <span id="distance-readout" class="text-sm font-mono font-bold text-yellow-300">0.0 m</span>
           </button>
 
-          <!-- Botón Avanzar Paso Mágico -->
           <button id="btn-step-forward" class="magic-btn flex-1 py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 text-yellow-200 text-xs font-semibold tracking-wider uppercase">
             <span>Avanzar</span>
             <svg class="w-4 h-4 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,7 +210,6 @@
           </button>
         </div>
 
-        <!-- Botones Funcionales de Foto y Video -->
         <div class="flex items-center justify-center gap-4">
           <button id="btn-capture-photo" class="flex items-center gap-2 px-5 py-2.5 rounded-full bg-stone-950/85 border border-white/25 text-white text-xs font-medium shadow-lg active:scale-95 transition-transform">
             <span class="w-5 h-5 rounded-full bg-white flex items-center justify-center">
@@ -248,10 +246,12 @@
     let hitTestSource = null;
     let hitTestSourceRequested = false;
 
-    // Jerarquía Espacial:
-    // hallAnchorGroup (anclado fijo en el suelo físico) -> walkStageGroup (desplazamiento libre de caminata) -> interiorGroup (modelos 3D)
-    let reticle, hallAnchorGroup, walkStageGroup, interiorGroup;
+    // Jerarquía Espacial
+    let reticle, reticleHudSprite, hallAnchorGroup, walkStageGroup, interiorGroup;
     let clippingPlane, leafParticles, leafMaterial, magicWaveRing, magicWaveLight;
+
+    // Controladores Nativos Meta Quest 3 (Rayos Láser + Eventos)
+    const controllers = [];
 
     // Estados de la experiencia
     let floorDetected = false;
@@ -266,28 +266,31 @@
     let fallbackMode = false;
     let fallbackVideo = null;
     let hasGyro = false;
-    let lastValidFloorY = -1.45;
+    let lastValidFloorY = 0.0; // En Quest 3 local-floor, Y=0 es el piso físico real
     const targetWalkOffset = new THREE.Vector3(0, 0, 0);
     const currentWalkOffset = new THREE.Vector3(0, 0, 0);
-    let moveButtonDir = 0; // +1 avanzar, -1 retroceder
+    let moveButtonDir = 0;
+    let buttonCooldown = 0;
 
-    // Cuaterniones de orientación 3DoF
+    // Orientación 3DoF (Respaldo móvil)
     const deviceEuler = new THREE.Euler();
     const deviceQuat = new THREE.Quaternion();
     const screenTransform = new THREE.Quaternion();
     const worldTransform = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
     const _zAxis = new THREE.Vector3(0, 0, 1);
 
-    // Vectores reutilizables en renderLoop
+    // Vectores reutilizables sin Garbage Collection en el renderLoop
     const _rayOrigin = new THREE.Vector3();
     const _rayDir = new THREE.Vector3();
     const _horizDir = new THREE.Vector3();
     const _camWorldPos = new THREE.Vector3();
     const _lookTarget = new THREE.Vector3();
     const _localForward = new THREE.Vector3();
+    const _localRight = new THREE.Vector3();
     const _invAnchorQuat = new THREE.Quaternion();
+    const _tempMatrix = new THREE.Matrix4();
 
-    // Grabación Multimedia
+    // Grabación Multimedia (Solo Móvil)
     let isRecording = false;
     let mediaRecorder = null;
     let recordedChunks = [];
@@ -297,7 +300,9 @@
     // Referencias DOM
     const domOverlay = document.getElementById('ar-overlay');
     const loadingModal = document.getElementById('loading-modal');
+    const xrLaunchButtons = document.getElementById('xr-launch-buttons');
     const btnEnterAR = document.getElementById('btn-enter-ar');
+    const btnEnterVR = document.getElementById('btn-enter-vr');
     const statusDot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
     const btnReanchor = document.getElementById('btn-reanchor');
@@ -324,7 +329,7 @@
       scene = new THREE.Scene();
 
       camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 120);
-      camera.position.set(0, 0, 0);
+      camera.position.set(0, 1.6, 0);
       scene.add(camera);
 
       renderer = new THREE.WebGLRenderer({
@@ -337,6 +342,12 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
+
+      // Optimización exclusiva para Meta Quest 3 (Foveated Rendering en lentes Pancake)
+      if (typeof renderer.xr.setFoveation === 'function') {
+        renderer.xr.setFoveation(0.85);
+      }
+
       renderer.localClippingEnabled = false;
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -349,7 +360,8 @@
       }, false);
 
       setupLighting();
-      setupFloorReticle();
+      setupFloorReticleWith3DHUD();
+      setupQuestControllers();
 
       // Jerarquía de la Sala
       hallAnchorGroup = new THREE.Group();
@@ -372,9 +384,11 @@
       setupMediaCapture();
 
       window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        if (!renderer.xr.isPresenting) {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        }
       });
     }
 
@@ -388,8 +402,8 @@
       scene.add(dirLight);
     }
 
-    // -- RETÍCULA MÁGICA EN EL PISO --
-    function setupFloorReticle() {
+    // -- RETÍCULA MÁGICA EN EL PISO + LETRERO HOLOGRÁFICO 3D PARA QUEST 3 --
+    function setupFloorReticleWith3DHUD() {
       reticle = new THREE.Group();
 
       const outerRing = new THREE.Mesh(
@@ -405,16 +419,73 @@
         new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.24, side: THREE.DoubleSide })
       );
 
-      // Flecha indicadora de dirección de entrada al pasillo
       const dirArrow = new THREE.Mesh(
         new THREE.ConeGeometry(0.08, 0.22, 3).rotateX(-Math.PI / 2),
         new THREE.MeshBasicMaterial({ color: 0xfacc15 })
       );
       dirArrow.position.set(0, 0.01, -0.45);
 
-      reticle.add(innerGlow, outerRing, midRing, dirArrow);
+      // Etiqueta holográfica 3D flotante (visible dentro de las gafas Meta Quest 3 donde no existe HTML)
+      const hudCanvas = document.createElement('canvas');
+      hudCanvas.width = 512;
+      hudCanvas.height = 128;
+      const hCtx = hudCanvas.getContext('2d');
+      hCtx.fillStyle = 'rgba(5, 18, 12, 0.88)';
+      hCtx.strokeStyle = '#a3e635';
+      hCtx.lineWidth = 4;
+      hCtx.beginPath();
+      hCtx.roundRect(8, 8, 496, 112, 56);
+      hCtx.fill();
+      hCtx.stroke();
+
+      hCtx.fillStyle = '#fde047';
+      hCtx.font = 'bold 24px sans-serif';
+      hCtx.textAlign = 'center';
+      hCtx.fillText('PULSA EL GATILLO O PELLIZCA', 256, 54);
+      hCtx.fillStyle = '#ecfccb';
+      hCtx.font = '18px sans-serif';
+      hCtx.fillText('para materializar la Sala Leonora Carrington aquí', 256, 88);
+
+      const hudTex = new THREE.CanvasTexture(hudCanvas);
+      const hudMat = new THREE.SpriteMaterial({ map: hudTex, transparent: true, depthTest: false });
+      reticleHudSprite = new THREE.Sprite(hudMat);
+      reticleHudSprite.scale.set(0.95, 0.24, 1);
+      reticleHudSprite.position.set(0, 0.42, 0);
+
+      reticle.add(innerGlow, outerRing, midRing, dirArrow, reticleHudSprite);
       reticle.visible = false;
       scene.add(reticle);
+    }
+
+    // -- CONTROLES NATIVOS DE META QUEST 3 (RAYO LÁSER + TRIGGER / HAND PINCH) --
+    function setupQuestControllers() {
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, -3.5)
+      ]);
+      const lineMat = new THREE.LineBasicMaterial({
+        color: 0xa3e635,
+        transparent: true,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending
+      });
+
+      for (let i = 0; i < 2; i++) {
+        const controller = renderer.xr.getController(i);
+        const laserLine = new THREE.Line(lineGeo, lineMat);
+        laserLine.name = 'laserLine';
+        controller.add(laserLine);
+
+        // En Meta Quest 3, 'select' se dispara tanto con el Gatillo del control como con el Pellizco de Hand Tracking
+        controller.addEventListener('select', () => {
+          if (!hallPlaced && reticle.visible) {
+            lockFloorAndMaterialize();
+          }
+        });
+
+        scene.add(controller);
+        controllers.push(controller);
+      }
     }
 
     // -- TEXTURA DE HOJA CON HALO LUMINISCENTE --
@@ -427,7 +498,6 @@
       ctx.save();
       ctx.translate(64, 64);
 
-      // Resplandor mágico suave alrededor de la hoja
       const aura = ctx.createRadialGradient(0, 0, 4, 0, 0, 60);
       aura.addColorStop(0, 'rgba(255, 255, 220, 0.55)');
       aura.addColorStop(0.5, 'rgba(190, 242, 100, 0.22)');
@@ -437,7 +507,6 @@
       ctx.arc(0, 0, 60, 0, Math.PI * 2);
       ctx.fill();
 
-      // Silueta de hoja botánica
       ctx.beginPath();
       ctx.moveTo(0, -48);
       ctx.bezierCurveTo(35, -30, 42, 14, 0, 46);
@@ -451,7 +520,6 @@
       ctx.fillStyle = leafGrad;
       ctx.fill();
 
-      // Nervadura central brillante
       ctx.strokeStyle = '#fef08a';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -465,13 +533,12 @@
       return tex;
     }
 
-    // -- MATERIALIZACIÓN MÁGICA Y RESPLANDECIENTE (1,400 HOJAS Y DESTELLOS GPU + ANILLO DE LUZ) --
+    // -- MATERIALIZACIÓN MÁGICA OPTIMIZADA PARA GPU XR2 GEN 2 (QUEST 3) --
     function setupMagicalLeafMaterialization() {
       clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 100);
 
       const leafTexture = createRadiantLeafTexture();
 
-      // Gama de verdes esmeralda/lima a amarillos solares resplandecientes
       const palette = [
         new THREE.Color('#16a34a'),
         new THREE.Color('#22c55e'),
@@ -485,11 +552,12 @@
         new THREE.Color('#fef08a')
       ];
 
-      const leafCount = 1400;
+      // 950 partículas ofrecen densidad idéntica sin saturar el fill-rate estereoscópico 4K del Quest 3
+      const leafCount = 950;
       const geo = new THREE.BufferGeometry();
       const positions = new Float32Array(leafCount * 3);
       const colors = new Float32Array(leafCount * 3);
-      const seeds = new Float32Array(leafCount * 4); // [phase, scale, rotSpeed, isSparkle]
+      const seeds = new Float32Array(leafCount * 4);
 
       for (let i = 0; i < leafCount; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -510,7 +578,7 @@
         seeds[i * 4] = Math.random() * Math.PI * 2;
         seeds[i * 4 + 1] = 0.55 + Math.random() * 1.05;
         seeds[i * 4 + 2] = (Math.random() - 0.5) * 4.8;
-        seeds[i * 4 + 3] = Math.random() < 0.28 ? 1.0 : 0.0; // 28% destellos puros de polen/luz dorada
+        seeds[i * 4 + 3] = Math.random() < 0.28 ? 1.0 : 0.0;
       }
 
       geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -553,7 +621,6 @@
             vec3 pos = position;
             float bandY = uProgress * uMaxHeight;
 
-            // Vórtice ascendente mágico de hojas
             float vortexAngle = uTime * 2.2 + phase + pos.y * 0.65;
             float swirlRadius = 0.28 + 0.18 * sin(uTime * 1.7 + phase);
             pos.x += cos(vortexAngle) * swirlRadius;
@@ -562,7 +629,6 @@
             float activeCeiling = max(0.8, bandY + 1.1);
             pos.y = mod(pos.y + uTime * (1.15 + leafScale * 0.5), activeCeiling);
 
-            // Concentración resplandeciente en el frente de materialización
             float distToWave = abs(pos.y - bandY);
             float waveBoost = smoothstep(2.2, 0.0, distToWave);
             vWaveGlow = waveBoost;
@@ -574,8 +640,8 @@
             vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
             gl_Position = projectionMatrix * mvPosition;
 
-            float baseSize = (vSparkle > 0.5 ? 64.0 : 88.0) * leafScale * (1.0 + waveBoost * 0.65);
-            gl_PointSize = clamp((baseSize * uPixelRatio) / max(-mvPosition.z, 0.35), 7.0, 120.0);
+            float baseSize = (vSparkle > 0.5 ? 48.0 : 68.0) * leafScale * (1.0 + waveBoost * 0.55);
+            gl_PointSize = clamp((baseSize * uPixelRatio) / max(-mvPosition.z, 0.45), 6.0, 64.0);
           }
         `,
         fragmentShader: `
@@ -592,7 +658,6 @@
             float dist = length(centered);
 
             if (vSparkle > 0.5) {
-              // Destello estelar de 4 puntas + halo dorado
               float crossStar = max(0.0, 1.0 - abs(centered.x * centered.y) * 90.0);
               float radial = smoothstep(0.5, 0.0, dist);
               float intensity = radial * (0.6 + 0.8 * crossStar);
@@ -614,7 +679,6 @@
             vec4 texColor = texture2D(uMap, rotatedUV);
             if (texColor.a < 0.08) discard;
 
-            // Brillo esmeralda-dorado extra al cruzar la onda de materialización
             vec3 radiantColor = mix(vColor * texColor.rgb, vec3(1.0, 0.98, 0.78), vWaveGlow * 0.48);
             gl_FragColor = vec4(radiantColor * 1.35, texColor.a * vAlpha * uOpacity);
           }
@@ -626,7 +690,6 @@
       leafParticles.visible = false;
       walkStageGroup.add(leafParticles);
 
-      // Anillo de energía dorado-esmeralda que sube por la estructura durante la materialización
       const ringGeo = new THREE.RingGeometry(1.6, 2.35, 48).rotateX(-Math.PI / 2);
       const ringMat = new THREE.MeshBasicMaterial({
         color: 0xfde047,
@@ -641,7 +704,6 @@
       magicWaveRing.frustumCulled = false;
       walkStageGroup.add(magicWaveRing);
 
-      // Luz cálida viajera de materialización
       magicWaveLight = new THREE.PointLight(0xfde047, 0, 14);
       walkStageGroup.add(magicWaveLight);
     }
@@ -669,7 +731,7 @@
       });
     }
 
-    // -- CARGA DE MODELOS, NIVELACIÓN A RAS DE PISO (pisoceart1) Y ESCULTURA MÁS GRANDE Y MÁS ENFRENTE --
+    // -- CARGA PARALELA DE MODELOS Y ALINEACIÓN EXACTA --
     async function loadModelsParallel() {
       await MeshoptDecoder.ready;
 
@@ -712,7 +774,6 @@
         corridor.scale.setScalar(5.2);
         corridor.updateMatrixWorld(true);
 
-        // Aislar exclusivamente las losas pisoceart1 para nivelarlas a Y = 0.000m (sin flotar)
         const pisoSlabBox = new THREE.Box3();
         const wallBox = new THREE.Box3();
         let hasPisoSlab = false;
@@ -739,20 +800,12 @@
         const entranceZ = hasWallMesh ? wallBox.max.z : fullCorrBox.max.z;
         const backZ = hasWallMesh ? wallBox.min.z : fullCorrBox.min.z;
 
-        corridor.position.set(
-          -refCenter.x,
-          -exactFloorY,
-          -entranceZ
-        );
+        corridor.position.set(-refCenter.x, -exactFloorY, -entranceZ);
         corridor.updateMatrixWorld(true);
 
         totalCorridorLength = Math.abs(entranceZ - backZ);
-
-        // Colocar el conjunto de roca y escultura MÁS ENFRENTE (46% de la profundidad del pasillo)
-        // dejando más de la mitad posterior del pasillo libre para caminar y rodear la obra hasta el fondo
         const sculptureZ = -(totalCorridorLength * 0.46);
 
-        // Pedestal de roca más grande (escala 3.60) apoyado exactamente sobre Y = 0
         const rock = gltfRock.scene;
         rock.scale.setScalar(3.60);
         rock.updateMatrixWorld(true);
@@ -762,7 +815,6 @@
         rock.updateMatrixWorld(true);
         const rockHeight = rockBox.max.y - rockBox.min.y;
 
-        // Escultura más grande (escala 5.50) posada sobre la cumbre de la roca
         const sculpture = gltfSculpture.scene;
         sculpture.scale.setScalar(5.50);
         sculpture.updateMatrixWorld(true);
@@ -775,7 +827,6 @@
         );
         sculpture.updateMatrixWorld(true);
 
-        // Luz puntual curatorial dedicada sobre la escultura monumental
         const sculptureLight = new THREE.PointLight(0xfef08a, 2.2, 12);
         sculptureLight.position.set(0, rockHeight + 2.5, sculptureZ + 1.5);
         interiorGroup.add(corridor, rock, sculpture, sculptureLight);
@@ -785,7 +836,7 @@
         leafMaterial.uniforms.uMaxHeight.value = maxRevealHeight;
         magicWaveRing.position.set(0, 0.1, sculptureZ * 0.65);
 
-        const maxAniso = Math.min(2, renderer.capabilities.getMaxAnisotropy());
+        const maxAniso = Math.min(4, renderer.capabilities.getMaxAnisotropy());
         const processedMaterials = new Set();
 
         interiorGroup.traverse((node) => {
@@ -810,28 +861,27 @@
         document.getElementById('progress-bar').style.width = '100%';
         document.getElementById('progress-text').textContent = '100%';
         document.getElementById('progress-container').classList.add('hidden');
-        document.getElementById('loading-message').textContent = 'Modelos listos · Detecta el suelo e inicia la materialización.';
-        btnEnterAR.classList.remove('hidden');
-        btnEnterAR.classList.add('flex');
+        document.getElementById('loading-message').textContent = 'Modelos listos · Elige Modo AR (Passthrough) o VR.';
+        xrLaunchButtons.classList.remove('hidden');
+        xrLaunchButtons.classList.add('flex');
       } catch (e) {
         console.error('Error cargando modelos:', e);
         document.getElementById('loading-message').textContent = 'Error al cargar modelos. Verifica tu conexión.';
       }
     }
 
-    // -- EVENTOS DE INTERFAZ Y CONTROLES DE CAMINATA SIN LÍMITE --
     function setupUIEvents() {
-      btnEnterAR.addEventListener('click', startARExperience);
+      btnEnterAR.addEventListener('click', () => startXRExperience('immersive-ar'));
+      btnEnterVR.addEventListener('click', () => startXRExperience('immersive-vr'));
       btnStartMaterialization.addEventListener('click', lockFloorAndMaterialize);
       btnReanchor.addEventListener('click', returnToFloorDetection);
 
-      // Caminata por pasos largos o manteniendo presionado (sin tope corto de metros)
       const bindWalkButton = (btn, dir) => {
         btn.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           btn.classList.add('pressing');
           moveButtonDir = dir;
-          advanceAlongViewDirection(dir * 1.85);
+          advanceAlongViewDirection(dir * 1.85, 0);
         });
         const stopPress = () => {
           btn.classList.remove('pressing');
@@ -851,11 +901,12 @@
       });
     }
 
-    // Avanza en la dirección horizontal hacia donde mira el usuario (permite recorrer todo el pasillo y más allá)
-    function advanceAlongViewDirection(stepMeters) {
+    // Desplazamiento longitudinal y lateral (compatible con Joysticks del Meta Quest 3 y botones móviles)
+    function advanceAlongViewDirection(forwardMeters, strafeMeters = 0) {
       if (!hallPlaced) return;
 
-      camera.getWorldDirection(_rayDir);
+      const activeCam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
+      activeCam.getWorldDirection(_rayDir);
       _horizDir.set(_rayDir.x, 0, _rayDir.z);
       if (_horizDir.lengthSq() < 0.001) {
         _horizDir.set(0, 0, -1);
@@ -863,23 +914,78 @@
         _horizDir.normalize();
       }
 
-      // Convertir dirección mundial de mirada al espacio local del pasillo anclado
       _invAnchorQuat.copy(hallAnchorGroup.quaternion).invert();
       _localForward.copy(_horizDir).applyQuaternion(_invAnchorQuat);
       _localForward.y = 0;
       _localForward.normalize();
 
-      // Desplazar walkStageGroup en sentido inverso para que el usuario avance dentro del pasillo
-      targetWalkOffset.x -= _localForward.x * stepMeters;
-      targetWalkOffset.z -= _localForward.z * stepMeters;
+      _localRight.set(-_localForward.z, 0, _localForward.x);
 
-      // Mantener al visitante dentro del ancho de los muros pero permitir recorrer todo el largo completo (-10m a +45m)
+      targetWalkOffset.x -= (_localForward.x * forwardMeters + _localRight.x * strafeMeters);
+      targetWalkOffset.z -= (_localForward.z * forwardMeters + _localRight.z * strafeMeters);
+
       targetWalkOffset.x = THREE.MathUtils.clamp(targetWalkOffset.x, -1.45, 1.45);
       targetWalkOffset.z = THREE.MathUtils.clamp(targetWalkOffset.z, -10.0, totalCorridorLength + 25.0);
     }
 
-    // -- INICIO DE EXPERIENCIA AR --
-    async function startARExperience() {
+    // -- LECTURA DE JOYSTICKS Y BOTONES A/B/X/Y DE LOS CONTROLES META QUEST 3 --
+    function processQuestThumbsticks(dt) {
+      if (!renderer.xr.isPresenting) return;
+      const session = renderer.xr.getSession();
+      if (!session || !session.inputSources) return;
+
+      if (buttonCooldown > 0) buttonCooldown -= dt;
+
+      for (const source of session.inputSources) {
+        if (!source.gamepad) continue;
+        const gp = source.gamepad;
+        const axes = gp.axes;
+
+        // En controles Meta Quest Touch Plus, el thumbstick está en axes[2] (X) y axes[3] (Y)
+        const stickX = axes.length >= 4 ? axes[2] : (axes[0] || 0);
+        const stickY = axes.length >= 4 ? axes[3] : (axes[1] || 0);
+
+        if (hallPlaced) {
+          // Avanzar / Retroceder con el joystick (hacia adelante stickY es negativo)
+          if (Math.abs(stickY) > 0.15 || Math.abs(stickX) > 0.15) {
+            if (source.handedness === 'left' || session.inputSources.length === 1) {
+              advanceAlongViewDirection(-stickY * 3.8 * dt, stickX * 2.5 * dt);
+            } else if (source.handedness === 'right') {
+              advanceAlongViewDirection(-stickY * 3.8 * dt, 0);
+              // Rotar suavemente la orientación del pasillo con el eje X del joystick derecho
+              if (Math.abs(stickX) > 0.25) {
+                hallAnchorGroup.matrixAutoUpdate = true;
+                hallAnchorGroup.rotation.y -= stickX * 1.4 * dt;
+                hallAnchorGroup.updateMatrix();
+                hallAnchorGroup.updateMatrixWorld(true);
+                hallAnchorGroup.matrixAutoUpdate = false;
+              }
+            }
+          }
+
+          // Botón A / X (buttons[4]): Volver al inicio del pasillo (0.0 m)
+          if (gp.buttons[4]?.pressed && buttonCooldown <= 0) {
+            buttonCooldown = 0.45;
+            targetWalkOffset.set(0, 0, 0);
+          }
+
+          // Botón B / Y (buttons[5]): Reubicar sala en otro punto del piso
+          if (gp.buttons[5]?.pressed && buttonCooldown <= 0) {
+            buttonCooldown = 0.45;
+            returnToFloorDetection();
+          }
+        } else {
+          // Si aún no se coloca la sala, presionar A/X o Gatillo también inicia la materialización
+          if ((gp.buttons[4]?.pressed || gp.buttons[0]?.pressed) && reticle.visible && buttonCooldown <= 0) {
+            buttonCooldown = 0.45;
+            lockFloorAndMaterialize();
+          }
+        }
+      }
+    }
+
+    // -- INICIO DE SESIÓN WEBXR (COMPATIBLE CON META QUEST 3 AR PASSTHROUGH, QUEST VR Y MÓVIL) --
+    async function startXRExperience(preferredMode = 'immersive-ar') {
       loadingModal.classList.add('hidden');
 
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -888,22 +994,43 @@
 
       if (navigator.xr) {
         try {
-          const supported = await navigator.xr.isSessionSupported('immersive-ar');
-          if (supported) {
-            const session = await navigator.xr.requestSession('immersive-ar', {
-              optionalFeatures: ['hit-test', 'local-floor', 'dom-overlay'],
+          let modeToRun = preferredMode;
+          let isSupported = await navigator.xr.isSessionSupported(modeToRun);
+
+          // Si el usuario eligió AR pero el navegador solo soporta VR, o viceversa, hacer fallback inteligente
+          if (!isSupported) {
+            const altMode = modeToRun === 'immersive-ar' ? 'immersive-vr' : 'immersive-ar';
+            if (await navigator.xr.isSessionSupported(altMode)) {
+              modeToRun = altMode;
+              isSupported = true;
+            }
+          }
+
+          if (isSupported) {
+            const sessionInit = {
+              optionalFeatures: ['local-floor', 'bounded-floor', 'hit-test', 'hand-tracking', 'dom-overlay'],
               domOverlay: { root: domOverlay }
-            });
+            };
+
+            const session = await navigator.xr.requestSession(modeToRun, sessionInit);
 
             try {
               renderer.xr.setReferenceSpaceType('local-floor');
-              lastValidFloorY = 0;
+              lastValidFloorY = 0.0; // En Meta Quest 3, local-floor pone Y=0 exactamente en el suelo físico
             } catch (_) {
               renderer.xr.setReferenceSpaceType('local');
               lastValidFloorY = -1.45;
             }
 
             await renderer.xr.setSession(session);
+
+            // En modo VR cerrado ponemos un fondo nocturno esmeralda profundo; en AR Passthrough es transparente
+            if (modeToRun === 'immersive-vr' && session.environmentBlendMode !== 'alpha-blend') {
+              scene.background = new THREE.Color(0x040907);
+            } else {
+              scene.background = null;
+            }
+
             domOverlay.classList.add('active');
             setupPedometerAndTouchLook();
 
@@ -917,7 +1044,7 @@
             return;
           }
         } catch (err) {
-          console.warn('Usando cámara AR directa:', err);
+          console.warn('Iniciando cámara de respaldo:', err);
         }
       }
 
@@ -981,11 +1108,10 @@
         camera.quaternion.copy(deviceQuat);
       });
 
-      // Podómetro biomecánico con filtro de gravedad para caminar físicamente con pasos largos (1.55m)
       let gravityMag = 9.81;
       let lastStepTime = 0;
       window.addEventListener('devicemotion', (e) => {
-        if (!hallPlaced) return;
+        if (!hallPlaced || renderer.xr.isPresenting) return;
         const acc = e.accelerationIncludingGravity;
         if (!acc) return;
         const rawMag = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
@@ -995,11 +1121,10 @@
         const now = performance.now();
         if (deltaAcc > 1.18 && now - lastStepTime > 290) {
           lastStepTime = now;
-          advanceAlongViewDirection(1.55);
+          advanceAlongViewDirection(1.55, 0);
         }
       });
 
-      // Giro táctil suave cuando se explora en pantallas sin giroscopio
       let lastX = null;
       let lastY = null;
       window.addEventListener('touchstart', (e) => {
@@ -1023,12 +1148,14 @@
       }, { passive: true });
     }
 
-    // -- DETECTOR DE PLANO DEL PISO --
+    // -- DETECTOR DE PISO HÍBRIDO (HIT-TEST + RAYO LÁSER DE CONTROL QUEST 3 + LOCAL-FLOOR Y=0) --
     function updateFloorDetector(frame) {
       let validFloorHit = false;
-      camera.getWorldPosition(_camWorldPos);
-      camera.getWorldDirection(_rayDir);
+      const activeCam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
+      activeCam.getWorldPosition(_camWorldPos);
+      activeCam.getWorldDirection(_rayDir);
 
+      // 1. Intentar Hit-Test nativo si el visor tiene malla del entorno
       if (frame && !fallbackMode) {
         const referenceSpace = renderer.xr.getReferenceSpace();
         const session = renderer.xr.getSession();
@@ -1053,7 +1180,6 @@
             const normalY = m[5];
             const hitY = pose.transform.position.y;
 
-            // Validar que sea un plano horizontal en el suelo por debajo de la cámara
             if (normalY > 0.72 && hitY < (_camWorldPos.y - 0.45)) {
               lastValidFloorY = hitY;
               reticle.position.set(pose.transform.position.x, hitY, pose.transform.position.z);
@@ -1064,12 +1190,37 @@
         }
       }
 
+      // 2. En Meta Quest 3: Si el usuario apunta al piso con su Control Touch Plus, usar el rayo del control contra Y = lastValidFloorY (0.0m)
+      if (!validFloorHit && renderer.xr.isPresenting) {
+        for (let i = 0; i < controllers.length; i++) {
+          const ctrl = controllers[i];
+          ctrl.getWorldPosition(_rayOrigin);
+          if (_rayOrigin.lengthSq() > 0.001) {
+            _tempMatrix.identity().extractRotation(ctrl.matrixWorld);
+            _rayDir.set(0, 0, -1).applyMatrix4(_tempMatrix).normalize();
+            if (_rayDir.y < -0.08) {
+              const dist = (lastValidFloorY - _rayOrigin.y) / _rayDir.y;
+              if (dist > 0.4 && dist < 8.0) {
+                reticle.position.set(
+                  _rayOrigin.x + _rayDir.x * dist,
+                  lastValidFloorY,
+                  _rayOrigin.z + _rayDir.z * dist
+                );
+                validFloorHit = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Respaldo matemático infalible con la dirección de la mirada hacia el piso (Y = lastValidFloorY)
       if (!validFloorHit) {
-        // Intersección geométrica directa con la cota del suelo cuando miras hacia abajo
+        activeCam.getWorldDirection(_rayDir);
         const targetY = lastValidFloorY;
         if (_rayDir.y < -0.06) {
           const dist = (targetY - _camWorldPos.y) / _rayDir.y;
-          const clampedDist = THREE.MathUtils.clamp(dist, 1.4, 4.0);
+          const clampedDist = THREE.MathUtils.clamp(dist, 1.4, 4.2);
           reticle.position.set(
             _camWorldPos.x + _rayDir.x * clampedDist,
             targetY,
@@ -1080,15 +1231,14 @@
           _horizDir.set(_rayDir.x, 0, _rayDir.z).normalize();
           if (_horizDir.lengthSq() < 0.001) _horizDir.set(0, 0, -1);
           reticle.position.set(
-            _camWorldPos.x + _horizDir.x * 2.1,
+            _camWorldPos.x + _horizDir.x * 2.2,
             targetY,
-            _camWorldPos.z + _horizDir.z * 2.1
+            _camWorldPos.z + _horizDir.z * 2.2
           );
           validFloorHit = true;
         }
       }
 
-      // Orientar la retícula hacia el usuario
       _lookTarget.set(_camWorldPos.x, reticle.position.y, _camWorldPos.z);
       reticle.lookAt(_lookTarget);
       reticle.visible = true;
@@ -1096,24 +1246,24 @@
       if (!floorDetected && validFloorHit) {
         floorDetected = true;
         statusDot.className = 'w-2.5 h-2.5 rounded-full bg-lime-400 animate-ping';
-        statusText.textContent = 'Plano del piso detectado';
+        statusText.textContent = 'Piso listo · Pulsa Gatillo o Botón para materializar';
         materializeCtaWrap.classList.remove('hidden');
         materializeCtaWrap.classList.add('flex');
       }
     }
 
-    // -- BOTÓN «INICIAR MATERIALIZACIÓN»: FIJAR SALA EN EL MERO PISO E INVOCAR HOJAS --
+    // -- ANCLAR EN EL PISO FÍSICO E INVOCAR LA MATERIALIZACIÓN DE HOJAS --
     function lockFloorAndMaterialize() {
       if (!reticle.visible) return;
 
       hallAnchorGroup.matrixAutoUpdate = true;
       hallAnchorGroup.position.copy(reticle.position);
 
-      camera.getWorldPosition(_camWorldPos);
+      const activeCam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
+      activeCam.getWorldPosition(_camWorldPos);
       _lookTarget.set(_camWorldPos.x, hallAnchorGroup.position.y, _camWorldPos.z);
       hallAnchorGroup.lookAt(_lookTarget);
 
-      // Congelar matriz del ancla en el piso físico
       hallAnchorGroup.updateMatrix();
       hallAnchorGroup.updateMatrixWorld(true);
       hallAnchorGroup.matrixAutoUpdate = false;
@@ -1126,15 +1276,20 @@
       hallPlaced = true;
       reticle.visible = false;
 
+      // Ocultar rayos láser durante la exploración para máxima inmersión museográfica
+      controllers.forEach((c) => {
+        const line = c.getObjectByName('laserLine');
+        if (line) line.visible = false;
+      });
+
       materializeCtaWrap.classList.add('hidden');
       materializeCtaWrap.classList.remove('flex');
       btnReanchor.classList.remove('hidden');
       explorationHud.classList.remove('hidden');
 
       statusDot.className = 'w-2.5 h-2.5 rounded-full bg-lime-400';
-      statusText.textContent = 'Materializando sala con hojas resplandecientes...';
+      statusText.textContent = 'Materializando sala · Camina o usa el Joystick';
 
-      // Activar barrido mágico de materialización
       renderer.localClippingEnabled = true;
       isMaterializing = true;
       materializationT = 0;
@@ -1162,6 +1317,11 @@
       magicWaveRing.visible = false;
       magicWaveLight.intensity = 0;
 
+      controllers.forEach((c) => {
+        const line = c.getObjectByName('laserLine');
+        if (line) line.visible = true;
+      });
+
       targetWalkOffset.set(0, 0, 0);
       currentWalkOffset.set(0, 0, 0);
       walkStageGroup.position.set(0, 0, 0);
@@ -1170,35 +1330,32 @@
       explorationHud.classList.add('hidden');
       statusDot.className = 'w-2.5 h-2.5 rounded-full bg-yellow-300 animate-pulse';
       statusText.textContent = 'Apunta hacia el piso para detectar superficie';
-      showToast('Apunta al piso para ubicar la sala');
+      showToast('Apunta al piso y presiona el Gatillo');
     }
 
-    // -- BUCLE PRINCIPAL --
+    // -- BUCLE PRINCIPAL DE RENDERIZADO (72Hz / 90Hz / 120Hz EN META QUEST 3) --
     function renderLoop(timestamp, frame) {
       const dt = Math.min(0.05, (timestamp - lastFrameTime) / 1000 || 0.016);
       lastFrameTime = timestamp;
       const timeSec = timestamp * 0.001;
 
+      processQuestThumbsticks(dt);
+
       if (!hallPlaced) {
         updateFloorDetector(frame);
       } else {
-        // Avance continuo fluido si se mantiene presionado el botón Avanzar o Atrás
         if (moveButtonDir !== 0) {
-          advanceAlongViewDirection(moveButtonDir * 4.4 * dt);
+          advanceAlongViewDirection(moveButtonDir * 4.4 * dt, 0);
         }
 
-        // Interpolación sedosa de caminata sobre walkStageGroup (000m nivel de piso)
         currentWalkOffset.lerp(targetWalkOffset, Math.min(1, dt * 8.5));
         walkStageGroup.position.set(currentWalkOffset.x, 0, currentWalkOffset.z);
 
-        // Actualizar indicador de metros recorridos hacia el interior
         const walkedMeters = currentWalkOffset.z;
         distanceReadout.textContent = `${walkedMeters.toFixed(1)} m`;
 
-        // Animación de materialización resplandeciente
         if (isMaterializing) {
           materializationT = Math.min(1, materializationT + dt * 0.28);
-          // Curva easeOutCubic para una revelación majestuosa
           const eased = 1 - Math.pow(1 - materializationT, 3);
           const revealH = eased * maxRevealHeight;
 
@@ -1221,11 +1378,10 @@
             renderer.localClippingEnabled = false;
             magicWaveRing.visible = false;
             magicWaveLight.intensity = 0;
-            statusText.textContent = 'Sala fija en el piso · Camina hasta el fondo';
+            statusText.textContent = 'Sala fija en el piso · Camina o usa el Joystick';
             showToast('¡Sala materializada! Explora todo el pasillo');
           }
         } else if (leafParticles.visible) {
-          // Mantener una brisa mágica sutil de hojas y destellos flotando en el pasillo
           leafMaterial.uniforms.uTime.value = timeSec * 0.65;
           leafMaterial.uniforms.uOpacity.value = Math.max(0.42, leafMaterial.uniforms.uOpacity.value - dt * 0.25);
         }
@@ -1233,12 +1389,13 @@
 
       renderer.render(scene, camera);
 
-      if (isRecording && compositeCtx) {
+      // Importante: Solo componer canvas de video en modo móvil 2D (nunca dentro de WebXR estereoscópico)
+      if (isRecording && compositeCtx && !renderer.xr.isPresenting) {
         drawCompositeFrame(false);
       }
     }
 
-    // -- CAPTURA DE FOTO Y VIDEO LIGERO COMPATIBLE CON ANDROID E IOS --
+    // -- CAPTURA MULTIMEDIA (PARA MÓVIL; EN QUEST 3 SE USA EL BOTÓN META + GATILLO NATIVO) --
     function ensureCompositeCanvas(forVideo = false) {
       const srcW = renderer.domElement.width;
       const srcH = renderer.domElement.height;
@@ -1258,7 +1415,7 @@
     }
 
     function drawCompositeFrame(forceRender = true, forVideo = true) {
-      if (forceRender) renderer.render(scene, camera);
+      if (forceRender && !renderer.xr.isPresenting) renderer.render(scene, camera);
       ensureCompositeCanvas(forVideo);
 
       const w = compositeCanvas.width;
